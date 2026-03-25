@@ -1,9 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useLabel } from '../context/LabelContext';
+import { useTheme } from '../context/ThemeContext';
 
 export default function TemplateLibrary() {
   const { templates, loadTemplate, meta } = useLabel();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   
   const [searchQuery, setSearchQuery] = useState('');
@@ -42,7 +44,7 @@ export default function TemplateLibrary() {
   return (
     <div className="bg-background text-on-surface min-h-screen">
       {/* TopNavBar */}
-      <header className="fixed top-0 w-full z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-[0px_12px_32px_rgba(25,28,30,0.04)] h-16 flex items-center justify-between px-8">
+      <header className="fixed top-0 w-full z-50 bg-[#F8FAFC]/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-black/5 dark:border-white/10 h-16 flex items-center justify-between px-8">
         <div className="flex items-center gap-8">
           <span className="text-xl font-bold tracking-tighter text-blue-900 dark:text-blue-100">PharmaLabel Precision</span>
           <nav className="hidden md:flex gap-6 items-center font-inter antialiased tracking-tight text-sm font-medium">
@@ -68,8 +70,15 @@ export default function TemplateLibrary() {
               type="text" 
             />
           </div>
-          <button className="p-2 text-on-surface-variant hover:bg-blue-50/50 rounded-full transition-all active:scale-95">
-            <span className="material-symbols-outlined">notifications</span>
+          {/* Theme toggle */}
+          <button
+            onClick={toggleTheme}
+            title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            className="p-2 text-on-surface-variant hover:bg-blue-50/50 dark:hover:bg-slate-800 rounded-full transition-all active:scale-95"
+          >
+            <span className="material-symbols-outlined">
+              {theme === 'dark' ? 'light_mode' : 'dark_mode'}
+            </span>
           </button>
           <div className="h-8 w-8 rounded-full overflow-hidden border border-outline-variant">
             <img alt="User profile" className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAFpJZbrJ2YQtd7MEMTjf3puH15-aHWbln71bIeOkmBEO90SjfSneviiWG94g6J8d4RmyzBatWhrfBZzRugVKnKrfPrR75pUCgUr6BoAQxy_X_06oT8ChIcCiKGx3QSZiORscP18DJt_JF2NIjXXIH1ffPlWQ30baVlsvnFb3fcdf8yJpzM4cHCqYE2r-LSthNCH3tfe4ZtSyYsV03GTVwGZFZZ0Zi4qVeEkR95Cphq59bldU7Cwj9j0aqfXUhzZhakq6j7NYbjeAtP" />
@@ -79,7 +88,7 @@ export default function TemplateLibrary() {
       
       <div className="flex pt-16 h-screen overflow-hidden">
         {/* SideNavBar */}
-        <aside className="hidden lg:flex flex-col gap-4 p-6 h-screen w-64 bg-slate-50 dark:bg-slate-950 shrink-0 border-r border-outline-variant/10">
+        <aside className="hidden lg:flex flex-col gap-4 p-6 h-screen w-64 bg-[#F8FAFC] dark:bg-slate-950 shrink-0 border-r border-outline-variant/10">
           <div className="mb-6">
             <p className="font-inter text-xs uppercase tracking-widest font-semibold text-slate-400 mb-1">Lab Workspace</p>
             <p className="text-[10px] text-slate-500 font-medium">Clinical Precision v2.4</p>
@@ -168,7 +177,7 @@ export default function TemplateLibrary() {
           {viewMode === 'grid' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8">
               {filteredTemplates.map((template, idx) => (
-                <div key={template.id} className="group bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm hover:shadow-[0px_12px_32px_rgba(25,28,30,0.06)] transition-all duration-300 flex flex-col border border-outline-variant/10">
+                <div key={template.id} className="group bg-surface-container-lowest dark:bg-slate-800 rounded-xl overflow-hidden shadow-sm hover:shadow-[0px_12px_32px_rgba(25,28,30,0.06)] transition-all duration-300 flex flex-col border border-outline-variant/10">
                   <div className="aspect-[4/3] bg-surface-container-low overflow-hidden relative p-4 flex items-center justify-center">
                     <img className="w-full h-full object-cover rounded shadow-sm group-hover:scale-105 transition-transform duration-500" alt={template.name} src={template.image} />
                     <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full flex items-center gap-1 shadow-sm border border-outline-variant/20">
@@ -209,7 +218,7 @@ export default function TemplateLibrary() {
           ) : (
             <div className="flex flex-col gap-4">
               {filteredTemplates.map((template) => (
-                <div key={template.id} className="group bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm hover:shadow-[0px_12px_32px_rgba(25,28,30,0.06)] transition-all duration-300 flex flex-col sm:flex-row border border-outline-variant/10">
+                <div key={template.id} className="group bg-surface-container-lowest dark:bg-slate-800 rounded-xl overflow-hidden shadow-sm hover:shadow-[0px_12px_32px_rgba(25,28,30,0.06)] transition-all duration-300 flex flex-col sm:flex-row border border-outline-variant/10">
                   <div className="w-full sm:w-48 h-32 shrink-0 bg-surface-container-low relative p-3 flex items-center justify-center border-b sm:border-b-0 sm:border-r border-outline-variant/10">
                     <img className="w-full h-full object-cover rounded shadow-sm group-hover:scale-105 transition-transform duration-500" alt={template.name} src={template.image} />
                   </div>

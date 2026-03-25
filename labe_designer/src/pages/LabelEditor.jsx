@@ -1,15 +1,19 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useLabel } from '../context/LabelContext';
+import { useTheme } from '../context/ThemeContext';
 import { Rnd } from 'react-rnd';
 import html2canvas from 'html2canvas';
 import { basicShapes, allIcons } from '../data/shapesLibrary';
+import { premiumIcons } from '../data/premiumIcons';
+import { v4 as uuidv4 } from 'uuid';
 import Barcode from 'react-barcode';
 import { QRCodeSVG } from 'qrcode.react';
 import FileNameModal from '../components/modals/FileNameModal';
 import LabelSizeModal from '../components/modals/LabelSizeModal';
 
 export default function LabelEditor() {
+  const { theme, toggleTheme } = useTheme();
   const {
     meta, setFileName, setLabelSize, newFile,
     elements, setElements, selectedElementId, setSelectedElementId,
@@ -208,7 +212,7 @@ export default function LabelEditor() {
   const addTxt  = () => addElement({ type: 'text',    text: 'New Text',         fontSize: 16, fontFamily: 'Inter, sans-serif', fontWeight: '500', color: '#191C1E', width: 160, height: 28 });
   const addBar  = () => addElement({ type: 'barcode', text: '123456789012',      color: '#191c1e', width: 180, height: 80 });
   const addQR   = () => addElement({ type: 'qrcode',  text: 'https://example.com', color: '#191c1e', width: 80, height: 80 });
-  const addIcon = (name) => addElement({ type: 'icon', iconName: name, fontSize: 48, color: '#191C1E', width: 48, height: 48 });
+  const addIcon = (name) => addElement({ type: 'icon', iconName: name, width: 48, height: 48, color: '#191C1E' });
 
   const selectedElement = elements.find(e => e.id === selectedElementId);
   const { w: AW, h: AH } = meta.labelSize || { w: 600, h: 400 };
@@ -298,7 +302,7 @@ export default function LabelEditor() {
       )}
 
       {/* ── Top Nav ─────────────────────────────────────────────────────────── */}
-      <header className="h-14 bg-white shadow-[0_1px_0] shadow-black/8 flex items-center justify-between px-4 shrink-0 z-40">
+      <header className="h-14 bg-[#F8FAFC] dark:bg-slate-900 border-b border-black/5 flex items-center justify-between px-6 shrink-0 z-40">
         {/* Left: File Menu + Title */}
         <div className="flex items-center gap-3">
           <Link to="/" className="text-lg font-extrabold tracking-tighter text-blue-900 shrink-0">PharmaLabel</Link>
@@ -363,6 +367,16 @@ export default function LabelEditor() {
 
         {/* Right: Toolset */}
         <div className="flex items-center gap-2">
+          {/* Theme Toggle */}
+          <button
+            onClick={toggleTheme}
+            title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-all"
+          >
+            <span className="material-symbols-outlined text-[18px]">
+              {theme === 'dark' ? 'light_mode' : 'dark_mode'}
+            </span>
+          </button>
           <button onClick={handleValidate} className="px-3 py-1.5 text-[11px] font-bold uppercase tracking-widest bg-slate-100 text-blue-700 border border-blue-200 rounded-lg hover:bg-blue-50 transition-all flex items-center gap-1.5">
             <span className="material-symbols-outlined text-[14px]">fact_check</span> Validate
           </button>
@@ -373,7 +387,7 @@ export default function LabelEditor() {
       </header>
 
       {/* ── Secondary Toolbar (Undo/Redo/Zoom) ──────────────────────────────── */}
-      <div className="h-10 bg-white border-b border-black/5 flex items-center justify-between px-4 shrink-0 z-30">
+      <div className="h-10 bg-[#F8FAFC] dark:bg-slate-800 border-b border-black/5 flex items-center justify-between px-4 shrink-0 z-30">
         <div className="flex items-center gap-2">
           <button onClick={undo} disabled={historyIndex <= 0} title="Undo (Ctrl+Z)" className="p-1 rounded hover:bg-slate-100 disabled:opacity-30 text-slate-600 transition-colors">
             <span className="material-symbols-outlined text-[16px]">undo</span>
@@ -423,12 +437,12 @@ export default function LabelEditor() {
       <main className="flex flex-1 overflow-hidden">
 
         {/* LEFT SIDEBAR */}
-        <aside className="w-64 bg-white border-r border-black/5 flex flex-col overflow-hidden shrink-0">
+        <aside className="w-64 bg-[#F8FAFC] dark:bg-slate-900 border-r border-black/5 flex flex-col overflow-hidden shrink-0">
           {/* Tab Headers */}
-          <div className="flex border-b border-black/5 text-[9px] font-bold uppercase tracking-widest text-slate-500 shrink-0">
-            {['elements', 'shapes', 'layers'].map(t => (
+          <div className="flex border-b border-black/5 text-[11px] font-bold uppercase tracking-wider text-slate-500 shrink-0">
+            {['elements', 'shapes', 'premium', 'layers'].map(t => (
               <button key={t} onClick={() => setActiveTab(t)}
-                className={`flex-1 py-2.5 transition-colors ${activeTab === t ? 'text-primary border-b-2 border-primary bg-blue-50/50' : 'hover:bg-slate-50 hover:text-slate-700'}`}
+                className={`flex-1 py-3 transition-colors ${activeTab === t ? 'text-primary border-b-2 border-primary bg-blue-50/50' : 'text-slate-500 hover:bg-slate-100/50 hover:text-slate-700'}`}
               >{t}</button>
             ))}
           </div>
@@ -446,9 +460,9 @@ export default function LabelEditor() {
                     { label: 'Upload Logo', icon: 'imagesmode', action: () => fileInputRef.current?.click() },
                   ].map(item => (
                     <button key={item.label} onClick={item.action}
-                      className="flex flex-col items-center p-3 bg-slate-50 rounded-xl border border-transparent hover:border-primary/30 hover:bg-blue-50/50 transition-all group">
-                      <span className="material-symbols-outlined text-slate-400 group-hover:text-primary mb-1 text-xl">{item.icon}</span>
-                      <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500 group-hover:text-primary">{item.label}</span>
+                      className="flex flex-col items-center p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-white/10 shadow-sm hover:border-primary/50 hover:bg-blue-50/60 hover:shadow-md transition-all group">
+                      <span className="material-symbols-outlined text-slate-500 group-hover:text-primary mb-1 text-xl">{item.icon}</span>
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600 group-hover:text-primary">{item.label}</span>
                     </button>
                   ))}
                   <input ref={fileInputRef} type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
@@ -456,22 +470,25 @@ export default function LabelEditor() {
                 </div>
 
                 <div>
-                  <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-2">Medical Fields</p>
-                  <div className="space-y-1.5">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-3 h-0.5 bg-primary rounded-full"></div>
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500">Medical Fields</p>
+                  </div>
+                  <div className="space-y-1">
                     {[
-                      { label: '+ Brand Name', payload: { type: 'text', subtype: 'brand', text: 'BRAND NAME', fontSize: 22, fontFamily: 'Inter, sans-serif', fontWeight: '800', color: '#0a2540', width: 200, height: 32 } },
-                      { label: 'Composition Block', payload: { type: 'text', heading: 'Composition', text: 'Active Ingredient 250mg\nExcipients q.s.', fontSize: 10, fontFamily: 'Inter, sans-serif', fontWeight: '400', color: '#191C1E', width: 220, height: 48 } },
-                      { label: 'Mfg & Licensing', payload: { type: 'text', heading: 'Manufacturing', text: 'Mfg. by: \nLic. No.: ', fontSize: 10, fontFamily: 'Inter, sans-serif', fontWeight: '400', color: '#191C1E', width: 220, height: 44 } },
-                      { label: 'Batch & Expiry Stamp', payload: { type: 'text', heading: 'Batch / Expiry', text: 'B.No: \nMfg: \nExp: ', fontSize: 11, fontFamily: 'Roboto, sans-serif', fontWeight: '700', color: '#191C1E', width: 160, height: 48 } },
-                      { label: 'Schedule H Warning', payload: { type: 'warnings', heading: 'Warning', alertColor: '#ba1a1a', text: 'To be sold by retail on the prescription of a Registered Medical Practitioner only.', fontSize: 9, fontFamily: 'Inter, sans-serif', fontWeight: '600', color: '#191C1E', width: 220, height: 40 } },
-                      { label: 'Dosage Instructions', payload: { type: 'text', heading: 'Dosage', text: 'As directed by physician.', fontSize: 10, fontFamily: 'Inter, sans-serif', fontWeight: '500', color: '#191C1E', width: 200, height: 36 } },
-                      { label: 'Storage Conditions', payload: { type: 'text', heading: 'Storage', text: 'Store below 30°C. Keep dry.', fontSize: 10, fontFamily: 'Inter, sans-serif', fontWeight: '400', color: '#191C1E', width: 200, height: 36 } },
-                      { label: 'Net Contents', payload: { type: 'text', heading: 'Net Content', text: '100 mL / 10 Tablets', fontSize: 12, fontFamily: 'Inter, sans-serif', fontWeight: '600', color: '#191C1E', width: 160, height: 28 } },
+                      { label: '+ Brand Name', icon: 'label', payload: { type: 'text', subtype: 'brand', text: 'BRAND NAME', fontSize: 22, fontFamily: 'Inter, sans-serif', fontWeight: '800', color: '#0a2540', width: 200, height: 32 } },
+                      { label: 'Composition Block', icon: 'science', payload: { type: 'text', heading: 'Composition', text: 'Active Ingredient 250mg\nExcipients q.s.', fontSize: 10, fontFamily: 'Inter, sans-serif', fontWeight: '400', color: '#191C1E', width: 220, height: 48 } },
+                      { label: 'Mfg & Licensing', icon: 'factory', payload: { type: 'text', heading: 'Manufacturing', text: 'Mfg. by: \nLic. No.: ', fontSize: 10, fontFamily: 'Inter, sans-serif', fontWeight: '400', color: '#191C1E', width: 220, height: 44 } },
+                      { label: 'Batch & Expiry', icon: 'calendar_today', payload: { type: 'text', heading: 'Batch / Expiry', text: 'B.No: \nMfg: \nExp: ', fontSize: 11, fontFamily: 'Roboto, sans-serif', fontWeight: '700', color: '#191C1E', width: 160, height: 48 } },
+                      { label: 'Schedule H Warning', icon: 'warning', payload: { type: 'warnings', heading: 'Warning', alertColor: '#ba1a1a', text: 'To be sold by retail on the prescription of a Registered Medical Practitioner only.', fontSize: 9, fontFamily: 'Inter, sans-serif', fontWeight: '600', color: '#191C1E', width: 220, height: 40 } },
+                      { label: 'Dosage Instructions', icon: 'medication', payload: { type: 'text', heading: 'Dosage', text: 'As directed by physician.', fontSize: 10, fontFamily: 'Inter, sans-serif', fontWeight: '500', color: '#191C1E', width: 200, height: 36 } },
+                      { label: 'Storage Conditions', icon: 'ac_unit', payload: { type: 'text', heading: 'Storage', text: 'Store below 30°C. Keep dry.', fontSize: 10, fontFamily: 'Inter, sans-serif', fontWeight: '400', color: '#191C1E', width: 200, height: 36 } },
+                      { label: 'Net Contents', icon: 'inventory', payload: { type: 'text', heading: 'Net Content', text: '100 mL / 10 Tablets', fontSize: 12, fontFamily: 'Inter, sans-serif', fontWeight: '600', color: '#191C1E', width: 160, height: 28 } },
                     ].map(item => (
-
                       <div key={item.label}
                         onClick={() => addElement(item.payload)}
-                        className="px-3 py-2 bg-slate-50 rounded-lg text-[10px] font-semibold text-slate-600 cursor-pointer border border-transparent hover:border-primary/30 hover:text-primary hover:bg-blue-50/50 transition-all">
+                        className="flex items-center gap-2.5 px-3 py-2 bg-white dark:bg-slate-800 rounded-lg text-[11px] font-bold text-slate-700 dark:text-slate-300 cursor-pointer border border-slate-200 dark:border-white/10 hover:border-primary/40 hover:text-primary hover:bg-blue-50/50 shadow-sm transition-all group">
+                        <span className="material-symbols-outlined text-[14px] text-slate-400 group-hover:text-primary shrink-0">{item.icon}</span>
                         {item.label}
                       </div>
                     ))}
@@ -484,20 +501,26 @@ export default function LabelEditor() {
             {activeTab === 'shapes' && (
               <div className="animate-fade-in flex flex-col gap-4">
                 <div>
-                  <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-2">Geometry</p>
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-3 h-0.5 bg-primary rounded-full"></div>
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500">Geometry</p>
+                  </div>
                   <div className="grid gap-2 grid-cols-2">
                     {basicShapes.map(s => (
                       <button key={s.id} onClick={() => addElement(s.payload)}
-                        className="flex flex-col items-center p-3 bg-slate-50 rounded-xl border border-transparent hover:border-primary/30 hover:bg-blue-50/50 transition-all group">
-                        <span className="material-symbols-outlined text-slate-400 group-hover:text-primary mb-1 text-xl">{s.render}</span>
-                        <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500 group-hover:text-primary">{s.name}</span>
+                        className="flex flex-col items-center p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-white/10 shadow-sm hover:border-primary/50 hover:bg-blue-50/60 hover:shadow-md transition-all group">
+                        <span className="material-symbols-outlined text-slate-500 group-hover:text-primary mb-1 text-xl">{s.render}</span>
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600 group-hover:text-primary">{s.name}</span>
                       </button>
                     ))}
                   </div>
                 </div>
 
                 <div>
-                  <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-2">Icons & Symbols ({allIcons.length})</p>
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-3 h-0.5 bg-primary rounded-full"></div>
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500">Icons & Symbols ({allIcons.length})</p>
+                  </div>
                   <div className="grid gap-1 grid-cols-5">
                     {allIcons.map((icon, i) => (
                       <button key={i} onClick={() => addIcon(icon)} title={icon}
@@ -510,6 +533,33 @@ export default function LabelEditor() {
               </div>
             )}
 
+            {/* PREMIUM TAB */}
+            {activeTab === 'premium' && (
+              <div className="animate-fade-in flex flex-col gap-6">
+                {Object.entries(premiumIcons).map(([cat, icons]) => (
+                  <div key={cat}>
+                    <div className="flex items-center gap-2 mb-2.5">
+                      <div className="w-3 h-0.5 bg-blue-500 rounded-full"></div>
+                      <p className="text-[11px] font-bold uppercase tracking-widest text-slate-700">{cat} ({icons.length})</p>
+                    </div>
+                    <div className="grid grid-cols-4 gap-2">
+                      {icons.map((icon, i) => (
+                        <button 
+                          key={i} 
+                          onClick={() => addElement({ type: 'premiumIcon', svg: icon.svg, name: icon.name, width: 60, height: 60 })} 
+                          title={icon.name}
+                          className="flex flex-col items-center justify-center p-2.5 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-white/10 shadow-sm hover:border-primary/50 hover:bg-blue-50/60 hover:shadow-md transition-all group"
+                        >
+                          <div className="w-8 h-8 mb-1.5 flex items-center justify-center transition-transform group-hover:scale-110" dangerouslySetInnerHTML={{ __html: icon.svg }} />
+                          <span className="text-[9px] font-bold uppercase text-slate-400 group-hover:text-primary truncate w-full text-center leading-tight">{icon.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
             {/* LAYERS TAB */}
             {activeTab === 'layers' && (
               <div className="animate-fade-in flex flex-col gap-1.5">
@@ -518,12 +568,12 @@ export default function LabelEditor() {
                   return (
                     <div key={`layer-${el.id}`}
                       onClick={() => setSelectedElementId(el.id)}
-                      className={`flex items-center justify-between p-2.5 rounded-lg border text-[10px] cursor-pointer transition-all ${isSelected ? 'bg-blue-50 border-primary/50 text-primary font-bold' : 'bg-slate-50 border-transparent hover:border-slate-200 text-slate-600'}`}>
+                      className={`flex items-center justify-between p-2.5 rounded-lg border text-[11px] cursor-pointer transition-all ${isSelected ? 'bg-blue-50 border-primary/50 text-primary font-bold' : 'bg-slate-50 border-transparent hover:border-slate-200 text-slate-600'}`}>
                       <div className="flex items-center gap-2 overflow-hidden">
                         <span className="material-symbols-outlined text-[13px]">
-                          {el.type === 'image' ? 'image' : el.type === 'shape' ? 'category' : el.type === 'icon' ? 'star' : el.type === 'barcode' ? 'barcode' : el.type === 'qrcode' ? 'qr_code_2' : 'match_case'}
+                          {el.type === 'image' ? 'image' : el.type === 'shape' ? 'category' : (el.type === 'icon' || el.type === 'premiumIcon') ? 'star' : el.type === 'barcode' ? 'barcode' : el.type === 'qrcode' ? 'qr_code_2' : 'match_case'}
                         </span>
-                        <span className="truncate max-w-[100px]">{el.text || el.iconName || el.shapeType || 'Layer'}</span>
+                        <span className="truncate max-w-[100px]">{el.name || el.text || el.iconName || el.shapeType || 'Layer'}</span>
                       </div>
                       {isSelected && (
                         <div className="flex gap-0.5 shrink-0">
@@ -661,6 +711,8 @@ export default function LabelEditor() {
                         <div className="w-full h-full flex items-center justify-center overflow-hidden">
                           <span className="material-symbols-outlined leading-[0]" style={{ fontSize: `${Math.min(elW, elH)}px`, color: el.color || '#191c1e' }}>{el.iconName}</span>
                         </div>
+                      ) : el.type === 'premiumIcon' ? (
+                        <div className="w-full h-full p-1 flex items-center justify-center" dangerouslySetInnerHTML={{ __html: el.svg }} />
                       ) : (
                         <span className="block w-full h-full">{el.text}</span>
                       )}
@@ -673,14 +725,14 @@ export default function LabelEditor() {
         </section>
 
         {/* RIGHT PROPERTIES PANEL */}
-        <aside className="w-72 bg-white border-l border-black/5 flex flex-col overflow-y-auto shrink-0 custom-scrollbar">
+        <aside className="w-80 bg-[#F8FAFC] dark:bg-slate-900 border-l border-black/5 flex flex-col overflow-y-auto shrink-0 custom-scrollbar">
           {selectedElement ? (
             <div className="animate-fade-in pb-16">
 
               {/* Position Block */}
               <div className="p-4 border-b border-black/5 bg-slate-50/50">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">Position & Layers</span>
+                  <span className="text-[9px] font-bold uppercase tracking-widest text-blue-600">Position & Layers</span>
                   <div className="flex gap-1">
                     <button onClick={() => duplicateElement(selectedElement.id)} className="p-1 rounded text-primary hover:bg-blue-50" title="Duplicate"><span className="material-symbols-outlined text-[14px]">content_copy</span></button>
                     <button onClick={() => deleteElement(selectedElement.id)} className="p-1 rounded text-error hover:bg-red-50" title="Delete"><span className="material-symbols-outlined text-[14px]">delete</span></button>
@@ -707,11 +759,11 @@ export default function LabelEditor() {
               {/* Data / Content Block — for all text-bearing types */}
               {['text','warnings','barcode','qrcode','manufacturing','dosage','storage','subtext'].includes(selectedElement.type) && (
                 <div className="p-4 border-b border-black/5">
-                  <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500 block mb-2">
+                  <span className="text-[11px] font-bold uppercase tracking-widest text-slate-500 block mb-2">
                     {['barcode','qrcode'].includes(selectedElement.type) ? 'Data String' : 'Text Content'}
                   </span>
                   <textarea
-                    className="w-full bg-slate-50 border border-slate-200 text-[11px] py-2 px-2.5 focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none rounded-lg resize-none min-h-[56px]"
+                    className="w-full bg-slate-50 border border-slate-200 text-[12px] py-2 px-2.5 focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none rounded-lg resize-none min-h-[56px]"
                     value={selectedElement.text || ''}
                     placeholder={selectedElement.type === 'qrcode' ? 'https://...' : selectedElement.type === 'barcode' ? '123456789012' : 'Enter text…'}
                     onChange={e => updateElement(selectedElement.id, { text: e.target.value })}
@@ -723,12 +775,12 @@ export default function LabelEditor() {
               {/* Typography — only for non-media types */}
               {!['image','barcode','qrcode','icon'].includes(selectedElement.type) && (
                 <div className="p-4 border-b border-black/5">
-                  <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500 block mb-3">Typography</span>
+                  <span className="text-[11px] font-bold uppercase tracking-widest text-slate-500 block mb-3">Typography</span>
                   <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="text-[8px] font-bold uppercase text-slate-400 mb-1 block">Font</label>
-                        <select className="w-full bg-slate-50 border border-slate-200 text-[10px] py-1.5 px-1.5 rounded-lg outline-none cursor-pointer"
+                        <label className="text-[10px] font-bold uppercase text-slate-400 mb-1 block">Font</label>
+                        <select className="w-full bg-slate-50 border border-slate-200 text-[11px] py-1.5 px-1.5 rounded-lg outline-none cursor-pointer"
                           value={selectedElement.fontFamily || 'Inter, sans-serif'}
                           onChange={e => { updateElement(selectedElement.id, { fontFamily: e.target.value }); commitUpdate(); }}>
                           <option value="Inter, sans-serif">Inter</option>
@@ -738,8 +790,8 @@ export default function LabelEditor() {
                         </select>
                       </div>
                       <div>
-                        <label className="text-[8px] font-bold uppercase text-slate-400 mb-1 block">Weight</label>
-                        <select className="w-full bg-slate-50 border border-slate-200 text-[10px] py-1.5 px-1.5 rounded-lg outline-none cursor-pointer"
+                        <label className="text-[10px] font-bold uppercase text-slate-400 mb-1 block">Weight</label>
+                        <select className="w-full bg-slate-50 border border-slate-200 text-[11px] py-1.5 px-1.5 rounded-lg outline-none cursor-pointer"
                           value={selectedElement.fontWeight || '400'}
                           onChange={e => { updateElement(selectedElement.id, { fontWeight: e.target.value }); commitUpdate(); }}>
                           <option value="800">Extra Bold</option>
@@ -752,7 +804,7 @@ export default function LabelEditor() {
                     </div>
 
                     <div>
-                      <label className="text-[8px] font-bold uppercase text-slate-400 mb-1 block flex justify-between">
+                      <label className="text-[10px] font-bold uppercase text-slate-400 mb-1 block flex justify-between">
                         <span>Size</span><span className="font-mono">{selectedElement.fontSize || 12}px</span>
                       </label>
                       <input type="range" min="6" max="144" className="w-full accent-blue-600"
@@ -786,12 +838,12 @@ export default function LabelEditor() {
               {/* Appearance — Fill, Color, Stroke */}
               {selectedElement.type !== 'image' && (
                 <div className="p-4 border-b border-black/5 space-y-4">
-                  <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500 block">Appearance</span>
+                  <span className="text-[11px] font-bold uppercase tracking-widest text-slate-500 block">Appearance</span>
 
                   {/* Icon size slider */}
                   {selectedElement.type === 'icon' && (
                     <div>
-                      <label className="text-[8px] font-bold uppercase text-slate-400 mb-1 flex justify-between">
+                      <label className="text-[10px] font-bold uppercase text-slate-400 mb-1 flex justify-between">
                         <span>Icon Size</span><span className="font-mono">{selectedElement.fontSize || 48}px</span>
                       </label>
                       <input type="range" min="12" max="400" className="w-full accent-blue-600"

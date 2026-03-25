@@ -1,11 +1,10 @@
 /**
  * Translation Service
- * Uses the MyMemory free translation API (no key required).
+ * Uses the free Google Translate API endpoint.
  * Supports all major ISO 639-1 language codes.
- * Rate limit: ~1000 words/day on anonymous access.
  */
 
-const MYMEMORY_API = 'https://api.mymemory.translated.net/get';
+const GOOGLE_API = 'https://translate.googleapis.com/translate_a/single?client=gtx&dt=t';
 
 /**
  * Translate a single text string.
@@ -18,14 +17,16 @@ export async function translateText(text, targetLangCode) {
   if (targetLangCode === 'en') return text;
 
   try {
-    const url = `${MYMEMORY_API}?q=${encodeURIComponent(text)}&langpair=en|${targetLangCode}`;
+    const url = `${GOOGLE_API}&sl=en&tl=${targetLangCode}&q=${encodeURIComponent(text)}`;
     const res = await fetch(url);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    if (data.responseStatus === 200 && data.responseData?.translatedText) {
-      return data.responseData.translatedText;
+    
+    // Google Translate returns an array where data[0] is an array of sentence translations
+    if (data && data[0] && Array.isArray(data[0])) {
+      return data[0].map(item => item[0]).join('');
     }
-    throw new Error(data.responseDetails || 'Translation failed');
+    throw new Error('Invalid response format from Google Translate');
   } catch (err) {
     console.warn(`[TranslationService] Failed for "${text}" → ${targetLangCode}:`, err.message);
     return text; // Graceful fallback: return original

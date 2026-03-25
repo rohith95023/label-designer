@@ -5,6 +5,7 @@
 @layer base {
   body {
     @apply font-body bg-background text-on-surface text-sm antialiased;
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
 }
 
@@ -12,6 +13,12 @@
   .material-symbols-outlined {
     font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
     vertical-align: middle;
+  }
+
+  .pharma-artboard svg {
+    width: 100%;
+    height: 100%;
+    display: block;
   }
 
   .btn-gradient {
@@ -29,9 +36,17 @@
     backdrop-filter: blur(12px);
   }
 
+  .dark .glass-header {
+    background: rgba(22, 26, 30, 0.85);
+  }
+
   .editor-canvas {
     background-image: radial-gradient(#c1c6d4 0.5px, transparent 0.5px);
     background-size: 20px 20px;
+  }
+
+  .dark .editor-canvas {
+    background-image: radial-gradient(#3a3f46 0.5px, transparent 0.5px);
   }
 
   .label-shadow {
@@ -46,7 +61,106 @@
       -ms-overflow-style: none;
       scrollbar-width: none;
   }
+
+  /* Custom scrollbar for dark mode */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #c1c6d4;
+    border-radius: 4px;
+  }
+  .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #3a3f46;
+  }
 }
+
+/* ── Dark Mode Overrides ─────────────────────────────────────────────────── */
+.dark {
+  color-scheme: dark;
+}
+
+/* ── Semantic Token Surfaces (used in TemplateLibrary & Translation) ─────── */
+.dark .bg-surface,
+.dark .bg-background            { background-color: #111418 !important; }
+.dark .bg-surface-bright        { background-color: #1b1f23 !important; }
+.dark .bg-surface-container-lowest { background-color: #1b1f23 !important; }
+.dark .bg-surface-container-low { background-color: #1f2329 !important; }
+.dark .bg-surface-container     { background-color: #21262e !important; }
+.dark .bg-surface-container-high{ background-color: #252b33 !important; }
+.dark .bg-surface-container-highest { background-color: #2a3040 !important; }
+.dark .bg-surface-dim           { background-color: #0d1014 !important; }
+.dark .bg-surface-variant       { background-color: #252b33 !important; }
+
+/* Plain white / gray surfaces */
+.dark body,
+.dark .bg-white                 { background-color: #1b1f23 !important; }
+.dark .bg-slate-50              { background-color: #1f2329 !important; }
+.dark .bg-slate-100             { background-color: #252b33 !important; }
+.dark .bg-\[\#F1F3F6\]          { background-color: #111418 !important; }
+.dark .bg-\[\#E8EAF0\]          { background-color: #0d1014 !important; }
+.dark .bg-blue-50\/50           { background-color: rgba(30, 64, 120, 0.3) !important; }
+.dark .bg-blue-50               { background-color: rgba(30, 64, 120, 0.2) !important; }
+.dark .bg-slate-50\/50          { background-color: rgba(31, 35, 41, 0.6) !important; }
+.dark .bg-slate-50\/80          { background-color: rgba(31, 35, 41, 0.85) !important; }
+.dark .bg-amber-50              { background-color: rgba(78, 55, 0, 0.4) !important; }
+
+/* ── Semantic Token Text ─────────────────────────────────────────────────── */
+.dark .text-on-surface          { color: #e2e6ea !important; }
+.dark .text-on-surface-variant  { color: #9aa3af !important; }
+.dark .text-on-background       { color: #e2e6ea !important; }
+.dark .text-on-primary-fixed    { color: #001c3a !important; }
+.dark .text-slate-800           { color: #e2e6ea !important; }
+.dark .text-slate-700           { color: #cdd2d8 !important; }
+.dark .text-slate-600           { color: #9aa3af !important; }
+.dark .text-slate-500           { color: #7a8490 !important; }
+.dark .text-slate-400           { color: #5a636e !important; }
+.dark .text-blue-700            { color: #78aff5 !important; }
+.dark .text-blue-900            { color: #93c5fd !important; }
+/* Keep primary/secondary/tertiary accent colors visible */
+.dark .text-primary             { color: #78aff5 !important; }
+.dark .text-secondary           { color: #6fcf82 !important; }
+
+/* ── Borders & Dividers ──────────────────────────────────────────────────── */
+.dark .border-outline-variant   { border-color: rgba(255,255,255,0.08) !important; }
+.dark .border-outline-variant\/10 { border-color: rgba(255,255,255,0.06) !important; }
+.dark .border-outline-variant\/20 { border-color: rgba(255,255,255,0.07) !important; }
+.dark .border-outline-variant\/30 { border-color: rgba(255,255,255,0.09) !important; }
+.dark .border-black\/5          { border-color: rgba(255,255,255,0.07) !important; }
+.dark .border-black\/8          { border-color: rgba(255,255,255,0.07) !important; }
+.dark .border-slate-200         { border-color: #2d3340 !important; }
+.dark .border-slate-100         { border-color: #252b33 !important; }
+.dark .divide-slate-100         { border-color: #252b33 !important; }
+.dark .shadow-\[0_1px_0\]       { box-shadow: 0 1px 0 rgba(255,255,255,0.06) !important; }
+
+/* ── Inputs & Selects ────────────────────────────────────────────────────── */
+.dark input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+.dark textarea,
+.dark select {
+  background-color: #252b33 !important;
+  color: #cdd2d8 !important;
+  border-color: #2d3340 !important;
+}
+
+/* ── Active / Hover States ───────────────────────────────────────────────── */
+.dark .hover\:bg-slate-100:hover  { background-color: #252b33 !important; }
+.dark .hover\:bg-slate-50:hover   { background-color: #1f2329 !important; }
+.dark .hover\:bg-primary-fixed:hover { background-color: rgba(30, 64, 120, 0.35) !important; }
+.dark .bg-surface-container-high.text-primary { background-color: #1e3870 !important; }
+
+/* ── Artboard: always white (physical printed label) ─────────────────────── */
+.dark #pharma-artboard {
+  background-color: #ffffff !important;
+  color: #191c1e !important;
+}
+
+/* ── Template card badges ────────────────────────────────────────────────── */
+.dark .bg-white\/90             { background-color: rgba(30, 34, 42, 0.92) !important; }
+
+
 
 /* 🏢 PRINT ENGINE 🏢 */
 @media print {
@@ -89,4 +203,3 @@
       box-shadow: none !important;
   }
 }
-
