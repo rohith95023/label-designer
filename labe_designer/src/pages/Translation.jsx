@@ -116,7 +116,7 @@ export default function Translation() {
       {/* ── Top Nav ─────────────────────────────────────────────────────────── */}
       <header className="fixed top-0 w-full z-50 bg-[#F8FAFC] dark:bg-slate-900 border-b border-black/5 h-14 flex items-center justify-between px-6">
         <div className="flex items-center gap-3">
-          <Link to="/" className="text-lg font-extrabold tracking-tighter text-blue-900">PharmaLabel</Link>
+          <Link to="/" className="text-lg font-extrabold tracking-tighter text-blue-900">Pharma Label Design</Link>
           <div className="w-[1px] h-5 bg-slate-200 mx-1" />
           <nav className="hidden md:flex items-center gap-1 text-[12px] font-semibold">
             <Link to="/" className="px-3 py-1.5 rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors">Library</Link>
@@ -325,6 +325,13 @@ export default function Translation() {
                   <span className="material-symbols-outlined text-[15px]">check_circle</span>
                   Apply to Editor
                 </button>
+                <button
+                  onClick={() => navigate('/editor')}
+                  className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 border border-slate-300 hover:bg-slate-200 hover:text-slate-800 rounded-lg text-[11px] font-bold shadow-sm transition-all active:scale-95"
+                >
+                  <span className="material-symbols-outlined text-[15px]">arrow_forward</span>
+                  Go to Editor
+                </button>
               </div>
             </div>
 
@@ -420,8 +427,8 @@ export default function Translation() {
                                   translating
                                     ? 'Translating…'
                                     : isReady
-                                    ? 'Click "Translate" to auto-translate, or type manually…'
-                                    : 'Select a language above first…'
+                                      ? 'Click "Translate" to auto-translate, or type manually…'
+                                      : 'Select a language above first…'
                                 }
                                 value={draftTranslations[el.id] || ''}
                                 onChange={e => setDraftTranslations(prev => ({ ...prev, [el.id]: e.target.value }))}

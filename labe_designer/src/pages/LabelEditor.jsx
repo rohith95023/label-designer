@@ -32,8 +32,8 @@ export default function LabelEditor() {
   const jsonInputRef = useRef(null);
   const navigate = useNavigate();
 
-  const [activeTab, setActiveTab]         = useState('elements');
-  const [showFileMenu, setShowFileMenu]   = useState(false);
+  const [activeTab, setActiveTab] = useState('elements');
+  const [showFileMenu, setShowFileMenu] = useState(false);
   const [showValidation, setShowValidation] = useState(false);
   const [validationResult, setValidationResult] = useState({ isValid: true, errors: [] });
 
@@ -42,6 +42,7 @@ export default function LabelEditor() {
   const [pendingFlow, setPendingFlow] = useState(null); // 'new' | 'template'
   const [showSaveAs, setShowSaveAs] = useState(false);
   const [saveAsName, setSaveAsName] = useState('');
+  const [editingElementId, setEditingElementId] = useState(null);
 
   // Show FileNameModal only AFTER hydration is complete and no saved file exists
   useEffect(() => {
@@ -65,12 +66,12 @@ export default function LabelEditor() {
       const key = e.key.toLowerCase();
       const isInput = ['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName);
 
-      if ((e.ctrlKey || e.metaKey) && key === 's') { 
-        e.preventDefault(); 
-        saveFile(); 
+      if ((e.ctrlKey || e.metaKey) && key === 's') {
+        e.preventDefault();
+        saveFile();
         return;
       }
-      
+
       if (isInput) return; // For other shortcuts, respect focus
 
       if ((e.ctrlKey || e.metaKey) && key === 'z' && !e.shiftKey) { e.preventDefault(); undo(); }
@@ -78,7 +79,7 @@ export default function LabelEditor() {
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && key === 'z') { e.preventDefault(); redo(); }
       if ((e.ctrlKey || e.metaKey) && key === 'd' && selectedElementId) { e.preventDefault(); duplicateElement(selectedElementId); }
       if ((e.ctrlKey || e.metaKey) && key === 'p') {
-        setSelectedElementId(null); 
+        setSelectedElementId(null);
         // window.print(); handles correctly by browser
       }
       if (e.key === 'Delete' || e.key === 'Backspace') { if (selectedElementId) deleteElement(selectedElementId); }
@@ -100,7 +101,7 @@ export default function LabelEditor() {
   const handleLabelSizeConfirm = (newW, newH) => {
     const oldW = meta.labelSize?.w || 0;
     const oldH = meta.labelSize?.h || 0;
-    
+
     // Auto-scaling logic "Arranged Perfectly"
     if (elements.length > 0 && oldW > 0 && oldH > 0 && newW > 0 && newH > 0) {
       const sX = newW / oldW;
@@ -123,7 +124,7 @@ export default function LabelEditor() {
       });
 
       setElements(scaled);
-      setTimeout(() => commitUpdate(), 100); 
+      setTimeout(() => commitUpdate(), 100);
     }
 
     setLabelSize(newW, newH);
@@ -209,9 +210,9 @@ export default function LabelEditor() {
   };
 
   // ── Add Element helpers ──────────────────────────────────────────────────────
-  const addTxt  = () => addElement({ type: 'text',    text: 'New Text',         fontSize: 16, fontFamily: 'Inter, sans-serif', fontWeight: '500', color: '#191C1E', width: 160, height: 28 });
-  const addBar  = () => addElement({ type: 'barcode', text: '123456789012',      color: '#191c1e', width: 180, height: 80 });
-  const addQR   = () => addElement({ type: 'qrcode',  text: 'https://example.com', color: '#191c1e', width: 80, height: 80 });
+  const addTxt = () => addElement({ type: 'text', text: 'New Text', fontSize: 16, fontFamily: 'Inter, sans-serif', fontWeight: '500', color: '#191C1E', width: 160, height: 28 });
+  const addBar = () => addElement({ type: 'barcode', text: '123456789012', color: '#191c1e', width: 180, height: 80 });
+  const addQR = () => addElement({ type: 'qrcode', text: 'https://example.com', color: '#191c1e', width: 80, height: 80 });
   const addIcon = (name) => addElement({ type: 'icon', iconName: name, width: 48, height: 48, color: '#191C1E' });
 
   const selectedElement = elements.find(e => e.id === selectedElementId);
@@ -224,7 +225,7 @@ export default function LabelEditor() {
   });
 
   const statusColor = savedStatus === 'saved' ? 'text-green-600' : savedStatus === 'saving' ? 'text-amber-500' : 'text-slate-400';
-  const statusIcon  = savedStatus === 'saved' ? 'check_circle' : savedStatus === 'saving' ? 'sync' : 'edit';
+  const statusIcon = savedStatus === 'saved' ? 'check_circle' : savedStatus === 'saving' ? 'sync' : 'edit';
   const statusLabel = savedStatus === 'saved' ? 'Saved' : savedStatus === 'saving' ? 'Saving…' : 'Unsaved';
 
   return (
@@ -288,13 +289,13 @@ export default function LabelEditor() {
 
       {/* ── Validation Overlay ──────────────────────────────────────────────── */}
       {showValidation && (
-        <div className={`fixed top-20 left-1/2 -translate-x-1/2 z-50 ${validationResult.isValid ? 'bg-green-600' : 'bg-error-container text-on-error-container'} text-white px-6 py-4 rounded-xl shadow-lg flex flex-col items-center gap-2 min-w-[300px] animate-fade-in`}>
+        <div className={`fixed top-20 left-1/2 -translate-x-1/2 z-50 ${validationResult.isValid ? 'bg-green-600 text-white' : 'bg-red-50 text-red-800 border fill-red border-red-200'} px-6 py-4 rounded-xl shadow-lg flex flex-col items-center gap-2 min-w-[300px] animate-fade-in`}>
           <div className="flex items-center gap-2 font-bold uppercase tracking-widest text-sm">
             <span className="material-symbols-outlined">{validationResult.isValid ? 'verified' : 'warning'}</span>
             {validationResult.isValid ? 'Validation Passed' : 'Compliance Issues'}
           </div>
           {!validationResult.isValid && (
-            <ul className="text-xs space-y-1 mt-2 list-disc list-inside bg-white/10 p-3 rounded-lg w-full">
+            <ul className="text-xs space-y-1 mt-2 list-disc list-inside bg-red-500/10 p-3 rounded-lg w-full">
               {validationResult.errors.map((e, i) => <li key={i}>{e}</li>)}
             </ul>
           )}
@@ -305,7 +306,7 @@ export default function LabelEditor() {
       <header className="h-14 bg-[#F8FAFC] dark:bg-slate-900 border-b border-black/5 flex items-center justify-between px-6 shrink-0 z-40">
         {/* Left: File Menu + Title */}
         <div className="flex items-center gap-3">
-          <Link to="/" className="text-lg font-extrabold tracking-tighter text-blue-900 shrink-0">PharmaLabel</Link>
+          <Link to="/" className="text-lg font-extrabold tracking-tighter text-blue-900 shrink-0">Pharma Label Design</Link>
           <div className="w-[1px] h-5 bg-outline-variant/30 mx-1"></div>
 
           {/* File Dropdown */}
@@ -410,7 +411,7 @@ export default function LabelEditor() {
         </div>
 
         <div className="flex items-center gap-2">
-          <button 
+          <button
             onClick={() => setModalStep('labelsize')}
             className="flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-medium text-slate-500 hover:bg-slate-100 hover:text-primary transition-colors"
             title="Edit label size"
@@ -454,13 +455,20 @@ export default function LabelEditor() {
               <div className="animate-fade-in flex flex-col gap-5">
                 <div className="grid grid-cols-2 gap-2">
                   {[
-                    { label: 'Text', icon: 'title',      action: addTxt },
-                    { label: 'Barcode', icon: 'barcode',  action: addBar },
-                    { label: 'QR Code', icon: 'qr_code_2', action: addQR },
+                    { label: 'Text', icon: 'title', action: addTxt, payload: { type: 'text', text: 'New Text', fontSize: 16, fontFamily: 'Inter, sans-serif', fontWeight: '500', color: '#191C1E', width: 160, height: 28 } },
+                    { label: 'Barcode', icon: 'barcode', action: addBar, payload: { type: 'barcode', text: '123456789012', color: '#191c1e', width: 180, height: 80 } },
+                    { label: 'QR Code', icon: 'qr_code_2', action: addQR, payload: { type: 'qrcode', text: 'https://example.com', color: '#191c1e', width: 80, height: 80 } },
                     { label: 'Upload Logo', icon: 'imagesmode', action: () => fileInputRef.current?.click() },
                   ].map(item => (
                     <button key={item.label} onClick={item.action}
-                      className="flex flex-col items-center p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-white/10 shadow-sm hover:border-primary/50 hover:bg-blue-50/60 hover:shadow-md transition-all group">
+                      draggable={!!item.payload}
+                      onDragStart={e => {
+                        if (item.payload) {
+                          e.dataTransfer.setData('application/json', JSON.stringify(item.payload));
+                          e.dataTransfer.effectAllowed = 'copy';
+                        }
+                      }}
+                      className="flex flex-col items-center p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-white/10 shadow-sm hover:border-primary/50 hover:bg-blue-50/60 hover:shadow-md transition-all group lg:active:cursor-grabbing">
                       <span className="material-symbols-outlined text-slate-500 group-hover:text-primary mb-1 text-xl">{item.icon}</span>
                       <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600 group-hover:text-primary">{item.label}</span>
                     </button>
@@ -487,7 +495,12 @@ export default function LabelEditor() {
                     ].map(item => (
                       <div key={item.label}
                         onClick={() => addElement(item.payload)}
-                        className="flex items-center gap-2.5 px-3 py-2 bg-white dark:bg-slate-800 rounded-lg text-[11px] font-bold text-slate-700 dark:text-slate-300 cursor-pointer border border-slate-200 dark:border-white/10 hover:border-primary/40 hover:text-primary hover:bg-blue-50/50 shadow-sm transition-all group">
+                        draggable
+                        onDragStart={e => {
+                          e.dataTransfer.setData('application/json', JSON.stringify(item.payload));
+                          e.dataTransfer.effectAllowed = 'copy';
+                        }}
+                        className="flex items-center gap-2.5 px-3 py-2 bg-white dark:bg-slate-800 rounded-lg text-[11px] font-bold text-slate-700 dark:text-slate-300 cursor-pointer border border-slate-200 dark:border-white/10 hover:border-primary/40 hover:text-primary hover:bg-blue-50/50 shadow-sm transition-all group lg:active:cursor-grabbing">
                         <span className="material-symbols-outlined text-[14px] text-slate-400 group-hover:text-primary shrink-0">{item.icon}</span>
                         {item.label}
                       </div>
@@ -508,7 +521,12 @@ export default function LabelEditor() {
                   <div className="grid gap-2 grid-cols-2">
                     {basicShapes.map(s => (
                       <button key={s.id} onClick={() => addElement(s.payload)}
-                        className="flex flex-col items-center p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-white/10 shadow-sm hover:border-primary/50 hover:bg-blue-50/60 hover:shadow-md transition-all group">
+                        draggable
+                        onDragStart={e => {
+                          e.dataTransfer.setData('application/json', JSON.stringify(s.payload));
+                          e.dataTransfer.effectAllowed = 'copy';
+                        }}
+                        className="flex flex-col items-center p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-white/10 shadow-sm hover:border-primary/50 hover:bg-blue-50/60 hover:shadow-md transition-all group lg:active:cursor-grabbing">
                         <span className="material-symbols-outlined text-slate-500 group-hover:text-primary mb-1 text-xl">{s.render}</span>
                         <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600 group-hover:text-primary">{s.name}</span>
                       </button>
@@ -524,7 +542,12 @@ export default function LabelEditor() {
                   <div className="grid gap-1 grid-cols-5">
                     {allIcons.map((icon, i) => (
                       <button key={i} onClick={() => addIcon(icon)} title={icon}
-                        className="flex items-center justify-center p-2 rounded-lg bg-slate-50 hover:bg-blue-50 hover:text-primary text-slate-400 transition-all aspect-square">
+                        draggable
+                        onDragStart={e => {
+                          e.dataTransfer.setData('application/json', JSON.stringify({ type: 'icon', iconName: icon, width: 48, height: 48, color: '#191C1E' }));
+                          e.dataTransfer.effectAllowed = 'copy';
+                        }}
+                        className="flex items-center justify-center p-2 rounded-lg bg-slate-50 hover:bg-blue-50 hover:text-primary text-slate-400 transition-all aspect-square lg:active:cursor-grabbing">
                         <span className="material-symbols-outlined text-lg">{icon}</span>
                       </button>
                     ))}
@@ -544,11 +567,16 @@ export default function LabelEditor() {
                     </div>
                     <div className="grid grid-cols-4 gap-2">
                       {icons.map((icon, i) => (
-                        <button 
-                          key={i} 
-                          onClick={() => addElement({ type: 'premiumIcon', svg: icon.svg, name: icon.name, width: 60, height: 60 })} 
+                        <button
+                          key={i}
+                          onClick={() => addElement({ type: 'premiumIcon', svg: icon.svg, name: icon.name, width: 60, height: 60 })}
                           title={icon.name}
-                          className="flex flex-col items-center justify-center p-2.5 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-white/10 shadow-sm hover:border-primary/50 hover:bg-blue-50/60 hover:shadow-md transition-all group"
+                          draggable
+                          onDragStart={e => {
+                            e.dataTransfer.setData('application/json', JSON.stringify({ type: 'premiumIcon', svg: icon.svg, name: icon.name, width: 60, height: 60 }));
+                            e.dataTransfer.effectAllowed = 'copy';
+                          }}
+                          className="flex flex-col items-center justify-center p-2.5 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-white/10 shadow-sm hover:border-primary/50 hover:bg-blue-50/60 hover:shadow-md transition-all group lg:active:cursor-grabbing"
                         >
                           <div className="w-8 h-8 mb-1.5 flex items-center justify-center transition-transform group-hover:scale-110" dangerouslySetInnerHTML={{ __html: icon.svg }} />
                           <span className="text-[9px] font-bold uppercase text-slate-400 group-hover:text-primary truncate w-full text-center leading-tight">{icon.name}</span>
@@ -577,7 +605,7 @@ export default function LabelEditor() {
                       </div>
                       {isSelected && (
                         <div className="flex gap-0.5 shrink-0">
-                          {['front','up','down','back'].map(d => (
+                          {['front', 'up', 'down', 'back'].map(d => (
                             <button key={d} onClick={e => { e.stopPropagation(); moveLayer(el.id, d); }}
                               className="p-0.5 rounded hover:bg-blue-100 text-primary">
                               <span className="material-symbols-outlined text-[12px]">
@@ -600,7 +628,39 @@ export default function LabelEditor() {
         <section
           className="flex-1 overflow-auto bg-[#E8EAF0] relative"
           style={{ backgroundImage: 'radial-gradient(circle, #b0b8c8 1px, transparent 1px)', backgroundSize: '20px 20px' }}
-          onClick={() => setSelectedElementId(null)}
+          onClick={() => {
+            setSelectedElementId(null);
+            if (editingElementId) {
+              setEditingElementId(null);
+              commitUpdate();
+            }
+          }}
+          onDragOver={e => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'copy';
+          }}
+          onDrop={e => {
+            e.preventDefault();
+            try {
+              const data = e.dataTransfer.getData('application/json');
+              if (data) {
+                const payload = JSON.parse(data);
+                const rect = artboardRef.current.getBoundingClientRect();
+                const dropX = (e.clientX - rect.left) / zoomLevel;
+                const dropY = (e.clientY - rect.top) / zoomLevel;
+
+                const targetW = payload.width || 120;
+                const targetH = payload.height || 40;
+                const centerOffX = targetW / 2;
+                const centerOffY = targetH / 2;
+
+                const finalPos = clampPos(dropX - centerOffX, dropY - centerOffY, targetW, targetH);
+                addElement({ ...payload, x: Math.round(finalPos.x), y: Math.round(finalPos.y) });
+              }
+            } catch (err) {
+              console.error(err);
+            }
+          }}
         >
           {/* Artboard container — centered, scrollable */}
           <div className="flex items-center justify-center min-h-full p-12">
@@ -609,7 +669,7 @@ export default function LabelEditor() {
               id="pharma-artboard"
               className="bg-white shadow-2xl relative pharma-artboard"
               style={{
-                width:  `${AW}px`,
+                width: `${AW}px`,
                 height: `${AH}px`,
                 transform: `scale(${zoomLevel})`,
                 transformOrigin: 'center top',
@@ -627,7 +687,7 @@ export default function LabelEditor() {
 
               {elements.map(el => {
                 const isSelected = selectedElementId === el.id;
-                const elW = el.width  || 120;
+                const elW = el.width || 120;
                 const elH = el.height || 40;
 
                 return (
@@ -655,25 +715,42 @@ export default function LabelEditor() {
                       updateElement(el.id, { width: newW, height: newH, ...clamped });
                       commitUpdate();
                     }}
-                    onClick={e => { e.stopPropagation(); setSelectedElementId(el.id); }}
+                    onClick={e => {
+                      e.stopPropagation();
+                      if (selectedElementId === el.id && ['text', 'warnings', 'manufacturing', 'dosage', 'storage', 'subtext'].includes(el.type)) {
+                        setEditingElementId(el.id);
+                      } else {
+                        setSelectedElementId(el.id);
+                        if (editingElementId && editingElementId !== el.id) {
+                          setEditingElementId(null);
+                          commitUpdate();
+                        }
+                      }
+                    }}
+                    onDoubleClick={e => {
+                      if (['text', 'warnings', 'manufacturing', 'dosage', 'storage', 'subtext'].includes(el.type)) {
+                        e.stopPropagation();
+                        setEditingElementId(el.id);
+                      }
+                    }}
                   >
-                    <div className="w-full h-full relative select-none" style={{
+                    <div className={`w-full h-full relative ${editingElementId === el.id ? '' : 'select-none'}`} style={{
                       backgroundColor: el.bgColor || 'transparent',
-                      borderWidth:  el.borderWidth ? `${el.borderWidth}px` : 0,
-                      borderColor:  el.borderColor || 'transparent',
-                      borderStyle:  'solid',
+                      borderWidth: el.borderWidth ? `${el.borderWidth}px` : 0,
+                      borderColor: el.borderColor || 'transparent',
+                      borderStyle: 'solid',
                       borderRadius: el.type === 'shape' && el.shapeType === 'circle' ? '50%' : `${el.borderRadius || 0}px`,
-                      fontSize:     el.fontSize ? `${el.fontSize}px` : undefined,
-                      fontFamily:   el.fontFamily || 'Inter, sans-serif',
-                      fontWeight:   el.fontWeight || '400',
-                      fontStyle:    el.fontStyle || 'normal',
+                      fontSize: el.fontSize ? `${el.fontSize}px` : undefined,
+                      fontFamily: el.fontFamily || 'Inter, sans-serif',
+                      fontWeight: el.fontWeight || '400',
+                      fontStyle: el.fontStyle || 'normal',
                       textDecoration: el.textDecoration || 'none',
-                      color:        el.color || '#191c1e',
-                      textAlign:    el.align || 'left',
-                      whiteSpace:   'pre-wrap',
-                      lineHeight:   '1.25',
-                      overflow:     'hidden',
-                      padding:      el.bgColor && el.bgColor !== 'transparent' && el.type !== 'shape' ? '4px 8px' : '0',
+                      color: el.color || '#191c1e',
+                      textAlign: el.align || 'left',
+                      whiteSpace: 'pre-wrap',
+                      lineHeight: '1.25',
+                      overflow: 'hidden',
+                      padding: el.bgColor && el.bgColor !== 'transparent' && el.type !== 'shape' ? '4px 8px' : '0',
                     }}>
                       {el.heading && (
                         <span style={{ display: 'block', fontSize: '8px', fontWeight: '800', fontFamily: 'Inter, sans-serif', textTransform: 'uppercase', color: el.alertColor || '#717783', marginBottom: '2px', letterSpacing: '1.2px' }}>
@@ -683,26 +760,26 @@ export default function LabelEditor() {
 
                       {el.type === 'barcode' ? (
                         <div className="w-full h-full flex items-center justify-center pointer-events-none">
-                          <Barcode 
-                            value={el.text || '123456789012'} 
-                            format="CODE128" 
-                            lineColor={el.color || '#191c1e'} 
-                            background="transparent" 
-                            width={1.2} 
-                            height={Math.max(20, elH - 32)} 
-                            margin={0} 
-                            fontSize={12} 
-                            displayValue={true} 
+                          <Barcode
+                            value={el.text || '123456789012'}
+                            format="CODE128"
+                            lineColor={el.color || '#191c1e'}
+                            background="transparent"
+                            width={1.2}
+                            height={Math.max(20, elH - 32)}
+                            margin={0}
+                            fontSize={12}
+                            displayValue={true}
                           />
                         </div>
                       ) : el.type === 'qrcode' ? (
                         <div className="w-full h-full">
-                          <QRCodeSVG 
-                            value={el.text || 'https://pharma-precision.com/scan'} 
-                            fgColor={el.color || '#191c1e'} 
-                            bgColor="transparent" 
-                            style={{ width: '100%', height: '100%', display: 'block' }} 
-                            level="M" 
+                          <QRCodeSVG
+                            value={el.text || 'https://pharma-precision.com/scan'}
+                            fgColor={el.color || '#191c1e'}
+                            bgColor="transparent"
+                            style={{ width: '100%', height: '100%', display: 'block' }}
+                            level="M"
                           />
                         </div>
                       ) : el.type === 'image' ? (
@@ -713,6 +790,26 @@ export default function LabelEditor() {
                         </div>
                       ) : el.type === 'premiumIcon' ? (
                         <div className="w-full h-full p-1 flex items-center justify-center" dangerouslySetInnerHTML={{ __html: el.svg }} />
+                      ) : editingElementId === el.id ? (
+                        <textarea
+                          autoFocus
+                          className="w-full h-full bg-transparent outline-none resize-none border-none p-0 m-0"
+                          value={el.text || ''}
+                          onChange={e => updateElement(el.id, { text: e.target.value })}
+                          onBlur={() => { setEditingElementId(null); commitUpdate(); }}
+                          onFocus={e => e.target.setSelectionRange(e.target.value.length, e.target.value.length)}
+                          style={{
+                            fontFamily: 'inherit',
+                            fontSize: 'inherit',
+                            fontWeight: 'inherit',
+                            fontStyle: 'inherit',
+                            textDecoration: 'inherit',
+                            color: 'inherit',
+                            textAlign: 'inherit',
+                            lineHeight: 'inherit',
+                            overflow: 'hidden',
+                          }}
+                        />
                       ) : (
                         <span className="block w-full h-full">{el.text}</span>
                       )}
@@ -739,7 +836,7 @@ export default function LabelEditor() {
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-2 mb-3">
-                  {['x','y'].map(axis => (
+                  {['x', 'y'].map(axis => (
                     <div key={axis} className="bg-white border border-slate-200 rounded-lg p-1.5 flex items-center">
                       <span className="text-[9px] font-bold text-slate-400 w-4 pl-1">{axis.toUpperCase()}</span>
                       <input type="number" className="w-full text-[11px] font-mono outline-none text-right bg-transparent" value={Math.round(selectedElement[axis]) || 0} onChange={e => { updateElement(selectedElement.id, { [axis]: parseInt(e.target.value) }); commitUpdate(); }} />
@@ -747,7 +844,7 @@ export default function LabelEditor() {
                   ))}
                 </div>
                 <div className="grid grid-cols-4 gap-1">
-                  {[['front','flip_to_front'],['up','arrow_upward'],['down','arrow_downward'],['back','flip_to_back']].map(([d, icon]) => (
+                  {[['front', 'flip_to_front'], ['up', 'arrow_upward'], ['down', 'arrow_downward'], ['back', 'flip_to_back']].map(([d, icon]) => (
                     <button key={d} onClick={() => moveLayer(selectedElement.id, d)}
                       className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 flex justify-center text-slate-500 transition-colors" title={d}>
                       <span className="material-symbols-outlined text-[13px]">{icon}</span>
@@ -757,10 +854,10 @@ export default function LabelEditor() {
               </div>
 
               {/* Data / Content Block — for all text-bearing types */}
-              {['text','warnings','barcode','qrcode','manufacturing','dosage','storage','subtext'].includes(selectedElement.type) && (
+              {['text', 'warnings', 'barcode', 'qrcode', 'manufacturing', 'dosage', 'storage', 'subtext'].includes(selectedElement.type) && (
                 <div className="p-4 border-b border-black/5">
                   <span className="text-[11px] font-bold uppercase tracking-widest text-slate-500 block mb-2">
-                    {['barcode','qrcode'].includes(selectedElement.type) ? 'Data String' : 'Text Content'}
+                    {['barcode', 'qrcode'].includes(selectedElement.type) ? 'Data String' : 'Text Content'}
                   </span>
                   <textarea
                     className="w-full bg-slate-50 border border-slate-200 text-[12px] py-2 px-2.5 focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none rounded-lg resize-none min-h-[56px]"
@@ -773,7 +870,7 @@ export default function LabelEditor() {
               )}
 
               {/* Typography — only for non-media types */}
-              {!['image','barcode','qrcode','icon'].includes(selectedElement.type) && (
+              {!['image', 'barcode', 'qrcode', 'icon'].includes(selectedElement.type) && (
                 <div className="p-4 border-b border-black/5">
                   <span className="text-[11px] font-bold uppercase tracking-widest text-slate-500 block mb-3">Typography</span>
                   <div className="space-y-3">
@@ -815,8 +912,8 @@ export default function LabelEditor() {
 
                     <div className="flex gap-1 bg-slate-50 p-1 rounded-lg border border-slate-200">
                       {[
-                        ['fontStyle','italic','format_italic', selectedElement.fontStyle === 'italic'],
-                        ['textDecoration','underline','format_underlined', selectedElement.textDecoration === 'underline'],
+                        ['fontStyle', 'italic', 'format_italic', selectedElement.fontStyle === 'italic'],
+                        ['textDecoration', 'underline', 'format_underlined', selectedElement.textDecoration === 'underline'],
                       ].map(([prop, val, icon, active]) => (
                         <button key={prop} onClick={() => { updateElement(selectedElement.id, { [prop]: active ? (prop === 'fontStyle' ? 'normal' : 'none') : val }); commitUpdate(); }}
                           className={`flex-1 p-1.5 rounded text-center transition-colors ${active ? 'bg-primary text-white' : 'hover:bg-slate-200 text-slate-500'}`}>
@@ -824,7 +921,7 @@ export default function LabelEditor() {
                         </button>
                       ))}
                       <div className="w-[1px] bg-slate-200 mx-0.5"></div>
-                      {['left','center','right'].map(a => (
+                      {['left', 'center', 'right'].map(a => (
                         <button key={a} onClick={() => { updateElement(selectedElement.id, { align: a }); commitUpdate(); }}
                           className={`flex-1 p-1.5 rounded text-center transition-colors ${selectedElement.align === a ? 'bg-blue-100 text-primary' : 'hover:bg-slate-200 text-slate-500'}`}>
                           <span className="material-symbols-outlined text-[14px]">format_align_{a}</span>
@@ -873,7 +970,7 @@ export default function LabelEditor() {
                   </div>
 
                   {/* Background (non-shape, non-barcode) */}
-                  {!['shape','barcode','qrcode','icon'].includes(selectedElement.type) && (
+                  {!['shape', 'barcode', 'qrcode', 'icon'].includes(selectedElement.type) && (
                     <div>
                       <label className="text-[8px] font-bold uppercase text-slate-400 mb-1.5 flex justify-between">
                         <span>Background</span>
