@@ -1,0 +1,78 @@
+import React, { useState } from 'react';
+
+export default function FileNameModal({ onConfirm, onCancel, onOpen }) {
+  const [name, setName] = useState('');
+  const valid = name.trim().length >= 3;
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (valid) onConfirm(name.trim());
+  };
+
+  return (
+    <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-2xl w-[420px] p-8 flex flex-col gap-6 animate-fade-in">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-primary-fixed/30 flex items-center justify-center">
+            <span className="material-symbols-outlined text-primary text-xl">drive_file_rename_outline</span>
+          </div>
+          <div>
+            <h2 className="text-[15px] font-bold text-slate-800 tracking-tight leading-none mb-1">Name Your Label</h2>
+            <p className="text-[11px] text-slate-500">Give your project a recognizable name.</p>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <div>
+            <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1.5">
+              Project Name <span className="text-error">*</span>
+            </label>
+            <input
+              autoFocus
+              type="text"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              placeholder="e.g. Cough Syrup 100ml Label"
+              className="w-full border border-outline-variant/40 rounded-lg px-4 py-2.5 text-sm text-slate-800 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+            />
+            {name.length > 0 && !valid && (
+              <p className="text-error text-[10px] mt-1">Name must be at least 3 characters.</p>
+            )}
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            {onCancel && (
+              <button
+                type="button"
+                onClick={onCancel}
+                className="flex-1 py-2.5 rounded-xl border border-outline-variant/40 text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors"
+              >
+                Cancel
+              </button>
+            )}
+            <button
+              type="submit"
+              disabled={!valid}
+              className="flex-1 py-2.5 rounded-xl btn-gradient text-white text-sm font-bold disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-95"
+            >
+              Continue →
+            </button>
+          </div>
+        </form>
+
+        {onOpen && (
+          <div className="pt-2 border-t border-outline-variant/15 flex flex-col items-center gap-3">
+            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">or</p>
+            <button
+              onClick={onOpen}
+              className="flex items-center gap-2 text-primary hover:text-primary-container text-xs font-bold transition-colors"
+            >
+              <span className="material-symbols-outlined text-[16px]">file_open</span>
+              Open saved design from your PC
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
