@@ -18,7 +18,6 @@ export default function FileNameModal({ onConfirm, onCancel, onOpen, recentFiles
           </div>
           <div>
             <h2 className="text-[15px] font-bold text-slate-800 tracking-tight leading-none mb-1">Create or Open Label</h2>
-            <p className="text-[11px] text-slate-500">Begin a new project or resume a saved one.</p>
           </div>
         </div>
 
@@ -48,7 +47,7 @@ export default function FileNameModal({ onConfirm, onCancel, onOpen, recentFiles
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>
             <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1.5">
-              Project Name <span className="text-error">*</span>
+              Label Name <span className="text-error">*</span>
             </label>
             <input
               autoFocus

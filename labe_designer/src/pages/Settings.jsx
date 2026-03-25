@@ -11,6 +11,7 @@ export default function Settings() {
   const [profileName, setProfileName] = useState(settings.profileName || 'Pharma Designer');
   const [confirmClear, setConfirmClear] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const handleSaveProfile = () => {
     updateSettings({ profileName });
@@ -93,8 +94,14 @@ export default function Settings() {
   return (
     <div className="bg-background text-on-surface min-h-screen">
       {/* TopNavBar */}
-      <header className="fixed top-0 w-full z-50 bg-[#F8FAFC]/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-black/5 dark:border-white/10 h-16 flex items-center justify-between px-8 relative">
-        <div className="flex items-center">
+      <header className="fixed top-0 w-full z-50 bg-[#F8FAFC]/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-black/5 dark:border-white/10 h-16 flex items-center justify-between px-8">
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            className="p-2 -ml-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+          >
+            <span className="material-symbols-outlined text-2xl">menu</span>
+          </button>
           <span className="text-xl font-bold tracking-tighter text-blue-900 dark:text-blue-100">Pharma Label Design</span>
         </div>
         
@@ -121,28 +128,26 @@ export default function Settings() {
       </header>
 
       <div className="flex pt-16 h-screen overflow-hidden">
-        {/* Sidebar */}
-        <aside className="hidden lg:flex flex-col gap-4 p-6 h-full w-64 bg-[#F8FAFC] dark:bg-slate-950 shrink-0 border-r border-outline-variant/10">
-
-          <nav className="flex flex-col gap-2">
-            <Link to="/" className="flex items-center gap-3 px-4 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900 hover:translate-x-1 transition-transform duration-200 rounded-lg">
-              <span className="material-symbols-outlined text-xl">dashboard</span>
-              <span className="font-inter text-xs uppercase tracking-widest font-semibold">Dashboard</span>
+        {/* SideNavBar */}
+        <aside className={`hidden lg:flex flex-col gap-8 p-6 h-full bg-white dark:bg-slate-950 shrink-0 border-r border-slate-100 overflow-y-hidden transition-all duration-300 ${sidebarCollapsed ? 'w-24' : 'w-72'}`}>
+          <nav className="flex flex-col gap-3">
+            <Link to="/" className={`flex items-center gap-4 py-4 text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-all duration-200 rounded-[20px] ${sidebarCollapsed ? 'justify-center px-0' : 'px-5'}`}>
+              <span className="material-symbols-outlined text-2xl">grid_view</span>
+              {!sidebarCollapsed && <span className="font-semibold text-[15px] tracking-tight">Dashboard</span>}
             </Link>
-            <Link to="/assets" className="flex items-center gap-3 px-4 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900 hover:translate-x-1 transition-transform duration-200 rounded-lg">
-              <span className="material-symbols-outlined text-xl">folder_open</span>
-              <span className="font-inter text-xs uppercase tracking-widest font-semibold">Assets</span>
+            <Link to="/assets" className={`flex items-center gap-4 py-4 text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-all duration-200 rounded-[20px] ${sidebarCollapsed ? 'justify-center px-0' : 'px-5'}`}>
+              <span className="material-symbols-outlined text-2xl">business</span>
+              {!sidebarCollapsed && <span className="font-semibold text-[15px] tracking-tight">Template Library</span>}
             </Link>
-            <Link to="/history" className="flex items-center gap-3 px-4 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900 hover:translate-x-1 transition-transform duration-200 rounded-lg">
-              <span className="material-symbols-outlined text-xl">history</span>
-              <span className="font-inter text-xs uppercase tracking-widest font-semibold">History</span>
+            <Link to="/history" className={`flex items-center gap-4 py-4 text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-all duration-200 rounded-[20px] ${sidebarCollapsed ? 'justify-center px-0' : 'px-5'}`}>
+              <span className="material-symbols-outlined text-2xl">history</span>
+              {!sidebarCollapsed && <span className="font-semibold text-[15px] tracking-tight">History</span>}
             </Link>
-            <Link to="/settings" className="flex items-center gap-3 px-4 py-3 bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-400 shadow-sm rounded-lg hover:translate-x-1 transition-transform duration-200">
-              <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>settings</span>
-              <span className="font-inter text-xs uppercase tracking-widest font-semibold">Settings</span>
+            <Link to="/settings" className={`flex items-center gap-4 py-4 transition-all duration-300 rounded-[20px] ${sidebarCollapsed ? 'justify-center px-0' : 'px-5 bg-blue-50/80 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 shadow-sm border border-blue-100 dark:border-blue-900/50'}`}>
+              <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>settings</span>
+              {!sidebarCollapsed && <span className="font-bold text-[15px] tracking-tight">Settings</span>}
             </Link>
           </nav>
-
         </aside>
 
         {/* Main Content */}
