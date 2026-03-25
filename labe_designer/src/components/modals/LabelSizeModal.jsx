@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { LABEL_PRESETS } from '../../context/LabelContext';
 
-export default function LabelSizeModal({ onConfirm, onCancel, onSkip }) {
-  const [selected, setSelected] = useState('bottle');
-  const [customW, setCustomW] = useState(150);
-  const [customH, setCustomH] = useState(80);
-
+export default function LabelSizeModal({ onConfirm, onCancel, onSkip, currentSize }) {
   const MM_TO_PX = 3.7795275591;
+  const initialPreset = LABEL_PRESETS.find(p => p.w === currentSize?.w && p.h === currentSize?.h)?.id || 'custom';
+
+  const [selected, setSelected] = useState(initialPreset);
+  const [customW, setCustomW] = useState(currentSize ? Math.round(currentSize.w / MM_TO_PX) : 150);
+  const [customH, setCustomH] = useState(currentSize ? Math.round(currentSize.h / MM_TO_PX) : 80);
+
 
   const handleConfirm = () => {
     if (selected === 'custom') {

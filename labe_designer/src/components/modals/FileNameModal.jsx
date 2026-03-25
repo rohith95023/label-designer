@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-export default function FileNameModal({ onConfirm, onCancel, onOpen }) {
+export default function FileNameModal({ onConfirm, onCancel, onOpen, recentFiles, onSelectRecent }) {
   const [name, setName] = useState('');
   const valid = name.trim().length >= 3;
 
@@ -17,10 +17,33 @@ export default function FileNameModal({ onConfirm, onCancel, onOpen }) {
             <span className="material-symbols-outlined text-primary text-xl">drive_file_rename_outline</span>
           </div>
           <div>
-            <h2 className="text-[15px] font-bold text-slate-800 tracking-tight leading-none mb-1">Name Your Label</h2>
-            <p className="text-[11px] text-slate-500">Give your project a recognizable name.</p>
+            <h2 className="text-[15px] font-bold text-slate-800 tracking-tight leading-none mb-1">Create or Open Label</h2>
+            <p className="text-[11px] text-slate-500">Begin a new project or resume a saved one.</p>
           </div>
         </div>
+
+        {recentFiles && recentFiles.length > 0 && (
+          <div className="flex flex-col gap-2">
+            <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Recent Labels</p>
+            <div className="flex flex-col gap-1.5 max-h-32 overflow-y-auto scrollbar-hide pr-1">
+              {recentFiles.slice(-3).reverse().map(f => (
+                <button
+                  key={f.fileId}
+                  onClick={() => onSelectRecent(f.fileId)}
+                  className="flex items-center justify-between p-2.5 rounded-xl border border-outline-variant/10 bg-slate-50 hover:bg-primary-fixed/20 hover:border-primary transition-all text-left"
+                >
+                  <div className="flex items-center gap-2 overflow-hidden">
+                    <span className="material-symbols-outlined text-sm text-slate-400">history</span>
+                    <span className="text-xs font-bold text-slate-700 truncate">{f.fileName || 'Untitled'}</span>
+                  </div>
+                  <span className="text-[9px] text-slate-400 font-medium">
+                    {new Date(f.updatedAt || Date.now()).toLocaleDateString()}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>

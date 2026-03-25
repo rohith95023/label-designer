@@ -50,15 +50,21 @@ const readFile = (id) => {
   }
 };
 
-const writeFile = (id, meta, elements) => {
+const writeFile = (id, meta, elements, activeTemplate) => {
   try {
-    localStorage.setItem(fileKey(id), JSON.stringify({ meta, elements, savedAt: Date.now() }));
+    localStorage.setItem(fileKey(id), JSON.stringify({ 
+      meta, 
+      elements, 
+      activeTemplate, 
+      savedAt: Date.now() 
+    }));
   } catch {}
 };
 
 // ─── Provider ─────────────────────────────────────────────────────────────────
 export const LabelProvider = ({ children }) => {
   const [templates]            = useState(generatedTemplates);
+  const [activeTemplate, setActiveTemplate] = useState(null);
   const [meta,     setMeta]    = useState(DEFAULT_META);
   const [elements, setElements] = useState([]);
   const [selectedElementId, setSelectedElementId] = useState(null);
@@ -86,6 +92,7 @@ export const LabelProvider = ({ children }) => {
     if (!data || data === 'CORRUPTED') { setHydrated(true); return; }
     setMeta(data.meta);
     setElements(data.elements);
+    setActiveTemplate(data.activeTemplate || null);
     setHistory([data.elements]);
     setHistoryIndex(0);
     setSavedStatus('saved');
@@ -99,14 +106,14 @@ export const LabelProvider = ({ children }) => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       setSavedStatus('saving');
-      writeFile(meta.fileId, meta, elements);
+      writeFile(meta.fileId, meta, elements, activeTemplate);
       // Update index
       const idx = getIndex().filter(f => f.fileId !== meta.fileId);
       idx.push({ fileId: meta.fileId, fileName: meta.fileName, updatedAt: Date.now() });
       setIndex(idx);
       setSavedStatus('saved');
     }, 800);
-  }, [elements, meta]);
+  }, [elements, meta, activeTemplate]);
 
   // ── History ──
   const saveToHistory = useCallback((newEls) => {
@@ -141,6 +148,7 @@ export const LabelProvider = ({ children }) => {
     const id = uuidv4();
     const newMeta = { fileId: id, fileName: null, labelSize: { w: 600, h: 400 } };
     setMeta(newMeta);
+    setActiveTemplate(null);
     setElements([]);
     setHistory([[]]);
     setHistoryIndex(0);
@@ -163,7 +171,7 @@ export const LabelProvider = ({ children }) => {
   const saveFile = () => {
     if (!meta.fileId) return;
     setSavedStatus('saving');
-    writeFile(meta.fileId, meta, elements);
+    writeFile(meta.fileId, meta, elements, activeTemplate);
     const idx = getIndex().filter(f => f.fileId !== meta.fileId);
     idx.push({ fileId: meta.fileId, fileName: meta.fileName, updatedAt: Date.now() });
     setIndex(idx);
@@ -174,7 +182,7 @@ export const LabelProvider = ({ children }) => {
   const saveFileAs = (newName) => {
     const newId = uuidv4();
     const newMeta = { ...meta, fileId: newId, fileName: newName.trim() };
-    writeFile(newId, newMeta, elements);
+    writeFile(newId, newMeta, elements, activeTemplate);
     const idx = getIndex();
     idx.push({ fileId: newId, fileName: newMeta.fileName, updatedAt: Date.now() });
     setIndex(idx);
@@ -247,6 +255,7 @@ export const LabelProvider = ({ children }) => {
     }
 
     setMeta({ fileId: id, fileName: null, labelSize: { w, h } });
+    setActiveTemplate(template);
     setElements(enriched);
     setHistory([enriched]);
     setHistoryIndex(0);
@@ -320,6 +329,7 @@ export const LabelProvider = ({ children }) => {
 
   const value = {
     templates,
+    activeTemplate, setActiveTemplate,
     meta, setMeta,
     elements, setElements,
     selectedElementId, setSelectedElementId,

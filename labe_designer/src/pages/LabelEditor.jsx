@@ -19,13 +19,14 @@ export default function LabelEditor() {
     undo, redo, historyIndex, historyLength,
     savedStatus, toast,
     validateLabel,
-    saveFile, saveFileAs, openFileFromJSON, exportJSON,
+    saveFile, saveFileAs, openFileById, openFileFromJSON, exportJSON, getAllFiles,
     hydrated,
   } = useLabel();
 
   const artboardRef = useRef(null);
   const fileInputRef = useRef(null);
   const jsonInputRef = useRef(null);
+  const navigate = useNavigate();
 
   const [activeTab, setActiveTab]         = useState('elements');
   const [showFileMenu, setShowFileMenu]   = useState(false);
@@ -93,11 +94,11 @@ export default function LabelEditor() {
   };
 
   const handleLabelSizeConfirm = (newW, newH) => {
-    const oldW = meta.labelSize.w;
-    const oldH = meta.labelSize.h;
+    const oldW = meta.labelSize?.w || 0;
+    const oldH = meta.labelSize?.h || 0;
     
     // Auto-scaling logic "Arranged Perfectly"
-    if (elements.length > 0 && oldW > 0 && oldH > 0) {
+    if (elements.length > 0 && oldW > 0 && oldH > 0 && newW > 0 && newH > 0) {
       const sX = newW / oldW;
       const sY = newH / oldH;
       const sMin = Math.min(sX, sY);
@@ -112,7 +113,7 @@ export default function LabelEditor() {
         };
         // Scale fonts if present
         if (el.fontSize) {
-          up.fontSize = Math.max(6, Math.round(el.fontSize * sMin));
+          up.fontSize = Math.max(8, Math.round(el.fontSize * sMin)); // Min font 8px
         }
         return up;
       });
@@ -229,8 +230,17 @@ export default function LabelEditor() {
       {modalStep === 'filename' && (
         <FileNameModal
           onConfirm={handleFileNameConfirm}
-          onCancel={pendingFlow === 'new' ? () => { setModalStep('none'); setPendingFlow(null); } : undefined}
+          onCancel={() => {
+            if (pendingFlow === 'new') {
+              setModalStep('none');
+              setPendingFlow(null);
+            } else {
+              navigate('/');
+            }
+          }}
           onOpen={() => jsonInputRef.current?.click()}
+          recentFiles={getAllFiles()}
+          onSelectRecent={(id) => { openFileById(id); setModalStep('none'); }}
         />
       )}
       {modalStep === 'labelsize' && (
@@ -238,6 +248,7 @@ export default function LabelEditor() {
           onConfirm={handleLabelSizeConfirm}
           onCancel={() => setModalStep('filename')}
           onSkip={() => { setModalStep('none'); setPendingFlow(null); }}
+          currentSize={meta.labelSize}
         />
       )}
 
