@@ -246,9 +246,10 @@ export default function LabelEditor() {
       {modalStep === 'labelsize' && (
         <LabelSizeModal
           onConfirm={handleLabelSizeConfirm}
-          onCancel={() => setModalStep('filename')}
-          onSkip={() => { setModalStep('none'); setPendingFlow(null); }}
+          onCancel={() => setModalStep('none')}
+          onSkip={pendingFlow ? () => { setModalStep('none'); setPendingFlow(null); } : undefined}
           currentSize={meta.labelSize}
+          isEditMode={!pendingFlow}
         />
       )}
 
@@ -394,8 +395,16 @@ export default function LabelEditor() {
           </button>
         </div>
 
-        <div className="text-[10px] font-mono text-slate-400">
-          Artboard: {AW}×{AH}px
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={() => setModalStep('labelsize')}
+            className="flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-medium text-slate-500 hover:bg-slate-100 hover:text-primary transition-colors"
+            title="Edit label size"
+          >
+            <span className="material-symbols-outlined text-[14px]">aspect_ratio</span>
+            <span className="font-mono">{AW}×{AH}px</span>
+            <span className="material-symbols-outlined text-[12px]">edit</span>
+          </button>
         </div>
 
         {selectedElementId && (
@@ -453,12 +462,13 @@ export default function LabelEditor() {
                       { label: '+ Brand Name', payload: { type: 'text', subtype: 'brand', text: 'BRAND NAME', fontSize: 22, fontFamily: 'Inter, sans-serif', fontWeight: '800', color: '#0a2540', width: 200, height: 32 } },
                       { label: 'Composition Block', payload: { type: 'text', heading: 'Composition', text: 'Active Ingredient 250mg\nExcipients q.s.', fontSize: 10, fontFamily: 'Inter, sans-serif', fontWeight: '400', color: '#191C1E', width: 220, height: 48 } },
                       { label: 'Mfg & Licensing', payload: { type: 'text', heading: 'Manufacturing', text: 'Mfg. by: \nLic. No.: ', fontSize: 10, fontFamily: 'Inter, sans-serif', fontWeight: '400', color: '#191C1E', width: 220, height: 44 } },
-                      { label: 'Batch & Expiry Stamp', payload: { type: 'text', heading: 'Batch / Expiry', text: 'B.No: \nMfg: \nExp: ', fontSize: 11, fontFamily: 'Roboto, sans-serif', fontWeight: '700', color: '#191C1E', width: 160, height: 52 } },
+                      { label: 'Batch & Expiry Stamp', payload: { type: 'text', heading: 'Batch / Expiry', text: 'B.No: \nMfg: \nExp: ', fontSize: 11, fontFamily: 'Roboto, sans-serif', fontWeight: '700', color: '#191C1E', width: 160, height: 48 } },
                       { label: 'Schedule H Warning', payload: { type: 'warnings', heading: 'Warning', alertColor: '#ba1a1a', text: 'To be sold by retail on the prescription of a Registered Medical Practitioner only.', fontSize: 9, fontFamily: 'Inter, sans-serif', fontWeight: '600', color: '#191C1E', width: 220, height: 40 } },
                       { label: 'Dosage Instructions', payload: { type: 'text', heading: 'Dosage', text: 'As directed by physician.', fontSize: 10, fontFamily: 'Inter, sans-serif', fontWeight: '500', color: '#191C1E', width: 200, height: 36 } },
                       { label: 'Storage Conditions', payload: { type: 'text', heading: 'Storage', text: 'Store below 30°C. Keep dry.', fontSize: 10, fontFamily: 'Inter, sans-serif', fontWeight: '400', color: '#191C1E', width: 200, height: 36 } },
                       { label: 'Net Contents', payload: { type: 'text', heading: 'Net Content', text: '100 mL / 10 Tablets', fontSize: 12, fontFamily: 'Inter, sans-serif', fontWeight: '600', color: '#191C1E', width: 160, height: 28 } },
                     ].map(item => (
+
                       <div key={item.label}
                         onClick={() => addElement(item.payload)}
                         className="px-3 py-2 bg-slate-50 rounded-lg text-[10px] font-semibold text-slate-600 cursor-pointer border border-transparent hover:border-primary/30 hover:text-primary hover:bg-blue-50/50 transition-all">

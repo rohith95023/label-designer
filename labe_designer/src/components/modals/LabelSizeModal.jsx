@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { LABEL_PRESETS } from '../../context/LabelContext';
 
-export default function LabelSizeModal({ onConfirm, onCancel, onSkip, currentSize }) {
+export default function LabelSizeModal({ onConfirm, onCancel, onSkip, currentSize, isEditMode = false }) {
   const MM_TO_PX = 3.7795275591;
   const initialPreset = LABEL_PRESETS.find(p => p.w === currentSize?.w && p.h === currentSize?.h)?.id || 'custom';
 
@@ -29,8 +29,8 @@ export default function LabelSizeModal({ onConfirm, onCancel, onSkip, currentSiz
             <span className="material-symbols-outlined text-primary text-xl">aspect_ratio</span>
           </div>
           <div>
-            <h2 className="text-[15px] font-bold text-slate-800 tracking-tight leading-none mb-1">Choose Label Size</h2>
-            <p className="text-[11px] text-slate-500">Sets the artboard area for your design.</p>
+            <h2 className="text-[15px] font-bold text-slate-800 tracking-tight leading-none mb-1">{isEditMode ? 'Edit Label Size' : 'Choose Label Size'}</h2>
+            <p className="text-[11px] text-slate-500">{isEditMode ? 'Resize the artboard area for your design.' : 'Sets the artboard area for your design.'}</p>
           </div>
         </div>
 
@@ -102,11 +102,11 @@ export default function LabelSizeModal({ onConfirm, onCancel, onSkip, currentSiz
               onClick={handleConfirm}
               className="flex-1 py-2.5 rounded-xl btn-gradient text-white text-sm font-bold active:scale-95 transition-all"
             >
-              Set New Size →
+              {isEditMode ? 'Apply Size' : 'Set New Size →'}
             </button>
           </div>
 
-          {onSkip && (
+          {onSkip && !isEditMode && (
             <button
               onClick={onSkip}
               className="w-full py-2 text-[10px] font-bold text-slate-400 hover:text-primary transition-colors uppercase tracking-widest flex items-center justify-center gap-1.5"
