@@ -6,13 +6,13 @@ export default function LabelSizeModal({ onConfirm, onCancel, onSkip, currentSiz
   const initialPreset = LABEL_PRESETS.find(p => p.w === currentSize?.w && p.h === currentSize?.h)?.id || 'custom';
 
   const [selected, setSelected] = useState(initialPreset);
-  const [customW, setCustomW] = useState(currentSize ? Math.round(currentSize.w / MM_TO_PX) : 150);
-  const [customH, setCustomH] = useState(currentSize ? Math.round(currentSize.h / MM_TO_PX) : 80);
+  const [customW, setCustomW] = useState(currentSize ? Math.round(currentSize.w) : 600);
+  const [customH, setCustomH] = useState(currentSize ? Math.round(currentSize.h) : 400);
 
 
   const handleConfirm = () => {
     if (selected === 'custom') {
-      onConfirm(Math.round(customW * MM_TO_PX), Math.round(customH * MM_TO_PX));
+      onConfirm(customW, customH);
     } else {
       const preset = LABEL_PRESETS.find(p => p.id === selected);
       onConfirm(preset.w, preset.h);
@@ -46,7 +46,9 @@ export default function LabelSizeModal({ onConfirm, onCancel, onSkip, currentSiz
               }`}
             >
               <p className="text-[11px] font-bold">{p.name}</p>
-              {p.id !== 'custom' && (
+              {p.id === 'custom' ? (
+                <p className="text-[9px] text-slate-400 mt-0.5">{customW}×{customH}px</p>
+              ) : (
                 <p className="text-[9px] text-slate-400 mt-0.5">{p.w}×{p.h}px</p>
               )}
             </button>
@@ -56,9 +58,9 @@ export default function LabelSizeModal({ onConfirm, onCancel, onSkip, currentSiz
         {selected === 'custom' && (
           <div className="flex items-center gap-3 p-4 bg-surface-container-low rounded-xl border border-outline-variant/20">
             <div className="flex-1">
-              <label className="block text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-1">Width (mm)</label>
+              <label className="block text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-1">Width (px)</label>
               <input
-                type="number" min="20" max="500"
+                type="number" min="50" max="2500"
                 value={customW}
                 onChange={e => setCustomW(parseInt(e.target.value))}
                 className="w-full border border-outline-variant/40 rounded-lg px-3 py-2 text-sm text-slate-800 focus:border-primary outline-none"
@@ -66,9 +68,9 @@ export default function LabelSizeModal({ onConfirm, onCancel, onSkip, currentSiz
             </div>
             <span className="text-slate-400 font-bold mt-4">×</span>
             <div className="flex-1">
-              <label className="block text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-1">Height (mm)</label>
+              <label className="block text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-1">Height (px)</label>
               <input
-                type="number" min="20" max="500"
+                type="number" min="50" max="2500"
                 value={customH}
                 onChange={e => setCustomH(parseInt(e.target.value))}
                 className="w-full border border-outline-variant/40 rounded-lg px-3 py-2 text-sm text-slate-800 focus:border-primary outline-none"

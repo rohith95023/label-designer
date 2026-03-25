@@ -23,6 +23,19 @@ export const LABEL_PRESETS = [
 ];
 
 const DEFAULT_META = { fileId: null, fileName: null, labelSize: { w: 600, h: 400 } };
+const SETTINGS_KEY = 'plabel_settings';
+const LOGS_KEY = 'plabel_logs';
+const fileHistoryKey = (id) => `plabel_history_${id}`;
+
+export const DEFAULT_SETTINGS = {
+  profileName: 'Pharma Designer',
+  defaultSize: 'custom',
+  gridEnabled: true,
+  units: 'mm',
+  defaultLanguage: 'en',
+  autoTranslate: false,
+  fdaValidation: true,
+};
 
 // ─── LocalStorage I/O ─────────────────────────────────────────────────────────
 const getIndex = () => {
@@ -61,6 +74,37 @@ const writeFile = (id, meta, elements, activeTemplate) => {
   } catch {}
 };
 
+export const getLogs = () => {
+  try { return JSON.parse(localStorage.getItem(LOGS_KEY) || '[]'); } catch { return []; }
+};
+export const addActivityLog = (action, fileId, fileName) => {
+  try {
+    const logs = getLogs();
+    logs.unshift({ id: uuidv4(), action, fileId, fileName, time: Date.now() });
+    if (logs.length > 200) logs.length = 200;
+    localStorage.setItem(LOGS_KEY, JSON.stringify(logs));
+  } catch {}
+};
+
+export const getFileHistory = (fileId) => {
+  try { return JSON.parse(localStorage.getItem(fileHistoryKey(fileId)) || '[]'); } catch { return []; }
+};
+const addFileSnapshot = (fileId, elements, actionName = 'Auto-saved') => {
+  try {
+    const hist = getFileHistory(fileId);
+    hist.unshift({ id: uuidv4(), time: Date.now(), elements, action: actionName });
+    if (hist.length > 50) hist.length = 50;
+    localStorage.setItem(fileHistoryKey(fileId), JSON.stringify(hist));
+  } catch {}
+};
+
+const loadSettings = () => {
+  try { return { ...DEFAULT_SETTINGS, ...JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}') }; } catch { return DEFAULT_SETTINGS; }
+};
+export const saveSettings = (s) => {
+  try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(s)); } catch {}
+};
+
 // ─── Provider ─────────────────────────────────────────────────────────────────
 export const LabelProvider = ({ children }) => {
   const [templates]            = useState(generatedTemplates);
@@ -74,6 +118,15 @@ export const LabelProvider = ({ children }) => {
   const [savedStatus, setSavedStatus]   = useState('saved'); // 'saved'|'saving'|'unsaved'
   const [toast, setToast]               = useState(null);     // { msg, type }
   const [hydrated, setHydrated]         = useState(false);    // true after localStorage restore
+  const [settings, _setSettings]        = useState(loadSettings());
+
+  const updateSettings = useCallback((updates) => {
+    _setSettings(prev => {
+      const next = { ...prev, ...updates };
+      saveSettings(next);
+      return next;
+    });
+  }, []);
 
   const debounceRef = useRef(null);
 
@@ -107,6 +160,7 @@ export const LabelProvider = ({ children }) => {
     debounceRef.current = setTimeout(() => {
       setSavedStatus('saving');
       writeFile(meta.fileId, meta, elements, activeTemplate);
+      addFileSnapshot(meta.fileId, elements, 'Auto-saved');
       // Update index
       const idx = getIndex().filter(f => f.fileId !== meta.fileId);
       idx.push({ fileId: meta.fileId, fileName: meta.fileName, updatedAt: Date.now() });
@@ -145,8 +199,7 @@ export const LabelProvider = ({ children }) => {
 
   // ── File Operations ──
   const newFile = () => {
-    const id = uuidv4();
-    const newMeta = { fileId: id, fileName: null, labelSize: { w: 600, h: 400 } };
+    const newMeta = { fileId: null, fileName: null, labelSize: { w: 600, h: 400 } };
     setMeta(newMeta);
     setActiveTemplate(null);
     setElements([]);
@@ -159,11 +212,24 @@ export const LabelProvider = ({ children }) => {
 
   const setFileName = (name) => {
     const trimmed = name.trim();
-    setMeta(m => ({ 
-      ...m, 
-      fileName: trimmed,
-      fileId: m.fileId || uuidv4() 
-    }));
+    setMeta(m => {
+      const isNew = !m.fileId;
+      const newId = m.fileId || uuidv4();
+      
+      if (isNew) {
+        if (activeTemplate) {
+          addActivityLog('Started from template', newId, activeTemplate.name);
+        } else {
+          addActivityLog('Created new label', newId, trimmed);
+        }
+      }
+      
+      return { 
+        ...m, 
+        fileName: trimmed,
+        fileId: newId 
+      };
+    });
   };
 
   const setLabelSize = (w, h) => setMeta(m => ({ ...m, labelSize: { w, h } }));
@@ -172,6 +238,7 @@ export const LabelProvider = ({ children }) => {
     if (!meta.fileId) return;
     setSavedStatus('saving');
     writeFile(meta.fileId, meta, elements, activeTemplate);
+    addFileSnapshot(meta.fileId, elements, 'Manual Save');
     const idx = getIndex().filter(f => f.fileId !== meta.fileId);
     idx.push({ fileId: meta.fileId, fileName: meta.fileName, updatedAt: Date.now() });
     setIndex(idx);
@@ -183,11 +250,13 @@ export const LabelProvider = ({ children }) => {
     const newId = uuidv4();
     const newMeta = { ...meta, fileId: newId, fileName: newName.trim() };
     writeFile(newId, newMeta, elements, activeTemplate);
+    addFileSnapshot(newId, elements, 'Created (Save As)');
     const idx = getIndex();
     idx.push({ fileId: newId, fileName: newMeta.fileName, updatedAt: Date.now() });
     setIndex(idx);
     setMeta(newMeta);
     setSavedStatus('saved');
+    addActivityLog('Duplicated file as', newId, newMeta.fileName);
     showToast(`Saved as "${newName}" ✓`, 'success');
   };
 
@@ -201,6 +270,7 @@ export const LabelProvider = ({ children }) => {
     setHistoryIndex(0);
     setSelectedElementId(null);
     setSavedStatus('saved');
+    addActivityLog('Opened file', id, data.meta.fileName);
   };
 
   const openFileFromJSON = (jsonStr) => {
@@ -224,14 +294,17 @@ export const LabelProvider = ({ children }) => {
     a.href = url;
     a.download = `${meta.fileName || 'label'}.json`;
     a.click();
+    addActivityLog('Exported JSON', meta.fileId, meta.fileName);
+
+    let exports = 0;
+    try { exports = parseInt(localStorage.getItem('plabel_total_exports') || '0', 10); } catch {}
+    localStorage.setItem('plabel_total_exports', (exports + 1).toString());
   };
 
   const getAllFiles = () => getIndex();
 
   // ── Template Loader ──
   const loadTemplate = (template) => {
-    // Generates a new fileId for this template session
-    const id = uuidv4();
     const enriched = (template.elements || []).map((el, i) => ({ ...el, zIndex: el.zIndex || (i + 10) }));
 
     const MM_TO_PX = 3.7795275591;
@@ -242,19 +315,12 @@ export const LabelProvider = ({ children }) => {
       const val1 = parseFloat(parts[0]);
       const val2 = parseFloat(parts[1]);
       if (!isNaN(val1) && !isNaN(val2)) {
-        // We use the orientation that makes sense (Pharma labels are usually wide)
-        // But we follow the data provided.
         w = Math.round(val1 * MM_TO_PX);
         h = Math.round(val2 * MM_TO_PX);
-        
-        // Swap if it's too skinny (tall vial labels are rare, we try to optimize for landscape)
-        if (w < h && template.category !== 'Syrups') {
-           // simple flip logic if we wanted, but let's stick to the data
-        }
       }
     }
 
-    setMeta({ fileId: id, fileName: null, labelSize: { w, h } });
+    setMeta({ fileId: null, fileName: null, labelSize: { w, h } });
     setActiveTemplate(template);
     setElements(enriched);
     setHistory([enriched]);
@@ -272,6 +338,7 @@ export const LabelProvider = ({ children }) => {
     setElements(next);
     saveToHistory(next);
     setSelectedElementId(el.id);
+    addActivityLog('Added new element', meta.fileId, meta.fileName);
   };
 
   const duplicateElement = (id) => {
@@ -299,6 +366,7 @@ export const LabelProvider = ({ children }) => {
     setElements(next);
     saveToHistory(next);
     if (selectedElementId === id) setSelectedElementId(null);
+    addActivityLog('Deleted element', meta.fileId, meta.fileName);
   };
 
   const moveLayer = (id, dir) => {
@@ -337,6 +405,7 @@ export const LabelProvider = ({ children }) => {
     savedStatus, toast,
     historyIndex, historyLength: history.length,
     hydrated,
+    settings, updateSettings, // exported settings
     // File ops
     newFile, setFileName, setLabelSize,
     saveFile, saveFileAs,

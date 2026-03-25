@@ -84,14 +84,14 @@ export default function FileNameModal({ onConfirm, onCancel, onOpen, recentFiles
         </form>
 
         {onOpen && (
-          <div className="pt-2 border-t border-outline-variant/15 flex flex-col items-center gap-3">
-            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">or</p>
+          <div className="pt-2 border-t border-outline-variant/15 flex flex-col gap-3">
+            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest text-center mt-2">or</p>
             <button
               onClick={onOpen}
-              className="flex items-center gap-2 text-primary hover:text-primary-container text-xs font-bold transition-colors"
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 text-primary hover:bg-primary/10 hover:border-primary/50 text-[13px] font-bold transition-all active:scale-95"
             >
-              <span className="material-symbols-outlined text-[16px]">file_open</span>
-              Open saved design from your PC
+              <span className="material-symbols-outlined text-[18px]">upload_file</span>
+              Upload
             </button>
           </div>
         )}

@@ -114,16 +114,19 @@ export default function Translation() {
     <div className="bg-[#F1F3F6] text-on-surface antialiased min-h-screen">
 
       {/* ── Top Nav ─────────────────────────────────────────────────────────── */}
-      <header className="fixed top-0 w-full z-50 bg-[#F8FAFC] dark:bg-slate-900 border-b border-black/5 h-14 flex items-center justify-between px-6">
+      <header className="fixed top-0 w-full z-50 bg-[#F8FAFC] dark:bg-slate-900 border-b border-black/5 h-14 flex items-center justify-between px-6 relative">
         <div className="flex items-center gap-3">
           <Link to="/" className="text-lg font-extrabold tracking-tighter text-blue-900">Pharma Label Design</Link>
           <div className="w-[1px] h-5 bg-slate-200 mx-1" />
-          <nav className="hidden md:flex items-center gap-1 text-[12px] font-semibold">
-            <Link to="/" className="px-3 py-1.5 rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors">Library</Link>
-            <Link to="/editor" className="px-3 py-1.5 rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors">Editor</Link>
-            <Link to="/translation" className="px-3 py-1.5 rounded-md bg-blue-50 text-blue-700">Translation</Link>
-          </nav>
         </div>
+
+        <nav className="hidden lg:flex absolute left-1/2 -translate-x-1/2 items-center gap-6 text-[15px] font-semibold">
+          <Link to="/" className="text-slate-500 hover:text-slate-800 transition-colors">Dashboard</Link>
+          <Link to="/assets" className="text-slate-500 hover:text-slate-800 transition-colors">Template Library</Link>
+          <Link to="/editor" className="text-slate-500 hover:text-slate-800 transition-colors">Label Editor</Link>
+          <Link to="/translation" className="text-blue-700 font-bold border-b-2 border-blue-600 pb-1">Translation</Link>
+        </nav>
+        
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
             <span className="material-symbols-outlined text-[14px]">edit_document</span>

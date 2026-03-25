@@ -44,21 +44,26 @@ export default function TemplateLibrary() {
   return (
     <div className="bg-background text-on-surface min-h-screen">
       {/* TopNavBar */}
-      <header className="fixed top-0 w-full z-50 bg-[#F8FAFC]/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-black/5 dark:border-white/10 h-16 flex items-center justify-between px-8">
-        <div className="flex items-center gap-8">
+      <header className="fixed top-0 w-full z-50 bg-[#F8FAFC]/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-black/5 dark:border-white/10 h-16 flex items-center justify-between px-8 relative">
+        <div className="flex items-center">
           <span className="text-xl font-bold tracking-tighter text-blue-900 dark:text-blue-100">Pharma Label Design</span>
-          <nav className="hidden md:flex gap-6 items-center font-inter antialiased tracking-tight text-sm font-medium">
-            <Link to="/" className="text-blue-700 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400 pb-1">
-              Template Library
-            </Link>
-            <Link to="/editor" className="text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors">
-              Label Editor
-            </Link>
-            <Link to="/translation" className="text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors">
-              Translation
-            </Link>
-          </nav>
         </div>
+        
+        <nav className="hidden lg:flex absolute left-1/2 -translate-x-1/2 gap-8 items-center font-inter antialiased tracking-tight text-[15px] font-semibold">
+          <Link to="/" className="text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors">
+            Dashboard
+          </Link>
+          <Link to="/assets" className="text-blue-700 dark:text-blue-400 border-b-2 border-primary pb-1">
+            Template Library
+          </Link>
+          <Link to="/editor" className="text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors">
+            Label Editor
+          </Link>
+          <Link to="/translation" className="text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors">
+            Translation
+          </Link>
+        </nav>
+        
         <div className="flex items-center gap-4">
           <div className="relative hidden lg:block">
             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-sm">search</span>
@@ -89,34 +94,26 @@ export default function TemplateLibrary() {
       <div className="flex pt-16 h-screen overflow-hidden">
         {/* SideNavBar */}
         <aside className="hidden lg:flex flex-col gap-4 p-6 h-full w-64 bg-[#F8FAFC] dark:bg-slate-950 shrink-0 border-r border-outline-variant/10">
-          <div className="mb-6">
-            <p className="font-inter text-xs uppercase tracking-widest font-semibold text-slate-400 mb-1">Lab Workspace</p>
-            <p className="text-[10px] text-slate-500 font-medium">Clinical Precision v2.4</p>
-          </div>
+
           <nav className="flex flex-col gap-2">
-            <button className="flex items-center gap-3 px-4 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900 hover:translate-x-1 transition-transform duration-200 rounded-lg">
+            <Link to="/" className="flex items-center gap-3 px-4 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900 hover:translate-x-1 transition-transform duration-200 rounded-lg">
               <span className="material-symbols-outlined text-xl">dashboard</span>
               <span className="font-inter text-xs uppercase tracking-widest font-semibold">Dashboard</span>
-            </button>
-            <button className="flex items-center gap-3 px-4 py-3 bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-400 shadow-sm rounded-lg hover:translate-x-1 transition-transform duration-200">
+            </Link>
+            <Link to="/assets" className="flex items-center gap-3 px-4 py-3 bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-400 shadow-sm rounded-lg hover:translate-x-1 transition-transform duration-200">
               <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>folder_open</span>
               <span className="font-inter text-xs uppercase tracking-widest font-semibold">Assets</span>
-            </button>
-            <button className="flex items-center gap-3 px-4 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900 hover:translate-x-1 transition-transform duration-200 rounded-lg">
+            </Link>
+            <Link to="/history" className="flex items-center gap-3 px-4 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900 hover:translate-x-1 transition-transform duration-200 rounded-lg">
               <span className="material-symbols-outlined text-xl">history</span>
               <span className="font-inter text-xs uppercase tracking-widest font-semibold">History</span>
-            </button>
-            <button className="flex items-center gap-3 px-4 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900 hover:translate-x-1 transition-transform duration-200 rounded-lg">
+            </Link>
+            <Link to="/settings" className="flex items-center gap-3 px-4 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900 hover:translate-x-1 transition-transform duration-200 rounded-lg">
               <span className="material-symbols-outlined text-xl">settings</span>
               <span className="font-inter text-xs uppercase tracking-widest font-semibold">Settings</span>
-            </button>
+            </Link>
           </nav>
-          <div className="mt-auto">
-            <button onClick={() => navigate('/editor')} className="w-full btn-gradient text-white py-3 rounded-xl text-xs font-bold uppercase tracking-widest shadow-md active:scale-95 transition-all flex items-center justify-center gap-2">
-              <span className="material-symbols-outlined text-lg">add_circle</span>
-              New Label Project
-            </button>
-          </div>
+
         </aside>
 
         {/* Main Content Canvas */}

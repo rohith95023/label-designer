@@ -349,22 +349,24 @@ export default function LabelEditor() {
             )}
           </div>
 
-          {/* Nav links */}
-          <nav className="hidden md:flex items-center gap-1 text-[12px] font-semibold">
-            <Link to="/" className="px-3 py-1.5 rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors">Library</Link>
-            <Link to="/editor" className="px-3 py-1.5 rounded-md bg-blue-50 text-blue-700">Editor</Link>
-            <Link to="/translation" className="px-3 py-1.5 rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors">Translation</Link>
-          </nav>
+          <div className="w-[1px] h-5 bg-outline-variant/30 mx-1"></div>
+          
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-semibold text-slate-700 truncate max-w-[200px]">{meta.fileName || 'Untitled Label'}</span>
+            <span className={`flex items-center gap-1 text-[10px] font-bold ${statusColor}`}>
+              <span className={`material-symbols-outlined text-[13px] ${savedStatus === 'saving' ? 'animate-spin' : ''}`}>{statusIcon}</span>
+              {statusLabel}
+            </span>
+          </div>
         </div>
 
-        {/* Center: File Name */}
-        <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
-          <span className="text-sm font-semibold text-slate-700 truncate max-w-[200px]">{meta.fileName || 'Untitled Label'}</span>
-          <span className={`flex items-center gap-1 text-[10px] font-bold ${statusColor}`}>
-            <span className={`material-symbols-outlined text-[13px] ${savedStatus === 'saving' ? 'animate-spin' : ''}`}>{statusIcon}</span>
-            {statusLabel}
-          </span>
-        </div>
+        {/* Center: Nav links */}
+        <nav className="hidden lg:flex absolute left-1/2 -translate-x-1/2 items-center gap-6 text-[15px] font-semibold">
+          <Link to="/" className="text-slate-500 hover:text-slate-800 transition-colors">Dashboard</Link>
+          <Link to="/assets" className="text-slate-500 hover:text-slate-800 transition-colors">Template Library</Link>
+          <Link to="/editor" className="text-blue-700 font-bold border-b-2 border-blue-600 pb-1">Label Editor</Link>
+          <Link to="/translation" className="text-slate-500 hover:text-slate-800 transition-colors">Translation</Link>
+        </nav>
 
         {/* Right: Toolset */}
         <div className="flex items-center gap-2">
