@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useLabel } from '../context/LabelContext';
-import { useTheme } from '../context/ThemeContext';
-import { getFileHistory, getLogs } from '../context/LabelContext';
+import { useNavigate } from 'react-router-dom';
+import { createPortal } from 'react-dom';
+import { useLabel, getFileHistory, getLogs, readFile } from '../context/LabelContext';
+import AppLayout from '../components/common/AppLayout';
+import PreviewModal from '../components/modals/PreviewModal';
 
 function timeAgo(ts) {
   const diff = Date.now() - ts;
@@ -12,9 +13,27 @@ function timeAgo(ts) {
   return new Date(ts).toLocaleDateString();
 }
 
+const LOG_STYLE_MAP = {
+  'Created new label':    { icon: 'add_circle',     grad: 'from-blue-500 to-blue-700',    bg: 'bg-blue-50 dark:bg-blue-950/40',    text: 'text-blue-600' },
+  'Opened file':          { icon: 'folder_open',     grad: 'from-violet-500 to-purple-700', bg: 'bg-violet-50 dark:bg-violet-950/40', text: 'text-violet-600' },
+  'Added new element':    { icon: 'add_box',         grad: 'from-emerald-500 to-teal-700', bg: 'bg-emerald-50 dark:bg-emerald-950/40', text: 'text-emerald-600' },
+  'Deleted element':      { icon: 'delete',          grad: 'from-red-500 to-red-700',      bg: 'bg-red-50 dark:bg-red-950/40',      text: 'text-red-500' },
+  'Exported JSON':        { icon: 'download',        grad: 'from-orange-500 to-amber-600', bg: 'bg-orange-50 dark:bg-orange-950/40', text: 'text-orange-500' },
+  'Duplicated file as':   { icon: 'file_copy',       grad: 'from-teal-500 to-cyan-600',   bg: 'bg-teal-50 dark:bg-teal-950/40',    text: 'text-teal-500' },
+  'Started from template':{ icon: 'auto_awesome',    grad: 'from-yellow-400 to-amber-500', bg: 'bg-yellow-50 dark:bg-yellow-950/40', text: 'text-yellow-600' },
+};
+const getLogStyle = (action) => {
+  const key = Object.keys(LOG_STYLE_MAP).find(k => action.startsWith(k));
+  return key ? LOG_STYLE_MAP[key] : { icon: 'info', grad: 'from-slate-400 to-slate-600', bg: 'bg-slate-100 dark:bg-slate-800', text: 'text-slate-500' };
+};
+
+const TABS = [
+  { key: 'files', icon: 'folder', label: 'File Versions' },
+  { key: 'activity', icon: 'timeline', label: 'Activity Log' },
+];
+
 export default function History() {
-  const { getAllFiles, openFileById, setElements, meta } = useLabel();
-  const { theme, toggleTheme } = useTheme();
+  const { getAllFiles, openFileById, setElements } = useLabel();
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState('files');
@@ -22,247 +41,365 @@ export default function History() {
   const [fileVersions, setFileVersions] = useState([]);
   const [logs, setLogs] = useState([]);
   const [confirmRestore, setConfirmRestore] = useState(null);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [confirmGoToEditor, setConfirmGoToEditor] = useState(null);
+  const [previewData, setPreviewData] = useState(null);
 
   const allFiles = getAllFiles().sort((a, b) => b.updatedAt - a.updatedAt);
 
-  useEffect(() => {
-    setLogs(getLogs());
-  }, []);
+  useEffect(() => { setLogs(getLogs()); }, []);
 
   const handleSelectFile = (file) => {
-    setSelectedFile(file);
+    const data = readFile(file.fileId);
+    setSelectedFile(data ? { ...data, ...file } : file);
     setFileVersions(getFileHistory(file.fileId));
-  };
-
-  const handleRestore = (version) => {
-    setConfirmRestore(version);
   };
 
   const confirmRestoreAction = () => {
     if (!confirmRestore || !selectedFile) return;
     openFileById(selectedFile.fileId);
-    // We overwrite elements with the restored snapshot
-    setTimeout(() => {
-      setElements(confirmRestore.elements);
-    }, 100);
+    setTimeout(() => setElements(confirmRestore.elements), 100);
     setConfirmRestore(null);
     navigate('/editor');
   };
 
-  const logIconMap = {
-    'Created new label': { icon: 'add_circle', color: 'text-blue-500 bg-blue-50 dark:bg-blue-900/30' },
-    'Opened file': { icon: 'folder_open', color: 'text-purple-500 bg-purple-50 dark:bg-purple-900/30' },
-    'Added new element': { icon: 'add_box', color: 'text-emerald-500 bg-emerald-50 dark:bg-emerald-900/30' },
-    'Deleted element': { icon: 'delete', color: 'text-red-500 bg-red-50 dark:bg-red-900/30' },
-    'Exported JSON': { icon: 'download', color: 'text-orange-500 bg-orange-50 dark:bg-orange-900/30' },
-    'Duplicated file as': { icon: 'file_copy', color: 'text-teal-500 bg-teal-50 dark:bg-teal-900/30' },
-    'Started from template': { icon: 'auto_awesome', color: 'text-yellow-500 bg-yellow-50 dark:bg-yellow-900/30' },
-  };
-  const getLogStyle = (action) => {
-    const key = Object.keys(logIconMap).find(k => action.startsWith(k));
-    return key ? logIconMap[key] : { icon: 'info', color: 'text-slate-500 bg-slate-100 dark:bg-slate-800' };
-  };
-
   return (
-    <div className="bg-background text-on-surface min-h-screen">
-      {/* TopNavBar */}
-      <header className="fixed top-0 w-full z-50 bg-[#F8FAFC]/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-black/5 dark:border-white/10 h-16 flex items-center justify-between px-8">
-        <div className="flex items-center gap-4">
-          <button 
-            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="p-2 -ml-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-          >
-            <span className="material-symbols-outlined text-2xl">menu</span>
-          </button>
-          <span className="text-xl font-bold tracking-tighter text-blue-900 dark:text-blue-100">Pharma Label Design</span>
+    <AppLayout activePage="history">
+      <div className="p-6 lg:p-10 pb-24 max-w-6xl mx-auto">
+
+        {/* Hero */}
+        <div className="mb-8 animate-slide-up">
+          <p className="text-primary font-bold text-[11px] uppercase tracking-[0.2em] mb-2">label version control</p>
+          <h1 className="text-4xl font-extrabold tracking-tighter text-gradient mb-2">History</h1>
+          <p className="text-on-surface-variant text-sm max-w-lg">
+            Browse saved versions and the full activity timeline for your label projects.
+          </p>
         </div>
-        
-        <nav className="hidden lg:flex absolute left-1/2 -translate-x-1/2 gap-8 items-center font-inter antialiased tracking-tight text-[15px] font-semibold">
-          <Link to="/" className="text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors">
-            Dashboard
-          </Link>
-          <Link to="/assets" className="text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors">
-            Template Library
-          </Link>
-          <Link to="/editor" className="text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors">
-            Label Editor
-          </Link>
-          <Link to="/translation" className="text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors">
-            Translation
-          </Link>
-        </nav>
-        
-        <div className="flex items-center gap-4">
-          <button onClick={toggleTheme} className="p-2 text-on-surface-variant hover:bg-blue-50/50 dark:hover:bg-slate-800 rounded-full transition-all active:scale-95">
-            <span className="material-symbols-outlined">{theme === 'dark' ? 'light_mode' : 'dark_mode'}</span>
-          </button>
+
+        {/* Tabs */}
+        <div className="flex gap-2 mb-8 animate-slide-up stagger-1">
+          {TABS.map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-250 ${
+                activeTab === tab.key
+                  ? 'bg-gradient-to-r from-primary to-tertiary text-on-primary shadow-glow-sm'
+                  : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container hover:text-on-surface'
+              }`}
+            >
+              <span className="material-symbols-outlined text-base"
+                style={{ fontVariationSettings: activeTab === tab.key ? "'FILL' 1" : "'FILL' 0" }}>
+                {tab.icon}
+              </span>
+              {tab.label}
+            </button>
+          ))}
         </div>
-      </header>
 
-      <div className="flex pt-16 h-screen overflow-hidden">
-        {/* SideNavBar */}
-        <aside className={`hidden lg:flex flex-col gap-8 p-6 h-full bg-white dark:bg-slate-950 shrink-0 border-r border-slate-100 overflow-y-hidden transition-all duration-300 ${sidebarCollapsed ? 'w-24' : 'w-72'}`}>
-          <nav className="flex flex-col gap-3">
-            <Link to="/" className={`flex items-center gap-4 py-4 text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-all duration-200 rounded-[20px] ${sidebarCollapsed ? 'justify-center px-0' : 'px-5'}`}>
-              <span className="material-symbols-outlined text-2xl">grid_view</span>
-              {!sidebarCollapsed && <span className="font-semibold text-[15px] tracking-tight">Dashboard</span>}
-            </Link>
-            <Link to="/assets" className={`flex items-center gap-4 py-4 text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-all duration-200 rounded-[20px] ${sidebarCollapsed ? 'justify-center px-0' : 'px-5'}`}>
-              <span className="material-symbols-outlined text-2xl">business</span>
-              {!sidebarCollapsed && <span className="font-semibold text-[15px] tracking-tight">Template Library</span>}
-            </Link>
-            <Link to="/history" className={`flex items-center gap-4 py-4 transition-all duration-300 rounded-[20px] ${sidebarCollapsed ? 'justify-center px-0' : 'px-5 bg-blue-50/80 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 shadow-sm border border-blue-100 dark:border-blue-900/50'}`}>
-              <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>history</span>
-              {!sidebarCollapsed && <span className="font-bold text-[15px] tracking-tight">History</span>}
-            </Link>
-            <Link to="/settings" className={`flex items-center gap-4 py-4 text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-all duration-200 rounded-[20px] ${sidebarCollapsed ? 'justify-center px-0' : 'px-5'}`}>
-              <span className="material-symbols-outlined text-2xl">settings</span>
-              {!sidebarCollapsed && <span className="font-semibold text-[15px] tracking-tight">Settings</span>}
-            </Link>
-          </nav>
-        </aside>
-
-        {/* Main Content */}
-        <main className="flex-1 overflow-y-auto bg-surface p-8 lg:p-12">
-          <div className="mb-10">
-            <span className="text-primary font-bold text-[0.7rem] uppercase tracking-[0.2em] block mb-2">Version Control</span>
-            <h1 className="text-4xl font-extrabold tracking-tighter text-on-surface">History</h1>
-            <p className="text-on-surface-variant max-w-lg mt-3 text-sm">Browse saved versions and the full activity timeline for your label projects.</p>
-          </div>
-
-          {/* Tabs */}
-          <div className="flex gap-2 border-b border-slate-200 dark:border-slate-700 mb-8">
-            {['files', 'activity'].map(tab => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-5 py-2.5 text-xs font-bold uppercase tracking-widest rounded-t-lg transition-colors ${activeTab === tab ? 'bg-white dark:bg-slate-800 text-primary border border-b-0 border-slate-200 dark:border-slate-700' : 'text-slate-500 hover:text-primary'}`}
-              >
-                {tab === 'files' ? '📂 File Versions' : '📋 Activity Log'}
-              </button>
-            ))}
-          </div>
-
-          {/* File Versions Tab */}
-          {activeTab === 'files' && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* File List */}
-              <div className="lg:col-span-1">
-                <h2 className="text-sm font-bold uppercase tracking-widest text-slate-500 mb-4">Select File</h2>
-                <div className="space-y-2">
-                  {allFiles.length === 0 && (
-                    <p className="text-sm text-slate-400 py-8 text-center">No files found.</p>
-                  )}
-                  {allFiles.map(file => (
-                    <button
-                      key={file.fileId}
-                      onClick={() => handleSelectFile(file)}
-                      className={`w-full text-left px-4 py-3 rounded-xl border transition-all flex items-center gap-3 ${selectedFile?.fileId === file.fileId ? 'bg-blue-50 dark:bg-blue-900/30 border-primary/40 text-primary' : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 hover:border-slate-300'}`}
-                    >
-                      <span className="material-symbols-outlined text-lg">draft</span>
-                      <div className="overflow-hidden">
-                        <p className="text-sm font-semibold truncate">{file.fileName || 'Untitled'}</p>
-                        <p className="text-xs text-slate-400">{timeAgo(file.updatedAt)}</p>
-                      </div>
-                    </button>
-                  ))}
+        {/* File Versions Tab */}
+        {activeTab === 'files' && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-slide-up stagger-2">
+            {/* File list */}
+            <div className="lg:col-span-1">
+              <p className="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant mb-3">Select File</p>
+              {allFiles.length === 0 ? (
+                <div className="glass-card rounded-2xl p-8 flex flex-col items-center gap-3 text-center">
+                  <span className="material-symbols-outlined text-outline/50 text-4xl">folder_off</span>
+                  <p className="text-sm text-on-surface-variant">No files found.</p>
                 </div>
-              </div>
+              ) : (
+                <div className="space-y-2">
+                  {allFiles.map(file => (
+                    <div
+                      key={file.fileId}
+                      className={`w-full text-left px-4 py-3.5 rounded-xl border transition-all group flex items-center gap-3 relative ${
+                        selectedFile?.fileId === file.fileId
+                          ? 'border-primary/40 bg-primary/6 text-primary shadow-glow-sm'
+                          : 'glass-card border-slate-100 hover:border-slate-200'
+                      }`}
+                    >
+                      {/* Selection Overlay (Clickable area for selecting file) */}
+                      <div 
+                        className="absolute inset-0 z-0 cursor-pointer" 
+                        onClick={() => handleSelectFile(file)}
+                      />
 
-              {/* Versions Panel */}
-              <div className="lg:col-span-2">
-                <h2 className="text-sm font-bold uppercase tracking-widest text-slate-500 mb-4 h-5">
-                  {selectedFile ? `Versions — ${selectedFile.fileName || 'Untitled'}` : ''}
-                </h2>
-                {!selectedFile && (
-                  <div className="flex flex-col items-center justify-center py-32 text-slate-200 dark:text-slate-800 transition-all">
-                    <span className="material-symbols-outlined text-8xl">history</span>
-                  </div>
-                )}
-                {selectedFile && fileVersions.length === 0 && (
-                  <div className="flex flex-col items-center py-20 text-slate-400">
-                    <span className="material-symbols-outlined text-5xl mb-3">cloud_off</span>
-                    <p className="text-sm">No versions recorded for this file yet.</p>
-                  </div>
-                )}
-                <div className="space-y-3">
-                  {fileVersions.map((v, i) => (
-                    <div key={v.id} className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-4 flex items-center justify-between gap-4 hover:shadow-sm transition-shadow">
-                      <div className="flex items-center gap-4">
-                        <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${i === 0 ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-500'}`}>
-                          <span className="material-symbols-outlined text-lg">save</span>
-                        </div>
-                        <div>
-                          <p className="text-sm font-semibold">{v.action}</p>
-                          <p className="text-xs text-slate-400">{new Date(v.time).toLocaleString()} · {v.elements?.length ?? 0} elements</p>
-                        </div>
+                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 relative z-10 ${
+                        selectedFile?.fileId === file.fileId
+                          ? 'bg-primary/10'
+                          : 'bg-surface-container-low dark:bg-slate-800'
+                      }`}>
+                        <span className="material-symbols-outlined text-base text-primary"
+                          style={{ fontVariationSettings: "'FILL' 1" }}>
+                          draft
+                        </span>
                       </div>
-                      {i !== 0 && (
-                        <button
-                          onClick={() => handleRestore(v)}
-                          className="text-xs font-bold px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600 hover:border-primary/50 hover:text-primary hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all shrink-0"
+
+                      <div className="overflow-hidden flex-1 relative z-10 pointer-events-none">
+                        <p className="text-sm font-semibold text-on-surface truncate">{file.fileName || 'Untitled'}</p>
+                        <p className="text-xs text-on-surface-variant">{timeAgo(file.updatedAt)}</p>
+                      </div>
+                      
+                      <div className="flex items-center gap-1.5 shrink-0 relative z-20">
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const data = readFile(file.fileId);
+                            if (data) setPreviewData({ elements: data.elements, meta: data.meta, title: data.meta.fileName });
+                          }}
+                          className="w-8 h-8 rounded-lg flex items-center justify-center bg-white dark:bg-slate-800 text-slate-500 hover:text-blue-600 transition-all shadow-sm border border-slate-100 dark:border-white/10 hover:scale-110"
+                          title="Quick Preview"
                         >
-                          Restore
+                          <span className="material-symbols-outlined text-[16px]">visibility</span>
                         </button>
-                      )}
-                      {i === 0 && <span className="text-[10px] font-bold text-blue-600 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded-full shrink-0">Latest</span>}
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setConfirmGoToEditor(file);
+                          }}
+                          className="w-8 h-8 rounded-lg flex items-center justify-center bg-white dark:bg-slate-800 text-slate-500 hover:text-emerald-500 transition-all shadow-sm border border-slate-100 dark:border-white/10 hover:scale-110"
+                          title="Open in Editor"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">edit_square</span>
+                        </button>
+                      </div>
+
+                      <span className="material-symbols-outlined text-outline/40 text-base group-hover:text-primary transition-colors shrink-0 relative z-10">
+                        chevron_right
+                      </span>
                     </div>
                   ))}
                 </div>
-              </div>
+              )}
             </div>
-          )}
 
-          {/* Activity Log Tab */}
-          {activeTab === 'activity' && (
-            <div>
-              {logs.length === 0 && (
-                <div className="flex flex-col items-center py-20 text-slate-400">
-                  <span className="material-symbols-outlined text-5xl mb-3">format_list_bulleted</span>
-                  <p className="text-sm">No activity logged yet. Go make something!</p>
+            {/* Versions panel */}
+            <div className="lg:col-span-2">
+            <div className="flex items-center justify-between mb-3 h-6">
+              <p className="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">
+                {selectedFile ? `Versions — ${selectedFile.fileName || 'Untitled'}` : ''}
+              </p>
+              {selectedFile && (
+                <button 
+                  onClick={() => {
+                    setSelectedFile(null);
+                    setFileVersions([]);
+                  }}
+                  className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-red-500 transition-colors"
+                >
+                  <span className="material-symbols-outlined text-sm">close</span>
+                  Close
+                </button>
+              )}
+            </div>
+              {!selectedFile && (
+                <div className="glass-card rounded-2xl flex flex-col items-center justify-center py-32 gap-4 text-center">
+                  <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-primary/10 to-tertiary/10 flex items-center justify-center">
+                    <span className="material-symbols-outlined text-primary/40 text-4xl">history</span>
+                  </div>
+                  <p className="text-on-surface-variant text-sm">Select a file to view its version history</p>
                 </div>
               )}
+              {selectedFile && fileVersions.length === 0 && (
+                <div className="glass-card rounded-2xl flex flex-col items-center py-20 gap-3 text-center">
+                  <span className="material-symbols-outlined text-4xl text-outline/50">cloud_off</span>
+                  <p className="text-sm text-on-surface-variant">No versions recorded for this file yet.</p>
+                </div>
+              )}
+              <div className="space-y-3">
+                {fileVersions.map((v, i) => (
+                  <div
+                    key={v.id}
+                    className={`glass-card rounded-xl p-4 flex items-center justify-between gap-4 animate-slide-up stagger-${Math.min(i+1,8)}`}
+                  >
+                    <div className="flex items-center gap-4 min-w-0">
+                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                        i === 0
+                          ? 'bg-gradient-to-br from-primary to-primary-container text-on-primary'
+                          : 'bg-surface-container text-on-surface-variant'
+                      }`}>
+                        <span className="material-symbols-outlined text-base"
+                          style={{ fontVariationSettings: "'FILL' 1" }}>
+                          save
+                        </span>
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-on-surface">{v.action}</p>
+                        <p className="text-xs text-on-surface-variant">
+                          {new Date(v.time).toLocaleString()} · {v.elements?.length ?? 0} elements
+                        </p>
+                      </div>
+                    </div>
+                    {i === 0
+                      ? (
+                        <div className="flex items-center gap-2 shrink-0">
+                          <button
+                            onClick={() => setPreviewData({ elements: v.elements, meta: selectedFile.meta, title: `Latest Version - ${selectedFile.fileName}` })}
+                            className="w-8 h-8 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface-variant flex items-center justify-center transition-all"
+                            title="Preview Snapshot"
+                          >
+                            <span className="material-symbols-outlined text-[18px]">visibility</span>
+                          </button>
+                          <span className="text-[10px] font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-full">Latest</span>
+                        </div>
+                      )
+                      : (
+                        <div className="flex items-center gap-2 shrink-0">
+                         <button
+                            onClick={() => setPreviewData({ elements: v.elements, meta: selectedFile.meta, title: `${v.action} - ${new Date(v.time).toLocaleTimeString()}` })}
+                            className="w-8 h-8 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface-variant flex items-center justify-center transition-all"
+                            title="Preview Snapshot"
+                          >
+                            <span className="material-symbols-outlined text-[18px]">visibility</span>
+                          </button>
+                          <button
+                            onClick={() => setConfirmRestore(v)}
+                            className="bg-primary/10 text-primary hover:bg-primary/20 font-bold text-[11px] py-1.5 px-3 rounded-lg transition-all"
+                          >
+                            Restore
+                          </button>
+                        </div>
+                      )
+                    }
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Activity Log Tab */}
+        {activeTab === 'activity' && (
+          <div className="animate-slide-up stagger-2">
+            {logs.length === 0 && (
+              <div className="glass-card rounded-2xl flex flex-col items-center py-24 gap-4 text-center">
+                <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-primary/10 to-tertiary/10 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-primary/50 text-3xl">format_list_bulleted</span>
+                </div>
+                <div>
+                  <p className="font-bold text-on-surface mb-1">No activity yet</p>
+                  <p className="text-sm text-on-surface-variant">Go make something!</p>
+                </div>
+              </div>
+            )}
+
+            {logs.length > 0 && (
               <div className="relative">
-                {logs.length > 0 && <div className="absolute top-0 left-[22px] h-full w-px bg-slate-200 dark:bg-slate-700 z-0" />}
+                {/* Timeline line */}
+                <div className="absolute top-5 left-5 bottom-5 w-0.5 bg-gradient-to-b from-primary/30 via-tertiary/20 to-transparent rounded-full z-0" />
                 <div className="space-y-4">
-                  {logs.map(log => {
+                  {logs.map((log, idx) => {
                     const style = getLogStyle(log.action);
                     return (
-                      <div key={log.id} className="relative z-10 flex items-start gap-4">
-                        <div className={`w-11 h-11 rounded-full flex items-center justify-center shrink-0 ${style.color}`}>
-                          <span className="material-symbols-outlined text-lg">{style.icon}</span>
+                      <div key={log.id} className={`relative z-10 flex items-start gap-4 animate-fade-in stagger-${Math.min(idx+1,10)}`}>
+                        {/* Node */}
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${style.bg} ${style.text}`}>
+                          <span className="material-symbols-outlined text-lg"
+                            style={{ fontVariationSettings: "'FILL' 1" }}>
+                            {style.icon}
+                          </span>
                         </div>
-                        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 px-4 py-3 flex-1 flex items-center justify-between gap-4">
-                          <div>
-                            <p className="text-sm font-semibold">{log.action}</p>
-                            {log.fileName && <p className="text-xs text-slate-400 truncate">File: {log.fileName}</p>}
+                        {/* Card */}
+                        <div className="glass-card rounded-xl px-4 py-3 flex-1 flex items-center justify-between gap-4 hover:-translate-y-0.5 transition-transform duration-200">
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-on-surface">{log.action}</p>
+                            {log.fileName && (
+                              <p className="text-xs text-on-surface-variant truncate">File: {log.fileName}</p>
+                            )}
                           </div>
-                          <span className="text-[11px] text-slate-400 shrink-0">{timeAgo(log.time)}</span>
+                          <span className="text-[11px] text-on-surface-variant/70 shrink-0 font-medium">{timeAgo(log.time)}</span>
                         </div>
                       </div>
                     );
                   })}
                 </div>
               </div>
-            </div>
-          )}
-        </main>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Confirm Restore Modal */}
-      {confirmRestore && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-8">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-8 max-w-sm w-full">
-            <h3 className="text-lg font-bold mb-2">Restore Version?</h3>
-            <p className="text-sm text-slate-500 mb-6">This will replace the current canvas with the snapshot from <strong>{new Date(confirmRestore.time).toLocaleString()}</strong>. This action cannot be undone.</p>
+      {confirmRestore && createPortal(
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[2005] flex items-center justify-center p-8 animate-fade-in">
+          <div className="glass-card bg-white dark:bg-slate-800 rounded-3xl shadow-float p-8 max-w-sm w-full animate-scale-in">
+            <div className="w-12 h-12 rounded-2xl bg-orange-100 text-orange-600 flex items-center justify-center mb-4">
+              <span className="material-symbols-outlined text-2xl"
+                style={{ fontVariationSettings: "'FILL' 1" }}>
+                published_with_changes
+              </span>
+            </div>
+            <h3 className="text-lg font-bold mb-2 text-slate-800 dark:text-white">Restore Version?</h3>
+            <p className="text-sm text-slate-500 mb-6">
+              This will replace the current canvas with the snapshot from{' '}
+              <strong>{new Date(confirmRestore.time).toLocaleString()}</strong>.
+            </p>
             <div className="flex gap-3">
-              <button onClick={() => setConfirmRestore(null)} className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">Cancel</button>
-              <button onClick={confirmRestoreAction} className="flex-1 py-2.5 rounded-xl bg-primary text-white text-sm font-bold hover:bg-primary/90 transition-colors">Restore</button>
+              <button
+                onClick={() => setConfirmRestore(null)}
+                className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmRestoreAction}
+                className="flex-1 py-2.5 rounded-xl btn-gradient text-white text-sm"
+              >
+                Restore
+              </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
-    </div>
+
+      {/* Confirm Go To Editor Modal */}
+      {confirmGoToEditor && createPortal(
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[3000] flex items-center justify-center p-8 animate-fade-in">
+          <div className="glass-card bg-white dark:bg-slate-800 rounded-3xl shadow-float p-8 max-w-sm w-full animate-scale-in">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center mb-4">
+              <span className="material-symbols-outlined text-2xl"
+                style={{ fontVariationSettings: "'FILL' 1" }}>
+                edit_square
+              </span>
+            </div>
+            <h3 className="text-lg font-bold mb-2 text-slate-800 dark:text-white">Switch to Editor?</h3>
+            <p className="text-sm text-slate-500 mb-6 font-medium italic">
+              selected one will be moving to active log
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirmGoToEditor(null)}
+                className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 transition-colors"
+              >
+                Not now
+              </button>
+              <button
+                onClick={() => {
+                  openFileById(confirmGoToEditor.fileId);
+                  setConfirmGoToEditor(null);
+                  navigate('/editor');
+                }}
+                className="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm shadow-emerald-200 text-sm font-bold"
+              >
+                Open Editor
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Preview Modal Popup */}
+      {previewData && (
+        <PreviewModal 
+          isOpen={true} 
+          onClose={() => setPreviewData(null)} 
+          elements={previewData.elements} 
+          meta={previewData.meta || { labelSize: { w:302, h:454 } }}
+          title={previewData.title}
+        />
+      )}
+    </AppLayout>
   );
 }

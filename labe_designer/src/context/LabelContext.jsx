@@ -50,7 +50,7 @@ const setIndex = (idx) => {
   try { localStorage.setItem(LABEL_INDEX_KEY, JSON.stringify(idx)); } catch {}
 };
 
-const readFile = (id) => {
+export const readFile = (id) => {
   try {
     const raw = localStorage.getItem(fileKey(id));
     if (!raw) return null;

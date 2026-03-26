@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import { useLabel } from '../context/LabelContext';
 import { useTheme } from '../context/ThemeContext';
@@ -12,6 +13,7 @@ import FileNameModal from '../components/modals/FileNameModal';
 import LabelSizeModal from '../components/modals/LabelSizeModal';
 import { IconsIcons } from '../data/premiumIcons';
 import { WORDART_CATEGORIES, WORDART_STYLES } from '../data/wordArtPresets';
+import PreviewModal from '../components/modals/PreviewModal';
 
 function TableSetupModal({ onConfirm, onCancel }) {
   const [rows, setRows] = useState(3);
@@ -40,9 +42,9 @@ function TableSetupModal({ onConfirm, onCancel }) {
     }
   };
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm animate-fade-in">
-      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-[500px] max-h-[90vh] flex flex-col">
+      <div className="glass-card bg-white dark:bg-slate-800 rounded-2xl shadow-float w-[500px] max-h-[90vh] flex flex-col">
         <div className="p-5 border-b border-slate-100 dark:border-white/5 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-blue-600">table_chart</span>
@@ -117,8 +119,9 @@ function TableSetupModal({ onConfirm, onCancel }) {
           <button onClick={handleConfirm} className="px-6 py-2 text-xs font-bold text-white btn-gradient rounded-xl shadow-sm hover:shadow active:scale-95 transition-all">Insert Table</button>
         </div>
       </div>
-    </div>
-  )
+    </div>,
+    document.body
+  );
 }
 
 export default function LabelEditor() {
@@ -165,6 +168,9 @@ export default function LabelEditor() {
   const [eraserPos, setEraserPos] = useState(null); // {x, y} for visual brush
   const [selectedLayers, setSelectedLayers] = useState([]); // Array of IDs for bulk editing
   const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [bulkSuffix, setBulkSuffix] = useState('');
+  const originalTexts = useRef({}); // Tracks base text during bulk suffix editing
 
   // Show FileNameModal only AFTER hydration is complete and no saved file exists
   useEffect(() => {
@@ -406,10 +412,10 @@ export default function LabelEditor() {
   const statusLabel = savedStatus === 'saved' ? 'Saved' : savedStatus === 'saving' ? 'Saving…' : 'Unsaved';
 
   return (
-    <div className="font-body text-on-surface h-screen flex flex-col overflow-hidden bg-[#E2E8F0] dark:bg-slate-950 transition-colors">
+    <div className="font-body text-on-surface h-screen flex flex-col overflow-hidden bg-slate-50 dark:bg-slate-950 dark:bg-slate-950 transition-colors">
 
       {/* ── Modals ──────────────────────────────────────────────────────────── */}
-      {modalStep === 'filename' && (
+      {modalStep === 'filename' && createPortal(
         <FileNameModal
           onConfirm={handleFileNameConfirm}
           onCancel={() => {
@@ -423,18 +429,20 @@ export default function LabelEditor() {
           onOpen={() => jsonInputRef.current?.click()}
           recentFiles={getAllFiles()}
           onSelectRecent={(id) => { openFileById(id); setModalStep('none'); }}
-        />
+        />,
+        document.body
       )}
-      {modalStep === 'labelsize' && (
+      {modalStep === 'labelsize' && createPortal(
         <LabelSizeModal
           onConfirm={handleLabelSizeConfirm}
           onCancel={() => setModalStep('none')}
           onSkip={pendingFlow ? () => { setModalStep('none'); setPendingFlow(null); } : undefined}
           currentSize={meta.labelSize}
           isEditMode={!pendingFlow}
-        />
+        />,
+        document.body
       )}
-      {showTableModal && (
+      {showTableModal && createPortal(
         <TableSetupModal
           onCancel={() => setShowTableModal(false)}
           onConfirm={(config) => {
@@ -452,14 +460,15 @@ export default function LabelEditor() {
             addElement({ type: 'table', text, fontSize: 10, fontFamily: 'Inter, sans-serif', fontWeight: '500', color: '#191c1e', width: actualCols * 100, height: (rows + 1) * 25, borderColor: '#94a3b8', borderWidth: 1, align: 'left' });
             setShowTableModal(false);
           }}
-        />
+        />,
+        document.body
       )}
 
       {/* WordArt Modal */}
-      {showWordArtModal && (
+      {showWordArtModal && createPortal(
         <div className="fixed inset-0 z-[1001] flex items-center justify-center bg-slate-900/60 backdrop-blur-md animate-fade-in p-6">
-          <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-[700px] h-[75vh] flex flex-col overflow-hidden">
-             <div className="p-6 border-b border-black/5 flex items-center justify-between bg-slate-50/50 dark:bg-white/5">
+          <div className="glass-card bg-white dark:bg-slate-800 rounded-3xl shadow-glow w-[700px] h-[75vh] flex flex-col overflow-hidden">
+             <div className="p-6 border-b border-white/20 dark:border-white/10 flex items-center justify-between bg-slate-50/50 dark:bg-white/5">
                 <div className="flex items-center gap-3">
                    <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-lg">
                       <span className="material-symbols-outlined">abc</span>
@@ -472,7 +481,7 @@ export default function LabelEditor() {
                 <button onClick={() => setShowWordArtModal(false)} className="w-8 h-8 rounded-full hover:bg-slate-200 dark:hover:bg-white/10 flex items-center justify-center text-slate-500 transition-colors"><span className="material-symbols-outlined text-xl">close</span></button>
              </div>
              
-             <div className="flex border-b border-black/5 bg-[#F8FAFC] dark:bg-slate-900 px-4 pt-2 shrink-0">
+             <div className="flex border-b border-white/20 dark:border-white/10 bg-[#F8FAFC] dark:bg-slate-900 px-4 pt-2 shrink-0">
                 {WORDART_CATEGORIES.map(t => (
                   <button key={t} onClick={() => setWordArtTab(t)}
                     className={`px-4 py-3 text-[11px] font-bold uppercase tracking-widest transition-all border-b-2 ${wordArtTab === t ? 'text-primary border-primary bg-white dark:bg-slate-800' : 'text-slate-400 border-transparent hover:text-slate-600 dark:hover:text-slate-200'}`}
@@ -493,12 +502,13 @@ export default function LabelEditor() {
                 ))}
              </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
       {/* Bulk Delete Dialog */}
-      {showBulkDeleteModal && (
+      {showBulkDeleteModal && createPortal(
         <div className="fixed inset-0 z-[1002] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-[360px] p-6 flex flex-col gap-4">
+          <div className="glass-card bg-white dark:bg-slate-800 rounded-2xl shadow-float w-[360px] p-6 flex flex-col gap-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-600 shrink-0">
                 <span className="material-symbols-outlined text-xl">delete_sweep</span>
@@ -529,7 +539,8 @@ export default function LabelEditor() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Save As Dialog */}
@@ -552,6 +563,15 @@ export default function LabelEditor() {
           </div>
         </div>
       )}
+
+      {/* ── Preview Modal ─────────────────────────────────────────────────── */}
+      <PreviewModal 
+        isOpen={showPreviewModal}
+        onClose={() => setShowPreviewModal(false)}
+        elements={elements}
+        meta={meta}
+        title={`Preview: ${meta.fileName || 'Untitled Label'}`}
+      />
 
       {/* ── Toast ───────────────────────────────────────────────────────────── */}
       {toast && (
@@ -577,17 +597,17 @@ export default function LabelEditor() {
       )}
 
       {/* ── Top Nav ─────────────────────────────────────────────────────────── */}
-      <header className="h-14 bg-[#F8FAFC] dark:bg-slate-900 border-b border-black/5 flex items-center justify-between px-6 shrink-0 z-40">
+      <header className="h-14 glass border-b border-white/20 dark:border-white/10 flex items-center justify-between px-6 shrink-0 z-40">
         {/* Left: File Menu + Title */}
         <div className="flex items-center gap-3">
-          <Link to="/" className="text-lg font-extrabold tracking-tighter text-blue-900 shrink-0">Pharma Label Design</Link>
+          <Link to="/" className="text-lg font-extrabold tracking-tighter text-blue-900 dark:text-blue-200 shrink-0">Pharma Label Design</Link>
           <div className="w-[1px] h-5 bg-outline-variant/30 mx-1"></div>
 
           {/* File Dropdown */}
           <div className="relative" onClick={e => e.stopPropagation()}>
             <button
               onClick={() => setShowFileMenu(v => !v)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-semibold text-slate-700 hover:bg-slate-100 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10 transition-colors"
             >
               <span className="material-symbols-outlined text-[16px]">folder_open</span>
               File
@@ -635,11 +655,11 @@ export default function LabelEditor() {
         </div>
 
         {/* Center: Nav links */}
-        <nav className="hidden lg:flex absolute left-1/2 -translate-x-1/2 items-center gap-6 text-[15px] font-semibold">
-          <Link to="/" className="text-slate-500 hover:text-slate-800 transition-colors">Dashboard</Link>
-          <Link to="/assets" className="text-slate-500 hover:text-slate-800 transition-colors">Template Library</Link>
-          <Link to="/editor" className="text-blue-700 font-bold border-b-2 border-blue-600 pb-1">Label Editor</Link>
-          <Link to="/translation" className="text-slate-500 hover:text-slate-800 transition-colors">Translation</Link>
+        <nav className="hidden lg:flex absolute left-1/2 -translate-x-1/2 items-center gap-6 text-[13px] font-semibold">
+          <Link to="/" className="text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white transition-colors">Dashboard</Link>
+          <Link to="/assets" className="text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white transition-colors">Template Library</Link>
+          <Link to="/editor" className="text-blue-700 dark:text-blue-400 font-bold border-b-2 border-blue-600 pb-1">Label Editor</Link>
+          <Link to="/translation" className="text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white transition-colors">Translation</Link>
         </nav>
 
         {/* Right: Toolset */}
@@ -648,7 +668,7 @@ export default function LabelEditor() {
           <button
             onClick={toggleTheme}
             title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-            className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-all"
+            className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10 hover:text-slate-700 dark:hover:text-white transition-all"
           >
             <span className="material-symbols-outlined text-[18px]">
               {theme === 'dark' ? 'light_mode' : 'dark_mode'}
@@ -664,7 +684,7 @@ export default function LabelEditor() {
       </header>
 
       {/* ── Secondary Toolbar (Undo/Redo/Zoom) ──────────────────────────────── */}
-      <div className="h-10 bg-[#F8FAFC] dark:bg-slate-800 border-b border-black/5 flex items-center justify-between px-4 shrink-0 z-30">
+      <div className="h-10 glass border-b border-white/20 dark:border-white/10 flex items-center justify-between px-4 shrink-0 z-30">
         <div className="flex items-center gap-2">
           <button onClick={undo} disabled={historyIndex <= 0} title="Undo (Ctrl+Z)" className="p-1 rounded hover:bg-slate-100 disabled:opacity-30 text-slate-600 transition-colors">
             <span className="material-symbols-outlined text-[16px]">undo</span>
@@ -708,9 +728,18 @@ export default function LabelEditor() {
           <div className="w-[1px] h-3 bg-slate-200 mx-1"></div>
           <button 
             onClick={() => setIsDrawingMode(true)}
-            className={`flex items-center gap-1.5 px-3 py-1 border rounded-full shadow-sm hover:shadow-md transition-all font-bold text-[10px] uppercase tracking-widest ${isDrawingMode ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white dark:bg-slate-700 border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:border-blue-400'}`}
+            className={`flex items-center gap-1.5 px-3 py-1 border rounded-full shadow-sm hover:shadow-md transition-all font-bold text-[10px] uppercase tracking-widest ${isDrawingMode ? 'btn-gradient shadow-glow' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:border-blue-400'}`}
           >
             <span className="material-symbols-outlined text-[16px]">edit_note</span> Writing
+          </button>
+
+          <div className="w-[1px] h-3 bg-slate-200 mx-1"></div>
+
+          <button 
+            onClick={() => setShowPreviewModal(true)}
+            className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-500/20 rounded-full shadow-sm hover:shadow-md hover:border-emerald-400 transition-all text-emerald-700 dark:text-emerald-300 font-bold text-[10px] uppercase tracking-widest"
+          >
+            <span className="material-symbols-outlined text-[16px]">visibility</span> Preview
           </button>
         </div>
 
@@ -721,9 +750,9 @@ export default function LabelEditor() {
       <main className="flex flex-1 overflow-hidden">
 
         {/* LEFT SIDEBAR */}
-        <aside className="w-64 bg-[#F8FAFC] dark:bg-slate-900 border-r border-black/5 flex flex-col overflow-hidden shrink-0">
+        <aside className="w-64 glass border-r border-white/20 dark:border-white/10 flex flex-col overflow-hidden shrink-0">
           {/* Tab Headers */}
-          <div className="flex border-b border-black/5 text-[11px] font-bold uppercase tracking-wider text-slate-500 shrink-0">
+          <div className="flex border-b border-white/20 dark:border-white/10 text-[11px] font-bold uppercase tracking-wider text-slate-500 shrink-0">
             {['elements', 'shapes', 'Icons', 'layers'].map(t => (
               <button key={t} onClick={() => setActiveTab(t)}
                 className={`flex-1 py-3 transition-colors ${activeTab === t ? 'text-primary border-b-2 border-primary bg-blue-50/50' : 'text-slate-500 hover:bg-slate-100/50 hover:text-slate-700'}`}
@@ -752,7 +781,7 @@ export default function LabelEditor() {
                           e.dataTransfer.effectAllowed = 'copy';
                         }
                       }}
-                      className="flex flex-col items-center p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-white/10 shadow-sm hover:border-primary/50 hover:bg-blue-50/60 hover:shadow-md transition-all group lg:active:cursor-grabbing">
+                      className="flex flex-col items-center p-3 glass-card group hover:-translate-y-1 transition-all duration-300 hover:border-primary/50 hover:bg-blue-50/60 hover:shadow-md transition-all group lg:active:cursor-grabbing">
                       <span className="material-symbols-outlined text-slate-500 group-hover:text-primary mb-1 text-xl">{item.icon}</span>
                       <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600 group-hover:text-primary">{item.label}</span>
                     </button>
@@ -818,7 +847,7 @@ export default function LabelEditor() {
                           e.dataTransfer.setData('application/json', JSON.stringify(s.payload));
                           e.dataTransfer.effectAllowed = 'copy';
                         }}
-                        className="flex flex-col items-center p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-white/10 shadow-sm hover:border-primary/50 hover:bg-blue-50/60 hover:shadow-md transition-all group lg:active:cursor-grabbing">
+                        className="flex flex-col items-center p-3 glass-card group hover:-translate-y-1 transition-all duration-300 hover:border-primary/50 hover:bg-blue-50/60 hover:shadow-md transition-all group lg:active:cursor-grabbing">
                         <span className="material-symbols-outlined text-slate-500 group-hover:text-primary mb-1 text-xl">{s.render}</span>
                         <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600 group-hover:text-primary">{s.name}</span>
                       </button>
@@ -868,7 +897,7 @@ export default function LabelEditor() {
                             e.dataTransfer.setData('application/json', JSON.stringify({ type: 'IconsIcon', svg: icon.svg, name: icon.name, width: 60, height: 60 }));
                             e.dataTransfer.effectAllowed = 'copy';
                           }}
-                          className="flex flex-col items-center justify-center p-2.5 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-white/10 shadow-sm hover:border-primary/50 hover:bg-blue-50/60 hover:shadow-md transition-all group lg:active:cursor-grabbing"
+                          className="flex flex-col items-center justify-center p-2.5 glass-card group hover:-translate-y-1 transition-all duration-300 hover:border-primary/50 hover:bg-blue-50/60 hover:shadow-md transition-all group lg:active:cursor-grabbing"
                         >
                           <div className="w-8 h-8 mb-1.5 flex items-center justify-center transition-transform group-hover:scale-110" dangerouslySetInnerHTML={{ __html: icon.svg }} />
                           <span className="text-[9px] font-bold uppercase text-slate-400 group-hover:text-primary truncate w-full text-center leading-tight">{icon.name}</span>
@@ -918,12 +947,12 @@ export default function LabelEditor() {
                           <input 
                             type="checkbox" 
                             checked={isBulkSelected}
-                            onClick={(e) => {
-                              e.stopPropagation();
+                            onChange={(e) => {
                               setSelectedLayers(prev => 
                                 prev.includes(el.id) ? prev.filter(id => id !== el.id) : [...prev, el.id]
                               );
                             }}
+                            onClick={(e) => e.stopPropagation()}
                             className="w-3.5 h-3.5 rounded border-slate-300 text-primary focus:ring-primary/20 accent-primary cursor-pointer shrink-0"
                           />
                           <span className="material-symbols-outlined text-[13px] opacity-70 shrink-0">
@@ -958,7 +987,7 @@ export default function LabelEditor() {
 
         {/* CENTER CANVAS */}
         <section
-          className="flex-1 overflow-auto bg-[#E8EAF0] relative custom-scrollbar"
+          className="flex-1 overflow-auto bg-slate-100 dark:bg-slate-900 relative custom-scrollbar"
           style={{ backgroundImage: 'radial-gradient(circle, #b0b8c8 1px, transparent 1px)', backgroundSize: '20px 20px' }}
           onClick={() => {
             setSelectedElementId(null);
@@ -999,10 +1028,10 @@ export default function LabelEditor() {
             <div className="sticky top-4 left-0 right-0 z-[1005] flex justify-center pointer-events-none px-4">
               <div className="flex items-center gap-3 bg-white dark:bg-slate-800 p-2.5 rounded-2xl shadow-2xl border border-slate-200 dark:border-white/10 pointer-events-auto animate-in fade-in slide-in-from-top-4 duration-300">
                  <div className="flex gap-2 px-3 border-r border-slate-200 dark:border-white/10 items-center">
-                    <button onClick={() => setIsEraserMode(false)} className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${!isEraserMode ? 'bg-primary text-white shadow-lg shadow-primary/30' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-white/5'}`}>
+                    <button onClick={() => setIsEraserMode(false)} className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${!isEraserMode ? 'btn-gradient shadow-sm text-white shadow-lg shadow-primary/30' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-white/5'}`}>
                        <span className="material-symbols-outlined text-lg">edit</span>
                     </button>
-                    <button onClick={() => setIsEraserMode(true)} className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${isEraserMode ? 'bg-primary text-white shadow-lg shadow-primary/30' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-white/5'}`}>
+                    <button onClick={() => setIsEraserMode(true)} className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${isEraserMode ? 'btn-gradient shadow-sm text-white shadow-lg shadow-primary/30' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-white/5'}`}>
                        <span className="material-symbols-outlined text-lg">ink_eraser</span>
                     </button>
                  </div>
@@ -1062,7 +1091,7 @@ export default function LabelEditor() {
                       setCurrentLines([]);
                       setEraserPos(null);
                       commitUpdate();
-                    }} className="px-5 py-2.5 text-[10px] font-black uppercase tracking-widest bg-primary text-white rounded-xl shadow-xl shadow-primary/20 hover:bg-blue-700 hover:shadow-2xl transition-all active:scale-95">Finish ✓</button>
+                    }} className="px-5 py-2.5 text-[10px] font-black uppercase tracking-widest btn-gradient shadow-sm text-white rounded-xl shadow-xl shadow-primary/20 hover:bg-blue-700 hover:shadow-2xl transition-all active:scale-95">Finish ✓</button>
                  </div>
               </div>
             </div>
@@ -1072,7 +1101,7 @@ export default function LabelEditor() {
             <div
               ref={artboardRef}
               id="pharma-artboard"
-              className="shadow-3xl relative pharma-artboard border border-black/15 dark:border-white/10"
+              className="shadow-2xl shadow-slate-300/50 dark:shadow-black/50 ring-1 ring-white/50 dark:ring-white/10 relative pharma-artboard border border-black/15 dark:border-white/10"
               style={{
                 width: `${AW}px`,
                 height: `${AH}px`,
@@ -1534,7 +1563,7 @@ export default function LabelEditor() {
         </section>
 
         {/* RIGHT PROPERTIES PANEL */}
-        <aside className="w-80 bg-[#F8FAFC] dark:bg-slate-900 border-l border-black/5 flex flex-col overflow-y-auto shrink-0 custom-scrollbar">
+        <aside className="w-80 glass border-l border-white/20 dark:border-white/10 flex flex-col overflow-y-auto shrink-0 custom-scrollbar">
           {selectedLayers.length > 1 ? (
             <div className="animate-fade-in p-4 space-y-6">
               <div className="flex items-center justify-between bg-blue-50 dark:bg-blue-900/20 px-3 py-3 rounded-xl mb-4 border border-blue-500/10">
@@ -1631,11 +1660,52 @@ export default function LabelEditor() {
                   </div>
                 </div>
               </div>
+
+              {/* Bulk Content — Suffix */}
+              <div className="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm border border-slate-100 space-y-3">
+                <span className="text-[11px] font-bold uppercase tracking-widest text-primary block">Batch Content Action</span>
+                <div>
+                  <label className="text-[10px] font-bold uppercase text-slate-400 mb-1.5 block">Append Suffix to Elements</label>
+                  <div className="relative">
+                    <input 
+                      type="text" 
+                      className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-white/10 text-[11px] py-2.5 pl-3 pr-10 rounded-xl outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/10 transition-all font-medium"
+                      placeholder="e.g. (Verified)"
+                      value={bulkSuffix}
+                      onFocus={() => {
+                        // Capture baseline text before appending
+                        const baseline = {};
+                        selectedLayers.forEach(id => {
+                          const el = elements.find(e => e.id === id);
+                          if (el && el.text) baseline[id] = el.text;
+                        });
+                        originalTexts.current = baseline;
+                      }}
+                      onChange={e => {
+                        const sfx = e.target.value;
+                        setBulkSuffix(sfx);
+                        selectedLayers.forEach(id => {
+                          const base = originalTexts.current[id];
+                          if (base !== undefined) {
+                            updateElement(id, { text: base + sfx });
+                          }
+                        });
+                      }}
+                      onBlur={() => {
+                        commitUpdate();
+                        setBulkSuffix(''); // Reset for next use
+                      }}
+                    />
+                    <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 text-[18px]">post_add</span>
+                  </div>
+                  <p className="text-[9px] text-slate-400 mt-2 italic font-medium">Tip: This appends text to all currently selected layers.</p>
+                </div>
+              </div>
             </div>
           ) : selectedElement ? (
             <div className="animate-fade-in pb-16 relative">
               {/* Sticky Global Lock Toggle for the Layer */}
-              <div className="sticky top-0 z-[20] shadow-sm flex items-center justify-between bg-primary-container px-4 py-2 border-b border-black/5 rounded-b-xl mb-2">
+              <div className="sticky top-0 z-[20] shadow-sm flex items-center justify-between bg-primary-container px-4 py-2 border-b border-white/20 dark:border-white/10 rounded-b-xl mb-2">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-primary flex items-center gap-2">
                   <span className="material-symbols-outlined text-[15px]">{selectedElement.locked ? 'lock' : 'lock_open'}</span>
                   {selectedElement.locked ? 'Layer Secured' : 'Unsecured Layer'}
@@ -1656,7 +1726,7 @@ export default function LabelEditor() {
               <div className={selectedElement.locked ? 'pointer-events-none opacity-50 grayscale-[50%]' : ''}>
 
               {/* Position Block */}
-              <div className="p-4 border-b border-black/5 bg-slate-50/50">
+              <div className="p-4 border-b border-white/20 dark:border-white/10 bg-slate-50/50">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-[9px] font-bold uppercase tracking-widest text-blue-600">Position & Size</span>
                   <button onClick={() => deleteElement(selectedElement.id)} className="h-6 px-2 bg-red-50 hover:bg-red-100 text-red-600 text-[9px] font-bold uppercase rounded border border-red-200 transition-all flex items-center gap-1">
@@ -1686,7 +1756,7 @@ export default function LabelEditor() {
 
               {/* Data / Content Block — for all text-bearing types */}
               {['text', 'warnings', 'barcode', 'qrcode', 'manufacturing', 'dosage', 'storage', 'subtext', 'table'].includes(selectedElement.type) && (
-                <div className="p-4 border-b border-black/5">
+                <div className="p-4 border-b border-white/20 dark:border-white/10">
                   <span className="text-[11px] font-bold uppercase tracking-widest text-slate-500 block mb-2">
                     {['barcode', 'qrcode'].includes(selectedElement.type) ? 'Data String' : (selectedElement.type === 'table' ? 'Table Data' : 'Text Content')}
                   </span>
@@ -1774,7 +1844,7 @@ export default function LabelEditor() {
 
               {/* Typography — only for non-media types */}
               {!['image', 'barcode', 'qrcode', 'icon', 'IconsIcon'].includes(selectedElement.type) && (
-                <div className="p-4 border-b border-black/5">
+                <div className="p-4 border-b border-white/20 dark:border-white/10">
                   <span className="text-[11px] font-bold uppercase tracking-widest text-slate-500 block mb-3">Typography</span>
                   <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-2">
@@ -1835,7 +1905,10 @@ export default function LabelEditor() {
                       <label className="text-[10px] font-bold uppercase text-slate-400 mb-1 block flex justify-between">
                         <span>Size</span><span className="font-mono">{selectedElement.fontSize || 12}px</span>
                       </label>
-                      <input type="range" min="6" max="144" className="w-full accent-blue-600"
+                      <input type="range" min="6" max={Math.max(12, Math.min(
+                        Math.floor((selectedElement.width || AW) / (Math.max(1, ...(selectedElement.text || 'text').split(/[\s\n]+/).map(w => w.length)) * 0.7)),
+                        Math.floor(Math.sqrt(((selectedElement.width || AW) * Math.max(10, AH - (selectedElement.y || 0) - 10)) / (Math.max(1, (selectedElement.text || 'text').length) * 0.7 * parseFloat(selectedElement.lineHeight || 1.25))))
+                      )) || 144} className="w-full accent-blue-600"
                         value={selectedElement.fontSize || 12}
                         onChange={e => updateElement(selectedElement.id, { fontSize: parseInt(e.target.value) })}
                         onMouseUp={commitUpdate} />
@@ -1864,7 +1937,7 @@ export default function LabelEditor() {
                         ['textDecoration', 'underline', 'format_underlined', selectedElement.textDecoration === 'underline'],
                       ].map(([prop, val, icon, active]) => (
                         <button key={prop} onClick={() => { updateElement(selectedElement.id, { [prop]: active ? (prop === 'fontStyle' ? 'normal' : 'none') : val }); commitUpdate(); }}
-                          className={`flex-1 p-1.5 rounded text-center transition-colors ${active ? 'bg-primary text-white' : 'hover:bg-slate-200 text-slate-500'}`}>
+                          className={`flex-1 p-1.5 rounded text-center transition-colors ${active ? 'btn-gradient shadow-sm text-white' : 'hover:bg-slate-200 text-slate-500'}`}>
                           <span className="material-symbols-outlined text-[14px]">{icon}</span>
                         </button>
                       ))}
@@ -1882,7 +1955,7 @@ export default function LabelEditor() {
 
               {/* Appearance — Fill, Color, Stroke */}
               {selectedElement.type !== 'image' && (
-                <div className="p-4 border-b border-black/5 space-y-4">
+                <div className="p-4 border-b border-white/20 dark:border-white/10 space-y-4">
                   <span className="text-[11px] font-bold uppercase tracking-widest text-slate-500 block">Appearance</span>
 
                   {/* Icon size slider */}
