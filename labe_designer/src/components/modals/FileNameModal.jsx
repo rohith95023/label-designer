@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 
 export default function FileNameModal({ onConfirm, onCancel, onOpen, recentFiles, onSelectRecent }) {
   const [name, setName] = useState('');
-  const valid = name.trim().length >= 3;
+  const valid = name.trim().length > 0;
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -58,7 +58,7 @@ export default function FileNameModal({ onConfirm, onCancel, onOpen, recentFiles
               className="w-full border border-outline-variant/40 rounded-lg px-4 py-2.5 text-sm text-slate-800 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
             />
             {name.length > 0 && !valid && (
-              <p className="text-error text-[10px] mt-1">Name must be at least 3 characters.</p>
+              <p className="text-error text-[10px] mt-1">Name cannot be empty.</p>
             )}
           </div>
 

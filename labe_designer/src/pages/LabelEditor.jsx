@@ -163,6 +163,8 @@ export default function LabelEditor() {
   const [penWidth, setPenWidth] = useState(3);
   const [isEraserMode, setIsEraserMode] = useState(false);
   const [eraserPos, setEraserPos] = useState(null); // {x, y} for visual brush
+  const [selectedLayers, setSelectedLayers] = useState([]); // Array of IDs for bulk editing
+  const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
 
   // Show FileNameModal only AFTER hydration is complete and no saved file exists
   useEffect(() => {
@@ -493,6 +495,43 @@ export default function LabelEditor() {
           </div>
         </div>
       )}
+      {/* Bulk Delete Dialog */}
+      {showBulkDeleteModal && (
+        <div className="fixed inset-0 z-[1002] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-[360px] p-6 flex flex-col gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-600 shrink-0">
+                <span className="material-symbols-outlined text-xl">delete_sweep</span>
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-slate-800 dark:text-white">Delete {selectedLayers.length} Layers?</h3>
+                <p className="text-xs text-slate-500">This action cannot be undone.</p>
+              </div>
+            </div>
+            <div className="flex gap-3 mt-2">
+              <button 
+                onClick={() => setShowBulkDeleteModal(false)} 
+                className="flex-1 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={() => {
+                  setElements(prev => prev.filter(el => !selectedLayers.includes(el.id)));
+                  setSelectedLayers([]);
+                  setSelectedElementId(null);
+                  setShowBulkDeleteModal(false);
+                  commitUpdate();
+                }} 
+                className="flex-1 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold shadow-sm transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Save As Dialog */}
       {showSaveAs && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 backdrop-blur-sm">
@@ -699,10 +738,10 @@ export default function LabelEditor() {
               <div className="animate-fade-in flex flex-col gap-5">
                 <div className="grid grid-cols-2 gap-2">
                   {[
-                    { label: 'Text', icon: 'title', action: addTxt, payload: { type: 'text', text: 'New Text', fontSize: 16, fontFamily: 'Inter, sans-serif', fontWeight: '500', color: '#191C1E', width: 160, height: 28 } },
+                    { label: 'Text', icon: 'title', action: addTxt, payload: { type: 'text', name: 'Text Box', text: 'New Text', fontSize: 16, fontFamily: 'Inter, sans-serif', fontWeight: '500', color: '#191C1E', width: 160, height: 28 } },
                     { label: 'Table', icon: 'table_chart', action: () => setShowTableModal(true) },
-                    { label: 'Barcode', icon: 'barcode', action: addBar, payload: { type: 'barcode', text: '123456789012', color: '#191c1e', width: 180, height: 80 } },
-                    { label: 'QR Code', icon: 'qr_code_2', action: addQR, payload: { type: 'qrcode', text: 'https://example.com', color: '#191c1e', width: 80, height: 80 } },
+                    { label: 'Barcode', icon: 'barcode', action: addBar, payload: { type: 'barcode', name: 'Barcode', text: '123456789012', color: '#191c1e', width: 180, height: 80 } },
+                    { label: 'QR Code', icon: 'qr_code_2', action: addQR, payload: { type: 'qrcode', name: 'QR Code', text: 'https://example.com', color: '#191c1e', width: 80, height: 80 } },
                     { label: 'Upload Logo', icon: 'imagesmode', action: () => fileInputRef.current?.click() },
                   ].map(item => (
                     <button key={item.label} onClick={item.action}
@@ -729,22 +768,22 @@ export default function LabelEditor() {
                   </div>
                   <div className="space-y-1">
                     {[
-                      { label: 'Rx Symbol', icon: 'medical_services', payload: { type: 'text', text: 'Rx', fontSize: 32, fontFamily: 'serif', fontWeight: '900', color: '#ba1a1a', width: 60, height: 48 } },
-                      { label: 'Prominent Generic', icon: 'text_fields', payload: { type: 'text', text: 'GENERIC NAME IP\n(Brand Name)', fontSize: 18, fontFamily: 'Inter, sans-serif', fontWeight: '900', color: '#191C1E', width: 240, height: 72, align: 'center' } },
-                      { label: 'Schedule H Warning', icon: 'warning', payload: { type: 'text', heading: 'SCHEDULE H DRUG - WARNING', text: 'To be sold by retail on the prescription of a Registered Medical Practitioner only.', fontSize: 8, fontFamily: 'Inter, sans-serif', fontWeight: '700', color: '#ba1a1a', bgColor: '#fff1f0', borderColor: '#ffccc7', borderWidth: 1, borderRadius: 4, width: 260, height: 54 } },
-                      { label: 'Schedule G Warning', icon: 'g_translate', payload: { type: 'text', heading: 'SCHEDULE G DRUG - CAUTION', text: 'It is dangerous to take this preparation except under medical supervision.', fontSize: 8, fontFamily: 'Inter, sans-serif', fontWeight: '700', color: '#ba1a1a', bgColor: '#fff1f0', borderColor: '#ffccc7', borderWidth: 1, borderRadius: 4, width: 260, height: 54 } },
-                      { label: 'Schedule X Warning', icon: 'dangerous', payload: { type: 'text', heading: 'SCHEDULE X DRUG - WARNING', text: 'It is dangerous to take this preparation except under medical supervision. To be sold by retail on the prescription of a Registered Medical Practitioner only.', fontSize: 8, fontFamily: 'Inter, sans-serif', fontWeight: '700', color: '#ba1a1a', bgColor: '#fff1f0', borderColor: '#ffccc7', borderWidth: 1, borderRadius: 4, width: 260, height: 60 } },
-                      { label: 'Composition', icon: 'science', payload: { type: 'text', heading: 'Composition', text: 'Each 5ml contains:\nActive Ingredient IP 250mg\nExcipients q.s.\nColor: Tartrazine', fontSize: 10, fontFamily: 'Inter, sans-serif', fontWeight: '400', color: '#191C1E', width: 240, height: 74 } },
-                      { label: 'Batch / Mfg / Exp / MRP', icon: 'calendar_today', payload: { type: 'text', heading: 'Batch Information', text: 'B.No: \nMfg.Date: \nExp.Date: \nM.R.P. ₹: \n(Incl. of all taxes)', fontSize: 10, fontFamily: 'Roboto Mono, monospace', fontWeight: '700', color: '#191C1E', width: 200, height: 90 } },
-                      { label: 'Storage & Stability', icon: 'device_thermostat', payload: { type: 'text', heading: 'Storage', text: 'Store below 25°C. Protected from light and moisture. Do not freeze.', fontSize: 10, fontFamily: 'Inter, sans-serif', fontWeight: '500', color: '#191C1E', width: 240, height: 44 } },
-                      { label: 'Child Safety Warning', icon: 'child_care', payload: { type: 'text', text: 'KEEP OUT OF REACH OF CHILDREN', fontSize: 11, fontFamily: 'Inter, sans-serif', fontWeight: '900', color: '#191C1E', width: 240, height: 24, align: 'center' } },
-                      { label: 'Precautions/Warnings', icon: 'report_problem', payload: { type: 'text', heading: 'Precautions', text: 'If symptoms persist, consult your doctor. Keep the container tightly closed.', fontSize: 10, fontFamily: 'Inter, sans-serif', fontWeight: '400', color: '#191C1E', width: 240, height: 48 } },
-                      { label: 'Special Warnings', icon: 'info', payload: { type: 'text', heading: 'Special Warnings', text: 'Pregnancy & Lactation: Consult your physician before use.', fontSize: 9, fontFamily: 'Inter, sans-serif', fontWeight: '600', color: '#191C1E', width: 240, height: 44 } },
-                      { label: 'Sterility Warning', icon: 'clean_hands', payload: { type: 'text', heading: 'Sterility', text: 'STRICTLY FOR INJECTABLES - Check for clarity before use.', fontSize: 10, fontFamily: 'Inter, sans-serif', fontWeight: '700', color: '#ba1a1a', width: 240, height: 44 } },
-                      { label: 'Shake Well (Susp.)', icon: 'shake', payload: { type: 'text', text: 'SHAKE WELL BEFORE USE', fontSize: 11, fontFamily: 'Inter, sans-serif', fontWeight: '900', color: '#191C1E', width: 240, height: 24, align: 'center' } },
-                      { label: 'Mfg & Licensing', icon: 'factory', payload: { type: 'text', heading: 'Manufacturing', text: 'Mfg. Lic No: \nBatch No: \nMarketed by:', fontSize: 10, fontFamily: 'Inter, sans-serif', fontWeight: '400', color: '#191C1E', width: 240, height: 60 } },
-                      { label: 'Dosage Instructions', icon: 'medication', payload: { type: 'text', heading: 'Dosage', text: 'As directed by the Physician.', fontSize: 10, fontFamily: 'Inter, sans-serif', fontWeight: '500', color: '#191C1E', width: 220, height: 36 } },
-                      { label: 'Net Contents', icon: 'inventory', payload: { type: 'text', heading: 'Net Content', text: '100 mL / 10 Tablets', fontSize: 12, fontFamily: 'Inter, sans-serif', fontWeight: '600', color: '#191C1E', width: 180, height: 32 } },
+                      { label: 'Rx Symbol', icon: 'medical_services', payload: { type: 'text', name: 'Rx Symbol', text: 'Rx', fontSize: 32, fontFamily: 'serif', fontWeight: '900', color: '#ba1a1a', width: 60, height: 48 } },
+                      { label: 'Prominent Generic', icon: 'text_fields', payload: { type: 'text', name: 'Generic Name', text: 'GENERIC NAME IP\n(Brand Name)', fontSize: 18, fontFamily: 'Inter, sans-serif', fontWeight: '900', color: '#191C1E', width: 240, height: 72, align: 'center' } },
+                      { label: 'Schedule H Warning', icon: 'warning', payload: { type: 'text', name: 'Schedule H', heading: 'SCHEDULE H DRUG - WARNING', text: 'To be sold by retail on the prescription of a Registered Medical Practitioner only.', fontSize: 8, fontFamily: 'Inter, sans-serif', fontWeight: '700', color: '#ba1a1a', bgColor: '#fff1f0', borderColor: '#ffccc7', borderWidth: 1, borderRadius: 4, width: 260, height: 54 } },
+                      { label: 'Schedule G Warning', icon: 'g_translate', payload: { type: 'text', name: 'Schedule G', heading: 'SCHEDULE G DRUG - CAUTION', text: 'It is dangerous to take this preparation except under medical supervision.', fontSize: 8, fontFamily: 'Inter, sans-serif', fontWeight: '700', color: '#ba1a1a', bgColor: '#fff1f0', borderColor: '#ffccc7', borderWidth: 1, borderRadius: 4, width: 260, height: 54 } },
+                      { label: 'Schedule X Warning', icon: 'dangerous', payload: { type: 'text', name: 'Schedule X', heading: 'SCHEDULE X DRUG - WARNING', text: 'It is dangerous to take this preparation except under medical supervision. To be sold by retail on the prescription of a Registered Medical Practitioner only.', fontSize: 8, fontFamily: 'Inter, sans-serif', fontWeight: '700', color: '#ba1a1a', bgColor: '#fff1f0', borderColor: '#ffccc7', borderWidth: 1, borderRadius: 4, width: 260, height: 60 } },
+                      { label: 'Composition', icon: 'science', payload: { type: 'text', name: 'Composition', heading: 'Composition', text: 'Each 5ml contains:\nActive Ingredient IP 250mg\nExcipients q.s.\nColor: Tartrazine', fontSize: 10, fontFamily: 'Inter, sans-serif', fontWeight: '400', color: '#191C1E', width: 240, height: 74 } },
+                      { label: 'Batch / Mfg / Exp / MRP', icon: 'calendar_today', payload: { type: 'text', name: 'Batch Info', heading: 'Batch Information', text: 'B.No: \nMfg.Date: \nExp.Date: \nM.R.P. ₹: \n(Incl. of all taxes)', fontSize: 10, fontFamily: 'Roboto Mono, monospace', fontWeight: '700', color: '#191C1E', width: 200, height: 90 } },
+                      { label: 'Storage & Stability', icon: 'device_thermostat', payload: { type: 'text', name: 'Storage', heading: 'Storage', text: 'Store below 25°C. Protected from light and moisture. Do not freeze.', fontSize: 10, fontFamily: 'Inter, sans-serif', fontWeight: '500', color: '#191C1E', width: 240, height: 44 } },
+                      { label: 'Child Safety Warning', icon: 'child_care', payload: { type: 'text', name: 'Child Safety', text: 'KEEP OUT OF REACH OF CHILDREN', fontSize: 11, fontFamily: 'Inter, sans-serif', fontWeight: '900', color: '#191C1E', width: 240, height: 24, align: 'center' } },
+                      { label: 'Precautions/Warnings', icon: 'report_problem', payload: { type: 'text', name: 'Precautions', heading: 'Precautions', text: 'If symptoms persist, consult your doctor. Keep the container tightly closed.', fontSize: 10, fontFamily: 'Inter, sans-serif', fontWeight: '400', color: '#191C1E', width: 240, height: 48 } },
+                      { label: 'Special Warnings', icon: 'info', payload: { type: 'text', name: 'Special Warnings', heading: 'Special Warnings', text: 'Pregnancy & Lactation: Consult your physician before use.', fontSize: 9, fontFamily: 'Inter, sans-serif', fontWeight: '600', color: '#191C1E', width: 240, height: 44 } },
+                      { label: 'Sterility Warning', icon: 'clean_hands', payload: { type: 'text', name: 'Sterility', heading: 'Sterility', text: 'STRICTLY FOR INJECTABLES - Check for clarity before use.', fontSize: 10, fontFamily: 'Inter, sans-serif', fontWeight: '700', color: '#ba1a1a', width: 240, height: 44 } },
+                      { label: 'Shake Well (Susp.)', icon: 'shake', payload: { type: 'text', name: 'Shake Well', text: 'SHAKE WELL BEFORE USE', fontSize: 11, fontFamily: 'Inter, sans-serif', fontWeight: '900', color: '#191C1E', width: 240, height: 24, align: 'center' } },
+                      { label: 'Mfg & Licensing', icon: 'factory', payload: { type: 'text', name: 'Mfg Details', heading: 'Manufacturing', text: 'Mfg. Lic No: \nBatch No: \nMarketed by:', fontSize: 10, fontFamily: 'Inter, sans-serif', fontWeight: '400', color: '#191C1E', width: 240, height: 60 } },
+                      { label: 'Dosage Instructions', icon: 'medication', payload: { type: 'text', name: 'Dosage', heading: 'Dosage', text: 'As directed by the Physician.', fontSize: 10, fontFamily: 'Inter, sans-serif', fontWeight: '500', color: '#191C1E', width: 220, height: 36 } },
+                      { label: 'Net Contents', icon: 'inventory', payload: { type: 'text', name: 'Net Contents', heading: 'Net Content', text: '100 mL / 10 Tablets', fontSize: 12, fontFamily: 'Inter, sans-serif', fontWeight: '600', color: '#191C1E', width: 180, height: 32 } },
                     ].map(item => (
                       <div key={item.label}
                         onClick={() => addElement(item.payload)}
@@ -843,36 +882,75 @@ export default function LabelEditor() {
 
             {/* LAYERS TAB */}
             {activeTab === 'layers' && (
-              <div className="animate-fade-in flex flex-col gap-1.5">
-                {[...elements].sort((a, b) => (b.zIndex || 0) - (a.zIndex || 0)).map(el => {
-                  const isSelected = selectedElementId === el.id;
-                  return (
-                    <div key={`layer-${el.id}`}
-                      onClick={() => setSelectedElementId(el.id)}
-                      className={`flex items-center justify-between p-2 rounded-lg border text-[11px] cursor-pointer transition-all ${isSelected ? 'bg-blue-50 border-primary/50 text-primary font-bold' : 'bg-slate-50 border-transparent hover:border-slate-200 text-slate-600'}`}>
-                      <div className="flex items-center gap-2 overflow-hidden">
-                        <span className="material-symbols-outlined text-[13px] opacity-70">
-                          {el.type === 'image' ? 'image' : el.type === 'shape' ? 'category' : (el.type === 'icon' || el.type === 'IconsIcon') ? 'star' : el.type === 'barcode' ? 'barcode' : el.type === 'qrcode' ? 'qr_code_2' : 'match_case'}
-                        </span>
-                        <span className="truncate max-w-[100px]">{el.name || el.text || el.iconName || el.shapeType || 'Layer'}</span>
+              <div className="animate-fade-in flex flex-col gap-1.5 h-full">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <input 
+                      type="checkbox" 
+                      checked={elements.length > 0 && selectedLayers.length === elements.length}
+                      onChange={(e) => {
+                        if (e.target.checked) setSelectedLayers(elements.map(el => el.id));
+                        else setSelectedLayers([]);
+                      }}
+                      className="w-3.5 h-3.5 rounded border-slate-300 text-primary focus:ring-primary/20 accent-primary cursor-pointer shrink-0"
+                    />
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Select All ({elements.length})</span>
+                  </div>
+                  {selectedLayers.length > 0 && (
+                    <button 
+                      onClick={() => setSelectedLayers([])}
+                      className="text-[10px] bg-slate-100 px-2 py-1 rounded-md text-slate-500 hover:text-red-500 transition-colors font-bold"
+                    >
+                      Clear Selection
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex flex-col gap-1 overflow-y-auto max-h-[600px] custom-scrollbar pr-1">
+                  {[...elements].sort((a, b) => (b.zIndex || 0) - (a.zIndex || 0)).map(el => {
+                    const isSelected = selectedElementId === el.id;
+                    const isBulkSelected = selectedLayers.includes(el.id);
+                    return (
+                      <div key={`layer-${el.id}`}
+                        onClick={() => setSelectedElementId(el.id)}
+                        className={`group flex items-center justify-between p-2 rounded-lg border text-[11px] cursor-pointer transition-all ${isSelected ? 'bg-blue-50/80 border-primary/50 text-primary font-bold shadow-sm' : 'bg-white border-slate-100 hover:border-slate-200 text-slate-600'}`}>
+                        <div className="flex items-center gap-2.5">
+                          <input 
+                            type="checkbox" 
+                            checked={isBulkSelected}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedLayers(prev => 
+                                prev.includes(el.id) ? prev.filter(id => id !== el.id) : [...prev, el.id]
+                              );
+                            }}
+                            className="w-3.5 h-3.5 rounded border-slate-300 text-primary focus:ring-primary/20 accent-primary cursor-pointer shrink-0"
+                          />
+                          <span className="material-symbols-outlined text-[13px] opacity-70 shrink-0">
+                            {el.type === 'image' ? 'image' : el.type === 'shape' ? 'category' : (el.type === 'icon' || el.type === 'IconsIcon') ? 'star' : el.type === 'barcode' ? 'barcode' : el.type === 'qrcode' ? 'qr_code_2' : 'match_case'}
+                          </span>
+                          <span className="font-bold leading-tight break-words pr-1">
+                            {el.name || el.heading || (el.text ? el.text.replace(/\n/g, ' ').slice(0, 30) + (el.text.length > 30 ? '...' : '') : el.type.toUpperCase())}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button 
+                            onClick={(e) => { 
+                              e.stopPropagation(); 
+                              updateElement(el.id, { locked: !el.locked }); 
+                              commitUpdate();
+                            }}
+                            className={`p-1 rounded-md transition-all ${el.locked ? 'text-primary scale-110' : 'text-slate-300 hover:text-slate-600'}`}
+                            title={el.locked ? "Unlock Layer" : "Lock Layer"}
+                          >
+                            <span className="material-symbols-outlined text-[15px]">{el.locked ? 'lock' : 'lock_open'}</span>
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1.5 shrink-0 ml-2">
-                        <button 
-                          onClick={(e) => { 
-                            e.stopPropagation(); 
-                            updateElement(el.id, { locked: !el.locked }); 
-                            commitUpdate();
-                          }}
-                          className={`p-1 rounded-md transition-all ${el.locked ? 'bg-blue-100 text-blue-600' : 'text-slate-400 hover:bg-slate-200 hover:text-slate-600'}`}
-                          title={el.locked ? "Unlock Layer" : "Lock Layer"}
-                        >
-                          <span className="material-symbols-outlined text-[15px]">{el.locked ? 'lock' : 'lock_open'}</span>
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-                {elements.length === 0 && <p className="text-[10px] text-slate-400 text-center py-8">Canvas is empty.</p>}
+                    );
+                  })}
+                </div>
+                {elements.length === 0 && <p className="text-[10px] text-slate-400 text-center py-12 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">Canvas is empty.</p>}
               </div>
             )}
           </div>
@@ -1111,7 +1189,7 @@ export default function LabelEditor() {
                     minWidth={4}
                     minHeight={4}
                     style={{
-                      zIndex: el.zIndex || 10,
+                      zIndex: isSelected ? 9999 : (el.zIndex || 10),
                       position: 'absolute'
                     }}
                     onDragStop={(_, d) => {
@@ -1209,9 +1287,8 @@ export default function LabelEditor() {
                                 <span className="material-symbols-outlined text-[16px]">content_copy</span>
                               </button>
                               <button onClick={e => { e.stopPropagation(); deleteElement(el.id); }}
-                                className="p-1 px-2.5 rounded bg-red-600 hover:bg-red-700 text-white shadow-sm flex items-center gap-1 transition-colors" title="Delete">
-                                <span className="material-symbols-outlined text-[16px]">delete</span>
-                                <span className="text-[10px] font-bold">Delete</span>
+                                className="w-8 h-8 rounded-lg bg-red-600 hover:bg-red-700 text-white shadow-sm flex items-center justify-center transition-colors" title="Delete">
+                                <span className="material-symbols-outlined text-[18px]">delete</span>
                               </button>
                             </div>
                           </>
@@ -1458,7 +1535,104 @@ export default function LabelEditor() {
 
         {/* RIGHT PROPERTIES PANEL */}
         <aside className="w-80 bg-[#F8FAFC] dark:bg-slate-900 border-l border-black/5 flex flex-col overflow-y-auto shrink-0 custom-scrollbar">
-          {selectedElement ? (
+          {selectedLayers.length > 1 ? (
+            <div className="animate-fade-in p-4 space-y-6">
+              <div className="flex items-center justify-between bg-blue-50 dark:bg-blue-900/20 px-3 py-3 rounded-xl mb-4 border border-blue-500/10">
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-blue-700 dark:text-blue-300 flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[15px]">group</span>
+                    Bulk Selection
+                  </span>
+                  <span className="text-[9px] text-blue-600/70 dark:text-blue-400/70 font-bold">{selectedLayers.length} Layers Selected</span>
+                </div>
+                <button 
+                  onClick={() => setShowBulkDeleteModal(true)}
+                  className="p-2 bg-red-50 hover:bg-red-500 hover:text-white text-red-600 rounded-lg transition-all border border-red-100"
+                  title="Delete Selected"
+                >
+                  <span className="material-symbols-outlined text-[18px]">delete_sweep</span>
+                </button>
+              </div>
+
+              {/* Bulk Typography */}
+              <div className="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm border border-slate-100 space-y-4">
+                <span className="text-[11px] font-bold uppercase tracking-widest text-primary block">Typography & Appearance</span>
+                
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-[10px] font-bold uppercase text-slate-400 mb-1 block">Font Family</label>
+                    <select className="w-full bg-slate-50 border border-slate-200 text-[11px] py-1.5 px-1.5 rounded-lg outline-none cursor-pointer"
+                      onChange={e => {
+                        selectedLayers.forEach(id => updateElement(id, { fontFamily: e.target.value }));
+                        commitUpdate();
+                      }}>
+                      <option value="">Select Font...</option>
+                      <option value="Inter, sans-serif">Inter</option>
+                      <option value="Roboto, sans-serif">Roboto</option>
+                      <option value="Poppins, sans-serif">Poppins</option>
+                      <option value="Outfit, sans-serif">Outfit</option>
+                      <option value="Lato, sans-serif">Lato</option>
+                      <option value="Open Sans, sans-serif">Open Sans</option>
+                    </select>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-[10px] font-bold uppercase text-slate-400 mb-1 block">Weight</label>
+                      <select className="w-full bg-slate-50 border border-slate-200 text-[11px] py-1.5 px-1.5 rounded-lg outline-none cursor-pointer"
+                        onChange={e => {
+                          selectedLayers.forEach(id => updateElement(id, { fontWeight: e.target.value }));
+                          commitUpdate();
+                        }}>
+                        <option value="">Select...</option>
+                        <option value="800">Extra Bold</option>
+                        <option value="700">Bold</option>
+                        <option value="600">Semibold</option>
+                        <option value="500">Medium</option>
+                        <option value="400">Regular</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold uppercase text-slate-400 mb-1 block">Color</label>
+                      <div className="flex gap-2 h-8">
+                        <div className="w-full h-full rounded-lg border border-slate-200 relative overflow-hidden backdrop-blur-sm">
+                          <input type="color" className="absolute -inset-4 w-20 h-20 cursor-pointer"
+                            onChange={e => {
+                              selectedLayers.forEach(id => updateElement(id, { color: e.target.value }));
+                              commitUpdate();
+                            }} />
+                          <div className="absolute inset-x-0 bottom-0 top-0 pointer-events-none flex items-center justify-center">
+                            <span className="material-symbols-outlined text-[14px] text-slate-400">colorize</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-bold uppercase text-slate-400 mb-1 block">Font Size</label>
+                    <input type="range" min="6" max="72" className="w-full accent-blue-600"
+                      onChange={e => {
+                        selectedLayers.forEach(id => updateElement(id, { fontSize: parseInt(e.target.value) }));
+                        commitUpdate();
+                      }} />
+                  </div>
+
+                  <div className="flex gap-1 bg-slate-50 p-1 rounded-lg border border-slate-200">
+                    {['left', 'center', 'right'].map(a => (
+                      <button key={a} onClick={() => { 
+                          selectedLayers.forEach(id => updateElement(id, { align: a }));
+                          commitUpdate(); 
+                        }}
+                        className="flex-1 p-1.5 rounded text-center transition-colors hover:bg-slate-200 text-slate-500">
+                        <span className="material-symbols-outlined text-[14px]">format_align_{a}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : selectedElement ? (
             <div className="animate-fade-in pb-16 relative">
               {/* Sticky Global Lock Toggle for the Layer */}
               <div className="sticky top-0 z-[20] shadow-sm flex items-center justify-between bg-primary-container px-4 py-2 border-b border-black/5 rounded-b-xl mb-2">
@@ -1516,6 +1690,21 @@ export default function LabelEditor() {
                   <span className="text-[11px] font-bold uppercase tracking-widest text-slate-500 block mb-2">
                     {['barcode', 'qrcode'].includes(selectedElement.type) ? 'Data String' : (selectedElement.type === 'table' ? 'Table Data' : 'Text Content')}
                   </span>
+
+                  {selectedElement.heading !== undefined && (
+                    <div className="mb-4">
+                      <label className="text-[9px] font-extrabold uppercase text-primary mb-1.5 block tracking-wider">Field Heading</label>
+                      <input
+                        type="text"
+                        className="w-full bg-blue-50/50 border border-blue-100 text-[11px] font-bold py-2 px-2.5 focus:border-primary outline-none rounded-lg transition-all"
+                        value={selectedElement.heading || ''}
+                        onChange={e => updateElement(selectedElement.id, { heading: e.target.value })}
+                        onBlur={commitUpdate}
+                        placeholder="Enter heading..."
+                      />
+                    </div>
+                  )}
+
                    {selectedElement.type === 'table' ? (
                     <div className="space-y-1.5">
                       <div className="max-h-[320px] overflow-y-auto overflow-x-hidden custom-scrollbar border border-slate-200/50 rounded-xl bg-slate-50/30 p-2 space-y-1">

@@ -197,37 +197,37 @@ const createElementsForTablet = (brand, comp, desc, dose, W, H) => {
   const yExpiry = y;
 
   return [
-    { id: uuidv4(), type: 'text', subtype: 'brand', zIndex: 12,
+    { id: uuidv4(), type: 'text', name: 'Brand Name', subtype: 'brand', zIndex: 12,
       text: brand, x: p, y: yBrand,
       fontSize: fs_brand, fontWeight: '800', color: '#191C1E', align: 'left',
       width: lW, height: h_brand },
 
-    { id: uuidv4(), type: 'subtext', zIndex: 13,
+    { id: uuidv4(), type: 'subtext', name: 'Rx Badge', zIndex: 13,
       text: 'Rx Only', x: p, y: yRx,
       fontSize: Math.max(6, Math.round(h_rx * 0.55)), fontWeight: '700',
       color: '#ffffff', bgColor: '#1976d2', align: 'left',
       width: Math.round(lW * 0.30), height: h_rx },
 
-    { id: uuidv4(), type: 'text', zIndex: 11,
+    { id: uuidv4(), type: 'text', name: 'Composition', zIndex: 11,
       text: desc + '\n' + comp, x: p, y: yDesc,
       fontSize: fs_desc, fontWeight: '500', color: '#414752', align: 'left',
       width: lW, height: h_desc },
 
-    { id: uuidv4(), type: 'dosage', heading: 'Dosage', zIndex: 12,
+    { id: uuidv4(), type: 'dosage', name: 'Dosage', heading: 'Dosage', zIndex: 12,
       text: dose, x: col, y: p,
       fontSize: fs_dos, fontWeight: '700', color: '#191C1E', align: 'right',
       width: rW, height: h_dosage },
 
-    { id: uuidv4(), type: 'warnings', heading: 'Warnings', zIndex: 11,
+    { id: uuidv4(), type: 'warnings', name: 'Warnings', heading: 'Warnings', zIndex: 11,
       text: 'Store below 25°C.', x: p, y: yWarn,
       fontSize: fs_sm, fontWeight: '500', color: '#191c1e', alertColor: '#ba1a1a', align: 'left',
       width: lW, height: h_warn },
 
-    { id: uuidv4(), type: 'barcode', zIndex: 10,
+    { id: uuidv4(), type: 'barcode', name: 'Barcode', zIndex: 10,
       text: '1234567890', x: col, y: p + h_dosage + g,
       width: rW, height: Math.max(4, h_bar), color: '#191c1e' },
 
-    { id: uuidv4(), type: 'expiry', heading: 'Expiry / Batch', zIndex: 12,
+    { id: uuidv4(), type: 'expiry', name: 'Expiry/Batch', heading: 'Expiry / Batch', zIndex: 12,
       text: 'EXP 11/26 | B.No 125B', x: p, y: yExpiry,
       fontSize: Math.max(6, Math.round(h_expiry * 0.45)), fontWeight: '700',
       color: '#191c1e', align: 'left', width: lW, height: h_expiry },
@@ -261,27 +261,27 @@ const createElementsForSyrup = (brand, comp, desc, warn, W, H) => {
   const yExpiry = y;
 
   return [
-    { id: uuidv4(), type: 'text', subtype: 'brand', zIndex: 12,
+    { id: uuidv4(), type: 'text', name: 'Brand Name', subtype: 'brand', zIndex: 12,
       text: brand, x: p, y: yBrand,
       fontSize: Math.round(h_brand * 0.65), fontWeight: '800',
       color: '#191C1E', align: 'left', width: lW, height: h_brand },
 
-    { id: uuidv4(), type: 'text', zIndex: 11,
+    { id: uuidv4(), type: 'text', name: 'Composition', zIndex: 11,
       text: desc + '\n' + comp, x: p, y: yDesc,
       fontSize: Math.max(7, Math.round(h_desc * 0.30)), fontWeight: '500',
       color: '#414752', align: 'left', width: lW, height: h_desc },
 
-    { id: uuidv4(), type: 'warnings', heading: 'Caution', zIndex: 11,
+    { id: uuidv4(), type: 'warnings', name: 'Caution', heading: 'Caution', zIndex: 11,
       text: warn, x: p, y: yWarn,
       fontSize: Math.max(6, Math.round(h_warn * 0.42)), fontWeight: '700',
       color: '#ba1a1a', align: 'left', width: lW, height: h_warn },
 
-    { id: uuidv4(), type: 'expiry', heading: 'Expiry / Batch', zIndex: 12,
+    { id: uuidv4(), type: 'expiry', name: 'Expiry/Batch', heading: 'Expiry / Batch', zIndex: 12,
       text: 'EXP 11/26 | B.No 125B', x: p, y: yExpiry,
       fontSize: Math.max(6, Math.round(h_expiry * 0.42)), fontWeight: '700',
       color: '#191c1e', align: 'left', width: Math.round(lW * 0.65), height: h_expiry },
 
-    { id: uuidv4(), type: 'barcode', zIndex: 10,
+    { id: uuidv4(), type: 'barcode', name: 'Barcode', zIndex: 10,
       text: '1234567890', x: barX, y: barY,
       width: barW, height: barH, color: '#1b6d24' },
   ];
@@ -307,23 +307,23 @@ const createElementsForInjection = (brand, comp, desc, route, W, H) => {
   const h_route = fh - h_comp - g;
 
   return [
-    { id: uuidv4(), type: 'text', subtype: 'brand', zIndex: 13,
+    { id: uuidv4(), type: 'text', name: 'Brand Name', subtype: 'brand', zIndex: 13,
       text: brand, x: c1X, y: p,
       fontSize: Math.max(6, Math.round(fh * 0.50)), fontWeight: '900',
       color: '#ba1a1a', align: 'left', width: c1W, height: fh },
 
-    { id: uuidv4(), type: 'text', zIndex: 11,
+    { id: uuidv4(), type: 'text', name: 'Composition', zIndex: 11,
       text: comp, x: c2X, y: p,
       fontSize: Math.max(5, Math.round(h_comp * 0.38)), fontWeight: '500',
       color: '#191C1E', align: 'left', width: c2W, height: h_comp },
 
-    { id: uuidv4(), type: 'subtext', zIndex: 12,
+    { id: uuidv4(), type: 'subtext', name: 'Route', zIndex: 12,
       text: route, x: c2X, y: p + h_comp + g,
       fontSize: Math.max(5, Math.round(h_route * 0.50)), fontWeight: '700',
       color: '#ffffff', bgColor: '#1b6d24', align: 'left',
       width: Math.round(c2W * 0.90), height: h_route },
 
-    { id: uuidv4(), type: 'warnings', heading: 'Hospital Use Only', zIndex: 12,
+    { id: uuidv4(), type: 'warnings', name: 'Caution', heading: 'Hospital Use Only', zIndex: 12,
       text: 'Single dose vial', x: c3X, y: p,
       fontSize: Math.max(5, Math.round(fh * 0.22)), fontWeight: '700',
       color: '#191c1e', alertColor: '#ba1a1a', align: 'right',
@@ -352,22 +352,22 @@ const createElementsForOintment = (brand, comp, desc, apply, W, H) => {
   const yExpiry = y;
 
   return [
-    { id: uuidv4(), type: 'text', subtype: 'brand', zIndex: 13,
+    { id: uuidv4(), type: 'text', name: 'Brand Name', subtype: 'brand', zIndex: 13,
       text: brand, x: p, y: yBrand,
       fontSize: Math.round(h_brand * 0.62), fontWeight: '800',
       color: '#005dac', align: 'center', width: fw, height: h_brand },
 
-    { id: uuidv4(), type: 'text', zIndex: 11,
+    { id: uuidv4(), type: 'text', name: 'Composition', zIndex: 11,
       text: desc + '\n' + comp, x: p, y: yDesc,
       fontSize: Math.max(6, Math.round(h_desc * 0.30)), fontWeight: '500',
       color: '#414752', align: 'center', width: fw, height: h_desc },
 
-    { id: uuidv4(), type: 'manufacturing', heading: 'Directions', zIndex: 11,
+    { id: uuidv4(), type: 'manufacturing', name: 'Directions', heading: 'Directions', zIndex: 11,
       text: apply, x: p, y: yDir,
       fontSize: Math.max(6, Math.round(h_dir * 0.42)), fontWeight: '700',
       color: '#191C1E', align: 'center', width: fw, height: h_dir },
 
-    { id: uuidv4(), type: 'expiry', heading: 'Expiry / Batch', zIndex: 12,
+    { id: uuidv4(), type: 'expiry', name: 'Expiry/Batch', heading: 'Expiry / Batch', zIndex: 12,
       text: 'EXP 11/26 | B.No 125B', x: p, y: yExpiry,
       fontSize: Math.max(5, Math.round(h_expiry * 0.42)), fontWeight: '700',
       color: '#191c1e', align: 'left', width: Math.round(fw * 0.6), height: h_expiry },
