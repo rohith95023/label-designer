@@ -1373,11 +1373,39 @@ export default function LabelEditor() {
                             <path d={el.pathData} stroke={el.color || '#191C1E'} strokeWidth={el.penWidth || 3} fill="none" strokeLinecap="round" strokeLinejoin="round" />
                           </svg>
                         )}
-                        {el.heading && (
+                        {(el.heading !== undefined || isSelected) && isSelected ? (
+                          <input
+                            type="text"
+                            value={el.heading ?? ''}
+                            onClick={e => e.stopPropagation()}
+                            onMouseDown={e => e.stopPropagation()}
+                            onChange={e => updateElement(el.id, { heading: e.target.value })}
+                            onBlur={commitUpdate}
+                            placeholder="Add heading..."
+                            style={{
+                              display: 'block',
+                              fontSize: '8px',
+                              fontWeight: '800',
+                              fontFamily: 'Inter, sans-serif',
+                              textTransform: 'uppercase',
+                              color: el.alertColor || '#717783',
+                              marginBottom: '2px',
+                              letterSpacing: '1.2px',
+                              background: 'transparent',
+                              border: 'none',
+                              outline: '1px dashed #93c5fd',
+                              outlineOffset: '1px',
+                              borderRadius: '2px',
+                              width: '100%',
+                              cursor: 'text',
+                              padding: '0',
+                            }}
+                          />
+                        ) : el.heading ? (
                           <span style={{ display: 'block', fontSize: '8px', fontWeight: '800', fontFamily: 'Inter, sans-serif', textTransform: 'uppercase', color: el.alertColor || '#717783', marginBottom: '2px', letterSpacing: '1.2px' }}>
                             {el.heading}
                           </span>
-                        )}
+                        ) : null}
 
                         {el.type === 'barcode' ? (
                           <div className="w-full h-full flex items-center justify-center pointer-events-none">
@@ -1761,16 +1789,16 @@ export default function LabelEditor() {
                     {['barcode', 'qrcode'].includes(selectedElement.type) ? 'Data String' : (selectedElement.type === 'table' ? 'Table Data' : 'Text Content')}
                   </span>
 
-                  {selectedElement.heading !== undefined && (
+                  {!['barcode', 'qrcode', 'table'].includes(selectedElement.type) && (
                     <div className="mb-4">
                       <label className="text-[9px] font-extrabold uppercase text-primary mb-1.5 block tracking-wider">Field Heading</label>
                       <input
                         type="text"
                         className="w-full bg-blue-50/50 border border-blue-100 text-[11px] font-bold py-2 px-2.5 focus:border-primary outline-none rounded-lg transition-all"
-                        value={selectedElement.heading || ''}
+                        value={selectedElement.heading ?? ''}
                         onChange={e => updateElement(selectedElement.id, { heading: e.target.value })}
                         onBlur={commitUpdate}
-                        placeholder="Enter heading..."
+                        placeholder="Enter heading (e.g. Composition)..."
                       />
                     </div>
                   )}
