@@ -91,18 +91,18 @@ export default function LabelSizeModal({ onConfirm, onCancel, onSkip, currentSiz
         )}
 
         <div className="flex flex-col gap-3 pt-2">
-          <div className="flex gap-3">
+          <div className="flex gap-3 justify-center">
             {onCancel && (
               <button
                 onClick={onCancel}
-                className="flex-1 py-2.5 rounded-xl border border-outline-variant/40 text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors"
+                className="px-8 py-2.5 rounded-xl border border-outline-variant/40 text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors"
               >
                 Back
               </button>
             )}
             <button
               onClick={handleConfirm}
-              className="flex-1 py-2.5 rounded-xl btn-gradient text-white text-sm font-bold active:scale-95 transition-all"
+              className="px-12 py-2.5 rounded-xl btn-gradient text-white text-sm font-bold active:scale-95 transition-all"
             >
               {isEditMode ? 'Apply Size' : 'Set New Size →'}
             </button>

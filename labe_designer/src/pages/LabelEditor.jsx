@@ -14,6 +14,7 @@ import LabelSizeModal from '../components/modals/LabelSizeModal';
 import { IconsIcons } from '../data/premiumIcons';
 import { WORDART_CATEGORIES, WORDART_STYLES } from '../data/wordArtPresets';
 import PreviewModal from '../components/modals/PreviewModal';
+import { calcAutoFitFontSize } from '../utils/autoFitFont';
 
 function TableSetupModal({ onConfirm, onCancel }) {
   const [rows, setRows] = useState(3);
@@ -147,6 +148,7 @@ export default function LabelEditor() {
 
   const [activeTab, setActiveTab] = useState('elements');
   const [showFileMenu, setShowFileMenu] = useState(false);
+  const [showExportMenu, setShowExportMenu] = useState(false);
   const [showValidation, setShowValidation] = useState(false);
   const [validationResult, setValidationResult] = useState({ isValid: true, errors: [] });
 
@@ -183,7 +185,7 @@ export default function LabelEditor() {
 
   // Close file menu on outside click
   useEffect(() => {
-    const close = () => setShowFileMenu(false);
+    const close = () => { setShowFileMenu(false); setShowExportMenu(false); };
     window.addEventListener('click', close);
     return () => window.removeEventListener('click', close);
   }, []);
@@ -620,13 +622,7 @@ export default function LabelEditor() {
                   { label: 'Open File (.json)', icon: 'folder_open', action: () => jsonInputRef.current?.click() },
                   null,
                   { label: 'Save', icon: 'save', action: () => { saveFile(); setShowFileMenu(false); }, shortcut: 'Ctrl+S' },
-                  { label: 'Save as File (.json)', icon: 'download', action: () => { exportJSON(); setShowFileMenu(false); } },
-                  null,
-                  { label: 'Open from PC', icon: 'file_open', action: () => { jsonInputRef.current?.click(); } },
-                  null,
-                  { label: 'Export PNG', icon: 'image', action: handleExportPNG },
-                  { label: 'Export PDF', icon: 'picture_as_pdf', action: handleExportPDF },
-                  { label: 'Print', icon: 'print', action: handlePrint },
+                  { label: 'Save as File (.json)', icon: 'download', action: () => { exportJSON(); setShowFileMenu(false); } }
                 ].map((item, i) => item === null
                   ? <div key={`sep-${i}`} className="h-[1px] bg-outline-variant/15 my-0.5" />
                   : (
@@ -677,9 +673,33 @@ export default function LabelEditor() {
           <button onClick={handleValidate} className="px-3 py-1.5 text-[11px] font-bold uppercase tracking-widest bg-slate-100 text-blue-700 border border-blue-200 rounded-lg hover:bg-blue-50 transition-all flex items-center gap-1.5">
             <span className="material-symbols-outlined text-[14px]">fact_check</span> Validate
           </button>
-          <button onClick={handleExportPDF} className="px-3 py-1.5 btn-gradient text-white rounded-lg text-[11px] font-bold uppercase tracking-widest shadow-sm flex items-center gap-1.5">
-            <span className="material-symbols-outlined text-[14px]">picture_as_pdf</span> PDF
-          </button>
+          <div className="relative">
+            <button
+              onClick={(e) => { e.stopPropagation(); setShowExportMenu(!showExportMenu); setShowFileMenu(false); }}
+              className="px-4 py-1.5 btn-gradient text-white rounded-lg text-[11px] font-bold uppercase tracking-widest shadow-sm flex items-center gap-1.5 transition-all"
+            >
+              Export
+              <span className="material-symbols-outlined text-[16px] -mr-1">{showExportMenu ? 'arrow_drop_up' : 'arrow_drop_down'}</span>
+            </button>
+
+            {showExportMenu && (
+              <div className="absolute top-10 right-0 w-44 bg-white border border-outline-variant/30 shadow-lg rounded-xl py-1.5 z-[9999] animate-fade-in origin-top-right">
+                {[
+                  { label: 'Export PNG', icon: 'image', action: () => { handleExportPNG(); setShowExportMenu(false); } },
+                  { label: 'Export PDF', icon: 'picture_as_pdf', action: () => { handleExportPDF(); setShowExportMenu(false); } },
+                  null,
+                  { label: 'Print Label', icon: 'print', action: () => { handlePrint(); setShowExportMenu(false); } }
+                ].map((item, i) => item === null ? (
+                  <div key={`sep-${i}`} className="h-[1px] bg-slate-100 my-1" />
+                ) : (
+                  <button key={item.label} onClick={item.action} className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-slate-50 hover:text-blue-700 transition-colors text-left tracking-tight">
+                    <span className="material-symbols-outlined text-[18px] text-slate-500">{item.icon}</span>
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
@@ -1345,7 +1365,15 @@ export default function LabelEditor() {
                               }
                           ),
                           borderRadius: el.type === 'shape' && el.shapeType === 'circle' ? '50%' : `${el.borderRadius || 0}px`,
-                          fontSize: `${el.fontSize || 16}px`,
+                          // Auto-fit font size for non-editing text to fit within element bounds
+                          fontSize: (() => {
+                            const isEditing = editingElementId === el.id;
+                            const isTextType = !['barcode','qrcode','image','icon','IconsIcon','shape','path','table'].includes(el.type);
+                            if (!isEditing && isTextType && el.text) {
+                              return `${calcAutoFitFontSize(el.text, el.width || 120, el.height || 40, el.fontSize || 16)}px`;
+                            }
+                            return `${el.fontSize || 16}px`;
+                          })(),
                           fontFamily: el.fontFamily || 'Inter, sans-serif',
                         fontWeight: el.fontWeight || '400',
                         fontStyle: el.fontStyle || 'normal',
@@ -2208,11 +2236,11 @@ export default function LabelEditor() {
         ) : (
             <div className="p-6 animate-fade-in space-y-8">
               <div className="flex flex-col items-center text-center px-4">
-                <div className="w-16 h-16 bg-blue-100/50 dark:bg-blue-900/20 rounded-2xl flex items-center justify-center mb-4 transition-colors">
+                <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center mb-4 shadow-sm">
                   <span className="material-symbols-outlined text-[32px] text-blue-600 dark:text-blue-400">settings_overscan</span>
                 </div>
-                <h3 className="text-[13px] font-bold text-slate-900 dark:text-slate-100 uppercase tracking-widest">Label Settings</h3>
-                <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1.5 leading-tight">Configure global properties for the entire label surface</p>
+                <h3 className="text-[13px] font-black text-slate-800 dark:text-slate-100 uppercase tracking-widest">Label Settings</h3>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1.5 leading-tight">Configure global properties for the entire label surface</p>
               </div>
 
               <div className="space-y-6">
@@ -2249,10 +2277,12 @@ export default function LabelEditor() {
                   </div>
                 </div>
 
-                <div className="p-4 bg-slate-100/30 rounded-2xl border border-dashed border-slate-300 text-center">
-                   <span className="material-symbols-outlined text-[24px] text-slate-400 mb-1">touch_app</span>
-                   <p className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-tight">Select an element</p>
-                   <p className="text-[9px] text-slate-500 dark:text-slate-500">to edit specific properties</p>
+                <div className="p-5 bg-slate-100 dark:bg-slate-700/40 rounded-2xl border border-slate-200 dark:border-white/10 text-center flex flex-col items-center gap-2">
+                   <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-700 shadow-sm flex items-center justify-center border border-slate-200 dark:border-white/10">
+                     <span className="material-symbols-outlined text-[22px] text-blue-500 dark:text-blue-400">touch_app</span>
+                   </div>
+                   <p className="text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-tight">Select an element</p>
+                   <p className="text-[10px] text-slate-500 dark:text-slate-500">to edit specific properties</p>
                 </div>
               </div>
             </div>

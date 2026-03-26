@@ -3,12 +3,12 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 
 const NAV_ITEMS = [
-  { key: 'dashboard',    to: '/',            icon: 'grid_view',            label: 'Dashboard' },
-  { key: 'assets',       to: '/assets',      icon: 'auto_awesome_mosaic',  label: 'Template Library' },
-  { key: 'editor',       to: '/editor',      icon: 'edit_document',        label: 'Label Editor' },
-  { key: 'translation',  to: '/translation', icon: 'translate',            label: 'Translation' },
-  { key: 'history',      to: '/history',     icon: 'history',              label: 'History' },
-  { key: 'settings',     to: '/settings',    icon: 'settings',             label: 'Settings' },
+  { key: 'dashboard', to: '/', icon: 'grid_view', label: 'Dashboard' },
+  { key: 'assets', to: '/assets', icon: 'auto_awesome_mosaic', label: 'Template Library' },
+  { key: 'editor', to: '/editor', icon: 'edit_document', label: 'Label Editor' },
+  { key: 'translation', to: '/translation', icon: 'translate', label: 'Translation' },
+  { key: 'history', to: '/history', icon: 'history', label: 'History' },
+  { key: 'settings', to: '/settings', icon: 'settings', label: 'Settings' },
 ];
 
 export default function AppLayout({ children, activePage = '', searchBar = null }) {
@@ -45,27 +45,26 @@ export default function AppLayout({ children, activePage = '', searchBar = null 
               </span>
             </div>
             <span className="hidden sm:block font-extrabold text-[16px] tracking-tight text-gradient select-none">
-              PharmaLabel
+              Clinical Label Design
             </span>
           </button>
         </div>
 
         {/* Center: top navigation (lg+) */}
-          <div className="hidden md:flex flex-1 items-center justify-center gap-1 bg-surface-container-low/60 dark:bg-slate-900/40 backdrop-blur-md px-1.5 py-1.5 border border-outline-variant/10 rounded-full max-w-xl mx-auto">
-          {NAV_ITEMS.filter(n => ['dashboard','assets','editor','translation'].includes(n.key)).map(item => (
+        <div className="hidden md:flex flex-1 items-center justify-center gap-1 bg-surface-container-low/60 dark:bg-slate-900/40 backdrop-blur-md px-1.5 py-1.5 border border-outline-variant/10 rounded-full max-w-xl mx-auto">
+          {NAV_ITEMS.filter(n => ['dashboard', 'assets', 'editor', 'translation'].includes(n.key)).map(item => (
             <Link
               key={item.key}
               to={item.to}
-              className={`px-4 py-1.5 rounded-full text-[13px] font-semibold tracking-tight transition-all duration-200 ${
-                activePage === item.key
+              className={`px-4 py-1.5 rounded-full text-[13px] font-semibold tracking-tight transition-all duration-200 ${activePage === item.key
                   ? 'bg-primary text-on-primary shadow-glow-sm'
                   : 'text-slate-600 hover:text-slate-900 dark:text-blue-100 hover:bg-slate-100 dark:hover:bg-white/10 dark:hover:text-white'
-              }`}
+                }`}
             >
               {item.label}
             </Link>
           ))}
-          </div>
+        </div>
 
         {/* Right: search + theme toggle */}
         <div className="flex items-center gap-2 shrink-0">
@@ -94,9 +93,8 @@ export default function AppLayout({ children, activePage = '', searchBar = null 
 
         {/* ── Sidebar ──────────────────────────────────────────────────── */}
         <aside
-          className={`hidden lg:flex flex-col h-full bg-white dark:bg-[#0F1420] border-r border-outline-variant/30 dark:border-white/5 shrink-0 overflow-hidden transition-all duration-350 ease-out-expo ${
-            collapsed ? 'w-[68px]' : 'w-64'
-          }`}
+          className={`hidden lg:flex flex-col h-full bg-white dark:bg-[#0F1420] border-r border-outline-variant/30 dark:border-white/5 shrink-0 overflow-hidden transition-all duration-350 ease-out-expo ${collapsed ? 'w-[68px]' : 'w-64'
+            }`}
         >
           {/* Logo area inside sidebar */}
           <div className={`flex items-center h-16 border-b border-outline-variant/20 dark:border-white/5 px-4 shrink-0 ${collapsed ? 'justify-center' : 'gap-3'}`}>
@@ -108,7 +106,7 @@ export default function AppLayout({ children, activePage = '', searchBar = null 
             </div>
             {!collapsed && (
               <span className="font-extrabold text-[15px] tracking-tight text-gradient leading-none">
-                PharmaLabel
+                Clinical Label Design
               </span>
             )}
           </div>
@@ -117,7 +115,7 @@ export default function AppLayout({ children, activePage = '', searchBar = null 
           <nav className="flex flex-col gap-1 p-3 flex-1 overflow-y-auto scrollbar-hide">
             {!collapsed && (
               <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-outline px-2 mb-1 mt-1">
-                Navigation
+
               </p>
             )}
             {NAV_ITEMS.map(item => {

@@ -1,6 +1,7 @@
 import React from 'react';
 import Barcode from 'react-barcode';
 import { QRCodeSVG } from 'qrcode.react';
+import { calcAutoFitFontSize } from '../../utils/autoFitFont';
 
 export default function LabelPreview({ elements, meta, scale = 1 }) {
   const { labelSize, bgColor } = meta;
@@ -21,6 +22,13 @@ export default function LabelPreview({ elements, meta, scale = 1 }) {
       {[...elements].sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0)).map(el => {
         const elW = (el.width || 120) * scale;
         const elH = (el.height || 40) * scale;
+
+        // Auto-fit font size for text elements so translated/long text doesn't overflow
+        const isTextEl = !['barcode','qrcode','image','icon','IconsIcon','shape','path','table'].includes(el.type);
+        const rawFontSize = el.fontSize || 16;
+        const fittedFontSize = isTextEl && el.text
+          ? calcAutoFitFontSize(el.text, el.width || 120, el.height || 40, rawFontSize)
+          : rawFontSize;
         
         return (
           <div
@@ -45,7 +53,7 @@ export default function LabelPreview({ elements, meta, scale = 1 }) {
                 : { border: `${(el.borderWidth || 0) * scale}px ${el.borderStyle || 'solid'} ${el.borderColor || 'transparent'}` }
               ),
               borderRadius: el.type === 'shape' && el.shapeType === 'circle' ? '50%' : `${(el.borderRadius || 0) * scale}px`,
-              fontSize: `${(el.fontSize || 16) * scale}px`,
+              fontSize: `${fittedFontSize * scale}px`,
               fontFamily: el.fontFamily || 'Inter, sans-serif',
               fontWeight: el.fontWeight || '400',
               fontStyle: el.fontStyle || 'normal',

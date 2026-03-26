@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useLabel } from '../context/LabelContext';
 import AppLayout from '../components/common/AppLayout';
@@ -230,8 +231,8 @@ export default function TemplateLibrary() {
       </div>
 
       {/* Confirm modal */}
-      {confirmTemplate && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4 animate-fade-in">
+      {confirmTemplate && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4 animate-fade-in">
           <div className="glass-card rounded-3xl shadow-float w-full max-w-md p-8 animate-scale-in">
             <div className="w-14 h-14 rounded-2xl bg-amber-50 dark:bg-amber-950/40 flex items-center justify-center mb-5">
               <span className="material-symbols-outlined text-amber-500 text-2xl"
@@ -266,7 +267,8 @@ export default function TemplateLibrary() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </AppLayout>
   );

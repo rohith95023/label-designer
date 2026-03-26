@@ -15,7 +15,7 @@ export default function PreviewModal({ isOpen, onClose, elements, meta, title })
              </div>
              <div>
                 <h3 className="text-sm font-bold text-slate-800 dark:text-white">{title || 'Label Preview'}</h3>
-                <p className="text-[10px] uppercase font-bold tracking-widest text-slate-400">Compliance Visualizer</p>
+                <p className="text-[10px] uppercase font-bold tracking-widest text-slate-400"> </p>
              </div>
           </div>
           <button 

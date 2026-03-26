@@ -5,6 +5,7 @@ import { useToast } from '../components/common/ToastContext';
 import { useTheme } from '../context/ThemeContext';
 import { GEO_LANGUAGE_DATA, ELEMENT_TYPE_LABELS, TRANSLATABLE_TYPES } from '../data/geoLanguages';
 import { translateBatch } from '../services/translation.service';
+import { calcAutoFitFontSize } from '../utils/autoFitFont';
 
 const TYPE_COLORS = {
   text: 'text-blue-700 bg-blue-50 border-blue-200',
@@ -100,7 +101,17 @@ export default function Translation() {
       showToast('Nothing to apply. Please translate first.', 'error');
       return;
     }
-    checkedWithDraft.forEach(el => updateElement(el.id, { text: draftTranslations[el.id] }));
+    checkedWithDraft.forEach(el => {
+      const translatedText = draftTranslations[el.id];
+      // Auto-compute a font size that fits the translated (possibly longer) text
+      const fittedSize = calcAutoFitFontSize(
+        translatedText,
+        el.width  || 120,
+        el.height || 40,
+        el.fontSize || 12,
+      );
+      updateElement(el.id, { text: translatedText, fontSize: fittedSize });
+    });
     commitUpdate();
     setIsApplied(true);
     showToast(`${checkedWithDraft.length} translation(s) applied to canvas!`, 'success');
