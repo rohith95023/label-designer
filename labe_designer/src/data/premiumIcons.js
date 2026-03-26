@@ -1,4 +1,4 @@
-export const premiumIcons = {
+export const IconsIcons = {
   core: [
     { name: 'Medical Cross', svg: '<svg viewBox="0 0 24 24" fill="none"><rect x="9" y="3" width="6" height="18" fill="#E11D48"/><rect x="3" y="9" width="18" height="6" fill="#E11D48"/></svg>' },
     { name: 'Hospital', svg: '<svg viewBox="0 0 24 24" fill="none"><rect x="4" y="10" width="16" height="11" fill="#94A3B8"/><rect x="7" y="2" width="10" height="19" fill="#64748B"/><rect x="10" y="5" width="4" height="6" fill="#E11D48"/><rect x="9" y="7" width="6" height="2" fill="#E11D48"/><path d="M11 15h2v6h-2v-6z" fill="#334155"/></svg>' },

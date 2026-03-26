@@ -373,7 +373,7 @@ export const LabelProvider = ({ children }) => {
     const el = elements.find(e => e.id === id);
     if (!el) return;
     let z = el.zIndex || 10;
-    const allZ = elements.map(e => e.zIndex || 0);
+    const allZ = elements.map(e => e.zIndex || 10);
     if (dir === 'up')    z += 1;
     if (dir === 'down')  z = Math.max(1, z - 1);
     if (dir === 'front') z = Math.max(...allZ) + 1;

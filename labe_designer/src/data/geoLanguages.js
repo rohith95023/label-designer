@@ -520,6 +520,7 @@ export const GEO_LANGUAGE_DATA = [
 
 export const ELEMENT_TYPE_LABELS = {
   text: 'Text',
+  table: 'Table',
   subtext: 'Sub Text',
   warnings: 'Warning',
   dosage: 'Dosage',

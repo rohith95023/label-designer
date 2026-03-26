@@ -58,6 +58,7 @@ export default function Translation() {
   const [draftTranslations, setDraftTranslations] = useState({});
   const [translating, setTranslating] = useState(false);
   const [progress, setProgress] = useState({ done: 0, total: 0 });
+  const [isApplied, setIsApplied] = useState(false);
 
   const handleTranslate = useCallback(async () => {
     if (!selectedLang) {
@@ -101,6 +102,7 @@ export default function Translation() {
     }
     checkedWithDraft.forEach(el => updateElement(el.id, { text: draftTranslations[el.id] }));
     commitUpdate();
+    setIsApplied(true);
     showToast(`${checkedWithDraft.length} translation(s) applied to canvas!`, 'success');
   };
 
@@ -109,6 +111,15 @@ export default function Translation() {
 
   const projectName = activeTemplate?.name || meta.fileName || 'Unsaved Project';
   const isReady = selectedCountry && selectedState && selectedLang;
+
+  // Auto-resize textareas on content change
+  useEffect(() => {
+    const textareas = document.querySelectorAll('textarea');
+    textareas.forEach(ta => {
+      ta.style.height = 'auto';
+      ta.style.height = ta.scrollHeight + 'px';
+    });
+  }, [draftTranslations, translatableElements, selectedLang]);
 
   return (
     <div className="bg-[#F1F3F6] text-on-surface antialiased min-h-screen">
@@ -213,7 +224,7 @@ export default function Translation() {
                             {el.heading || typeLabel}
                           </span>
                         </div>
-                        <p className="text-[11px] text-slate-700 font-medium leading-snug whitespace-pre-wrap line-clamp-3">
+                        <p className="text-[11px] text-slate-700 font-medium leading-snug whitespace-pre-wrap">
                           {el.text || <span className="text-slate-300 italic">Empty</span>}
                         </p>
                       </div>
@@ -330,7 +341,9 @@ export default function Translation() {
                 </button>
                 <button
                   onClick={() => navigate('/editor')}
-                  className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 border border-slate-300 hover:bg-slate-200 hover:text-slate-800 rounded-lg text-[11px] font-bold shadow-sm transition-all active:scale-95"
+                  disabled={!isApplied}
+                  title={!isApplied ? "Apply translations first to return to Editor" : "Return safely to Editor"}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[11px] font-bold shadow-sm transition-all active:scale-95 ${isApplied ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'}`}
                 >
                   <span className="material-symbols-outlined text-[15px]">arrow_forward</span>
                   Go to Editor
@@ -434,7 +447,12 @@ export default function Translation() {
                                       : 'Select a language above first…'
                                 }
                                 value={draftTranslations[el.id] || ''}
-                                onChange={e => setDraftTranslations(prev => ({ ...prev, [el.id]: e.target.value }))}
+                                onChange={e => {
+                                  setDraftTranslations(prev => ({ ...prev, [el.id]: e.target.value }));
+                                  // Auto-expand height
+                                  e.target.style.height = 'auto';
+                                  e.target.style.height = e.target.scrollHeight + 'px';
+                                }}
                                 dir={['ar', 'he', 'fa', 'ur'].includes(selectedLang?.code) ? 'rtl' : 'ltr'}
                               />
                             ) : (

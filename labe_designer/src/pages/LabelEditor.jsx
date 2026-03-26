@@ -5,12 +5,120 @@ import { useTheme } from '../context/ThemeContext';
 import { Rnd } from 'react-rnd';
 import html2canvas from 'html2canvas';
 import { basicShapes, allIcons } from '../data/shapesLibrary';
-import { premiumIcons } from '../data/premiumIcons';
 import { v4 as uuidv4 } from 'uuid';
 import Barcode from 'react-barcode';
 import { QRCodeSVG } from 'qrcode.react';
 import FileNameModal from '../components/modals/FileNameModal';
 import LabelSizeModal from '../components/modals/LabelSizeModal';
+import { IconsIcons } from '../data/premiumIcons';
+
+function TableSetupModal({ onConfirm, onCancel }) {
+  const [rows, setRows] = useState(3);
+  const [cols, setCols] = useState(2);
+  const [template, setTemplate] = useState('blank');
+  const [colHeaders, setColHeaders] = useState(['Column 1', 'Column 2']);
+
+  const updateColCount = (n) => {
+    setCols(n);
+    setColHeaders(prev => {
+      const next = [...prev];
+      while (next.length < n) next.push(`Column ${next.length + 1}`);
+      return next.slice(0, n);
+    });
+  };
+
+  const handleConfirm = () => {
+    if (template === 'composition') {
+      onConfirm({ rows, cols: 2, template, colHeaders: ['Ingredient', 'Amount'] });
+    } else if (template === 'usage') {
+      onConfirm({ rows, cols: 2, template, colHeaders: ['Age Group', 'Dosage'] });
+    } else if (template === 'nutrition') {
+      onConfirm({ rows, cols: 2, template, colHeaders: ['Nutrient', 'Per 100g'] });
+    } else {
+      onConfirm({ rows, cols, template, colHeaders: colHeaders.slice(0, cols) });
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm animate-fade-in">
+      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-[500px] max-h-[90vh] flex flex-col">
+        <div className="p-5 border-b border-slate-100 dark:border-white/5 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-blue-600">table_chart</span>
+            <h3 className="font-bold text-slate-800 dark:text-white">Insert Data Table</h3>
+          </div>
+          <button onClick={onCancel} className="text-slate-400 hover:text-slate-600"><span className="material-symbols-outlined text-xl">close</span></button>
+        </div>
+
+        <div className="p-6 flex flex-col gap-6 overflow-y-auto">
+          <div>
+            <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2 block">Table Template</label>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { id: 'blank', label: 'Blank Grid', icon: 'grid_on' },
+                { id: 'composition', label: 'Ingredients', icon: 'science' },
+                { id: 'usage', label: 'Dosage Guide', icon: 'medication' },
+                { id: 'nutrition', label: 'Nutrition Facts', icon: 'restaurant' },
+              ].map(t => (
+                <button key={t.id} onClick={() => setTemplate(t.id)} className={`flex items-center gap-2 p-2.5 rounded-xl border text-left transition-all ${template === t.id ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-slate-200 hover:border-slate-300 dark:border-white/10 text-slate-600 dark:text-slate-300'}`}>
+                  <span className="material-symbols-outlined text-lg opacity-70">{t.icon}</span>
+                  <span className="text-xs font-bold">{t.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex gap-4">
+            <div className="flex-1">
+              <label className="text-[10px] font-bold uppercase tracking-widest flex justify-between text-slate-500 mb-2"><span>Data Rows</span><span className="text-blue-600 font-mono">{rows}</span></label>
+              <div className="flex items-center gap-2">
+                <input type="range" min="1" max="50" className="flex-1 accent-blue-600" value={rows} onChange={e => setRows(Number(e.target.value))} />
+                <input type="number" min="1" max="100" className="w-12 bg-white border border-slate-200 rounded px-1 py-0.5 text-[11px] font-mono outline-none focus:border-blue-400" value={rows} onChange={e => setRows(Math.max(1, Number(e.target.value)))} />
+              </div>
+            </div>
+            <div className={`flex-1 transition-opacity ${template !== 'blank' ? 'opacity-30 pointer-events-none' : ''}`}>
+              <label className="text-[10px] font-bold uppercase tracking-widest flex justify-between text-slate-500 mb-2"><span>Columns</span><span className="text-blue-600 font-mono">{cols}</span></label>
+              <div className="flex items-center gap-2">
+                <input type="range" min="1" max="12" className="flex-1 accent-blue-600" value={cols} onChange={e => updateColCount(Number(e.target.value))} />
+                <input type="number" min="1" max="20" className="w-12 bg-white border border-slate-200 rounded px-1 py-0.5 text-[11px] font-mono outline-none focus:border-blue-400" value={cols} onChange={e => updateColCount(Math.max(1, Number(e.target.value)))} />
+              </div>
+            </div>
+          </div>
+
+          {/* Manual Column Header Names — only for blank template */}
+          {template === 'blank' && (
+            <div>
+              <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-3 block">Column Names</label>
+              <div className="flex flex-col gap-2">
+                {Array.from({ length: cols }).map((_, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold text-slate-400 bg-slate-100 dark:bg-slate-700 rounded-lg px-2 py-1.5 shrink-0 w-14 text-center">Col {i + 1}</span>
+                    <input
+                      type="text"
+                      className="flex-1 bg-slate-50 border border-slate-200 dark:bg-slate-700 dark:border-white/10 text-[12px] px-3 py-1.5 rounded-lg outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200 transition-all"
+                      value={colHeaders[i] || ''}
+                      placeholder={`Column ${i + 1} name…`}
+                      onChange={e => {
+                        const next = [...colHeaders];
+                        next[i] = e.target.value;
+                        setColHeaders(next);
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="p-5 border-t border-slate-100 dark:border-white/5 flex justify-end gap-3 bg-slate-50 dark:bg-slate-800/50">
+          <button onClick={onCancel} className="px-5 py-2 text-xs font-bold text-slate-500 dark:text-slate-300 hover:bg-slate-200/50 dark:hover:bg-slate-700 rounded-xl transition-colors">Cancel</button>
+          <button onClick={handleConfirm} className="px-6 py-2 text-xs font-bold text-white btn-gradient rounded-xl shadow-sm hover:shadow active:scale-95 transition-all">Insert Table</button>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export default function LabelEditor() {
   const { theme, toggleTheme } = useTheme();
@@ -43,6 +151,8 @@ export default function LabelEditor() {
   const [showSaveAs, setShowSaveAs] = useState(false);
   const [saveAsName, setSaveAsName] = useState('');
   const [editingElementId, setEditingElementId] = useState(null);
+  const [editingCell, setEditingCell] = useState(null); // { r, c }
+  const [showTableModal, setShowTableModal] = useState(false);
 
   // Show FileNameModal only AFTER hydration is complete and no saved file exists
   useEffect(() => {
@@ -87,6 +197,33 @@ export default function LabelEditor() {
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [selectedElementId, saveFile, undo, redo, duplicateElement, deleteElement]);
+
+  // ── Auto-expand text elements if content overflows ──────────────────────────
+  useEffect(() => {
+    let hasUpdates = false;
+    const newElements = elements.map(el => {
+      if (!['text', 'warnings', 'manufacturing', 'dosage', 'storage', 'subtext'].includes(el.type)) return el;
+
+      const dom = document.querySelector(`[data-id="${el.id}"]`);
+      if (dom && editingElementId !== el.id) {
+        const prevH = dom.style.height;
+        dom.style.height = 'auto'; // allow shrink to measure intrinsic height
+        const sh = dom.scrollHeight;
+        dom.style.height = prevH; // revert
+
+        const targetH = Math.max(22, sh);
+        if (Math.abs(targetH - (el.height || 0)) > 2) {
+          hasUpdates = true;
+          return { ...el, height: targetH };
+        }
+      }
+      return el;
+    });
+
+    if (hasUpdates) {
+      setElements(newElements);
+    }
+  }, [elements, zoomLevel, editingElementId]);
 
   // ── Modal Handlers ──────────────────────────────────────────────────────────
   const handleFileNameConfirm = (name) => {
@@ -210,19 +347,34 @@ export default function LabelEditor() {
   };
 
   // ── Add Element helpers ──────────────────────────────────────────────────────
-  const addTxt = () => addElement({ type: 'text', text: 'New Text', fontSize: 16, fontFamily: 'Inter, sans-serif', fontWeight: '500', color: '#191C1E', width: 160, height: 28 });
+  const addTxt = () => addElement({ type: 'text', text: 'New Text', fontSize: 16, fontFamily: 'Inter, sans-serif', fontWeight: '500', color: '#191C1E', width: 160, height: 22 });
   const addBar = () => addElement({ type: 'barcode', text: '123456789012', color: '#191c1e', width: 180, height: 80 });
   const addQR = () => addElement({ type: 'qrcode', text: 'https://example.com', color: '#191c1e', width: 80, height: 80 });
   const addIcon = (name) => addElement({ type: 'icon', iconName: name, width: 48, height: 48, color: '#191C1E' });
+  const addTable = () => addElement({ type: 'table', text: 'Ingredient|Amount\nVitamin C|500mg\nZinc|15mg', fontSize: 10, fontFamily: 'Inter, sans-serif', fontWeight: '500', color: '#191c1e', width: 200, height: 70, borderColor: '#94a3b8', borderWidth: 1, align: 'left' });
 
   const selectedElement = elements.find(e => e.id === selectedElementId);
   const { w: AW, h: AH } = meta.labelSize || { w: 600, h: 400 };
 
   // ── Artboard element clamp ───────────────────────────────────────────────────
-  const clampPos = (x, y, elW, elH) => ({
-    x: Math.min(Math.max(0, x), AW - elW),
-    y: Math.min(Math.max(0, y), AH - elH),
-  });
+  // Strictly enforce bounds based on rotated bounding box
+  const clampPos = (x, y, elW, elH, rot = 0) => {
+    const rad = rot * Math.PI / 180;
+    const absCos = Math.abs(Math.cos(rad));
+    const absSin = Math.abs(Math.sin(rad));
+    const W = elW * absCos + elH * absSin;
+    const H = elW * absSin + elH * absCos;
+
+    const minX = W / 2 - elW / 2;
+    const maxX = AW - (W / 2 + elW / 2);
+    const minY = H / 2 - elH / 2;
+    const maxY = AH - (H / 2 + elH / 2);
+
+    return {
+      x: Math.min(Math.max(minX, x), Math.max(minX, maxX)),
+      y: Math.min(Math.max(minY, y), Math.max(minY, maxY)),
+    };
+  };
 
   const statusColor = savedStatus === 'saved' ? 'text-green-600' : savedStatus === 'saving' ? 'text-amber-500' : 'text-slate-400';
   const statusIcon = savedStatus === 'saved' ? 'check_circle' : savedStatus === 'saving' ? 'sync' : 'edit';
@@ -255,6 +407,26 @@ export default function LabelEditor() {
           onSkip={pendingFlow ? () => { setModalStep('none'); setPendingFlow(null); } : undefined}
           currentSize={meta.labelSize}
           isEditMode={!pendingFlow}
+        />
+      )}
+      {showTableModal && (
+        <TableSetupModal
+          onCancel={() => setShowTableModal(false)}
+          onConfirm={(config) => {
+            const { rows, cols, template, colHeaders } = config;
+            let text = '';
+            let actualCols = cols;
+            if (template === 'composition') { text = 'Ingredient|Amount\n' + Array(rows).fill('|').join('\n'); actualCols = 2; }
+            else if (template === 'usage') { text = 'Age Group|Dosage\n' + Array(rows).fill('|').join('\n'); actualCols = 2; }
+            else if (template === 'nutrition') { text = 'Nutrient|Per 100g\n' + Array(rows).fill('|').join('\n'); actualCols = 2; }
+            else {
+              const headers = colHeaders || Array.from({ length: cols }, (_, i) => `Column ${i + 1}`);
+              text = headers.join('|') + '\n' + Array(rows).fill(Array(cols).fill('').join('|')).join('\n');
+            }
+
+            addElement({ type: 'table', text, fontSize: 10, fontFamily: 'Inter, sans-serif', fontWeight: '500', color: '#191c1e', width: actualCols * 100, height: (rows + 1) * 25, borderColor: '#94a3b8', borderWidth: 1, align: 'left' });
+            setShowTableModal(false);
+          }}
         />
       )}
 
@@ -350,7 +522,7 @@ export default function LabelEditor() {
           </div>
 
           <div className="w-[1px] h-5 bg-outline-variant/30 mx-1"></div>
-          
+
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold text-slate-700 truncate max-w-[200px]">{meta.fileName || 'Untitled Label'}</span>
             <span className={`flex items-center gap-1 text-[10px] font-bold ${statusColor}`}>
@@ -424,16 +596,7 @@ export default function LabelEditor() {
           </button>
         </div>
 
-        {selectedElementId && (
-          <div className="flex items-center gap-1">
-            <button onClick={() => duplicateElement(selectedElementId)} title="Duplicate (Ctrl+D)" className="p-1 rounded hover:bg-slate-100 text-primary transition-colors">
-              <span className="material-symbols-outlined text-[15px]">content_copy</span>
-            </button>
-            <button onClick={() => deleteElement(selectedElementId)} title="Delete" className="p-1 rounded hover:bg-red-50 text-error transition-colors">
-              <span className="material-symbols-outlined text-[15px]">delete</span>
-            </button>
-          </div>
-        )}
+        <div className="flex-1" />
       </div>
 
       {/* ── Main 3-Column Area ─────────────────────────────────────────────── */}
@@ -443,7 +606,7 @@ export default function LabelEditor() {
         <aside className="w-64 bg-[#F8FAFC] dark:bg-slate-900 border-r border-black/5 flex flex-col overflow-hidden shrink-0">
           {/* Tab Headers */}
           <div className="flex border-b border-black/5 text-[11px] font-bold uppercase tracking-wider text-slate-500 shrink-0">
-            {['elements', 'shapes', 'premium', 'layers'].map(t => (
+            {['elements', 'shapes', 'Icons', 'layers'].map(t => (
               <button key={t} onClick={() => setActiveTab(t)}
                 className={`flex-1 py-3 transition-colors ${activeTab === t ? 'text-primary border-b-2 border-primary bg-blue-50/50' : 'text-slate-500 hover:bg-slate-100/50 hover:text-slate-700'}`}
               >{t}</button>
@@ -458,6 +621,7 @@ export default function LabelEditor() {
                 <div className="grid grid-cols-2 gap-2">
                   {[
                     { label: 'Text', icon: 'title', action: addTxt, payload: { type: 'text', text: 'New Text', fontSize: 16, fontFamily: 'Inter, sans-serif', fontWeight: '500', color: '#191C1E', width: 160, height: 28 } },
+                    { label: 'Table', icon: 'table_chart', action: () => setShowTableModal(true) },
                     { label: 'Barcode', icon: 'barcode', action: addBar, payload: { type: 'barcode', text: '123456789012', color: '#191c1e', width: 180, height: 80 } },
                     { label: 'QR Code', icon: 'qr_code_2', action: addQR, payload: { type: 'qrcode', text: 'https://example.com', color: '#191c1e', width: 80, height: 80 } },
                     { label: 'Upload Logo', icon: 'imagesmode', action: () => fileInputRef.current?.click() },
@@ -487,9 +651,9 @@ export default function LabelEditor() {
                   <div className="space-y-1">
                     {[
                       { label: '+ Brand Name', icon: 'label', payload: { type: 'text', subtype: 'brand', text: 'BRAND NAME', fontSize: 22, fontFamily: 'Inter, sans-serif', fontWeight: '800', color: '#0a2540', width: 200, height: 32 } },
-                      { label: 'Composition Block', icon: 'science', payload: { type: 'text', heading: 'Composition', text: 'Active Ingredient 250mg\nExcipients q.s.', fontSize: 10, fontFamily: 'Inter, sans-serif', fontWeight: '400', color: '#191C1E', width: 220, height: 48 } },
+                      { label: 'Composition Block', icon: 'science', payload: { type: 'text', heading: 'Composition', text: 'Active Ingredient 250mg\nExcipients q.s.', fontSize: 10, fontFamily: 'Inter, sans-serif', fontWeight: '400', color: '#191C1E', width: 220, height: 54 } },
                       { label: 'Mfg & Licensing', icon: 'factory', payload: { type: 'text', heading: 'Manufacturing', text: 'Mfg. by: \nLic. No.: ', fontSize: 10, fontFamily: 'Inter, sans-serif', fontWeight: '400', color: '#191C1E', width: 220, height: 44 } },
-                      { label: 'Batch & Expiry', icon: 'calendar_today', payload: { type: 'text', heading: 'Batch / Expiry', text: 'B.No: \nMfg: \nExp: ', fontSize: 11, fontFamily: 'Roboto, sans-serif', fontWeight: '700', color: '#191C1E', width: 160, height: 48 } },
+                      { label: 'Batch & Expiry', icon: 'calendar_today', payload: { type: 'text', heading: 'Batch / Expiry', text: 'B.No: \nMfg: \nExp: ', fontSize: 11, fontFamily: 'Roboto, sans-serif', fontWeight: '700', color: '#191C1E', width: 160, height: 60 } },
                       { label: 'Schedule H Warning', icon: 'warning', payload: { type: 'warnings', heading: 'Warning', alertColor: '#ba1a1a', text: 'To be sold by retail on the prescription of a Registered Medical Practitioner only.', fontSize: 9, fontFamily: 'Inter, sans-serif', fontWeight: '600', color: '#191C1E', width: 220, height: 40 } },
                       { label: 'Dosage Instructions', icon: 'medication', payload: { type: 'text', heading: 'Dosage', text: 'As directed by physician.', fontSize: 10, fontFamily: 'Inter, sans-serif', fontWeight: '500', color: '#191C1E', width: 200, height: 36 } },
                       { label: 'Storage Conditions', icon: 'ac_unit', payload: { type: 'text', heading: 'Storage', text: 'Store below 30°C. Keep dry.', fontSize: 10, fontFamily: 'Inter, sans-serif', fontWeight: '400', color: '#191C1E', width: 200, height: 36 } },
@@ -558,10 +722,10 @@ export default function LabelEditor() {
               </div>
             )}
 
-            {/* PREMIUM TAB */}
-            {activeTab === 'premium' && (
+            {/* Icons TAB */}
+            {activeTab === 'Icons' && (
               <div className="animate-fade-in flex flex-col gap-6">
-                {Object.entries(premiumIcons).map(([cat, icons]) => (
+                {Object.entries(IconsIcons).map(([cat, icons]) => (
                   <div key={cat}>
                     <div className="flex items-center gap-2 mb-2.5">
                       <div className="w-3 h-0.5 bg-blue-500 rounded-full"></div>
@@ -571,11 +735,11 @@ export default function LabelEditor() {
                       {icons.map((icon, i) => (
                         <button
                           key={i}
-                          onClick={() => addElement({ type: 'premiumIcon', svg: icon.svg, name: icon.name, width: 60, height: 60 })}
+                          onClick={() => addElement({ type: 'IconsIcon', svg: icon.svg, name: icon.name, width: 60, height: 60 })}
                           title={icon.name}
                           draggable
                           onDragStart={e => {
-                            e.dataTransfer.setData('application/json', JSON.stringify({ type: 'premiumIcon', svg: icon.svg, name: icon.name, width: 60, height: 60 }));
+                            e.dataTransfer.setData('application/json', JSON.stringify({ type: 'IconsIcon', svg: icon.svg, name: icon.name, width: 60, height: 60 }));
                             e.dataTransfer.effectAllowed = 'copy';
                           }}
                           className="flex flex-col items-center justify-center p-2.5 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-white/10 shadow-sm hover:border-primary/50 hover:bg-blue-50/60 hover:shadow-md transition-all group lg:active:cursor-grabbing"
@@ -601,22 +765,10 @@ export default function LabelEditor() {
                       className={`flex items-center justify-between p-2.5 rounded-lg border text-[11px] cursor-pointer transition-all ${isSelected ? 'bg-blue-50 border-primary/50 text-primary font-bold' : 'bg-slate-50 border-transparent hover:border-slate-200 text-slate-600'}`}>
                       <div className="flex items-center gap-2 overflow-hidden">
                         <span className="material-symbols-outlined text-[13px]">
-                          {el.type === 'image' ? 'image' : el.type === 'shape' ? 'category' : (el.type === 'icon' || el.type === 'premiumIcon') ? 'star' : el.type === 'barcode' ? 'barcode' : el.type === 'qrcode' ? 'qr_code_2' : 'match_case'}
+                          {el.type === 'image' ? 'image' : el.type === 'shape' ? 'category' : (el.type === 'icon' || el.type === 'IconsIcon') ? 'star' : el.type === 'barcode' ? 'barcode' : el.type === 'qrcode' ? 'qr_code_2' : 'match_case'}
                         </span>
                         <span className="truncate max-w-[100px]">{el.name || el.text || el.iconName || el.shapeType || 'Layer'}</span>
                       </div>
-                      {isSelected && (
-                        <div className="flex gap-0.5 shrink-0">
-                          {['front', 'up', 'down', 'back'].map(d => (
-                            <button key={d} onClick={e => { e.stopPropagation(); moveLayer(el.id, d); }}
-                              className="p-0.5 rounded hover:bg-blue-100 text-primary">
-                              <span className="material-symbols-outlined text-[12px]">
-                                {d === 'front' ? 'flip_to_front' : d === 'up' ? 'keyboard_arrow_up' : d === 'down' ? 'keyboard_arrow_down' : 'flip_to_back'}
-                              </span>
-                            </button>
-                          ))}
-                        </div>
-                      )}
                     </div>
                   );
                 })}
@@ -656,7 +808,7 @@ export default function LabelEditor() {
                 const centerOffX = targetW / 2;
                 const centerOffY = targetH / 2;
 
-                const finalPos = clampPos(dropX - centerOffX, dropY - centerOffY, targetW, targetH);
+                const finalPos = clampPos(dropX - centerOffX, dropY - centerOffY, targetW, targetH, payload.rotation || 0);
                 addElement({ ...payload, x: Math.round(finalPos.x), y: Math.round(finalPos.y) });
               }
             } catch (err) {
@@ -703,23 +855,27 @@ export default function LabelEditor() {
                       topLeft: isSelected, topRight: isSelected, bottomLeft: isSelected, bottomRight: isSelected,
                     }}
                     lockAspectRatio={['qrcode', 'icon', 'image'].includes(el.type)}
-                    style={{ zIndex: el.zIndex || 10, position: 'absolute' }}
-                    className={isSelected ? 'outline outline-2 outline-blue-500 outline-offset-0 ring-4 ring-blue-500/10' : ''}
+                    minWidth={4}
+                    minHeight={4}
+                    style={{
+                      zIndex: el.zIndex || 10,
+                      position: 'absolute'
+                    }}
                     onDragStop={(_, d) => {
-                      const clamped = clampPos(d.x, d.y, elW, elH);
+                      const clamped = clampPos(d.x, d.y, elW, elH, el.rotation);
                       updateElement(el.id, clamped);
                       commitUpdate();
                     }}
                     onResizeStop={(_, __, ref, ___, pos) => {
                       const newW = parseInt(ref.style.width);
                       const newH = parseInt(ref.style.height);
-                      const clamped = clampPos(pos.x, pos.y, newW, newH);
+                      const clamped = clampPos(pos.x, pos.y, newW, newH, el.rotation);
                       updateElement(el.id, { width: newW, height: newH, ...clamped });
                       commitUpdate();
                     }}
                     onClick={e => {
                       e.stopPropagation();
-                      if (selectedElementId === el.id && ['text', 'warnings', 'manufacturing', 'dosage', 'storage', 'subtext'].includes(el.type)) {
+                      if (selectedElementId === el.id && ['text', 'warnings', 'manufacturing', 'dosage', 'storage', 'subtext', 'shape', 'table'].includes(el.type)) {
                         setEditingElementId(el.id);
                       } else {
                         setSelectedElementId(el.id);
@@ -730,90 +886,298 @@ export default function LabelEditor() {
                       }
                     }}
                     onDoubleClick={e => {
-                      if (['text', 'warnings', 'manufacturing', 'dosage', 'storage', 'subtext'].includes(el.type)) {
+                      if (['text', 'warnings', 'manufacturing', 'dosage', 'storage', 'subtext', 'shape', 'table'].includes(el.type)) {
                         e.stopPropagation();
                         setEditingElementId(el.id);
+                      } else if (['barcode', 'qrcode'].includes(el.type)) {
+                        e.stopPropagation();
+                        // No prompt here anymore, handled in properties or toolbar
                       }
                     }}
                   >
-                    <div className={`w-full h-full relative ${editingElementId === el.id ? '' : 'select-none'}`} style={{
-                      backgroundColor: el.bgColor || 'transparent',
-                      borderWidth: el.borderWidth ? `${el.borderWidth}px` : 0,
-                      borderColor: el.borderColor || 'transparent',
-                      borderStyle: 'solid',
-                      borderRadius: el.type === 'shape' && el.shapeType === 'circle' ? '50%' : `${el.borderRadius || 0}px`,
-                      fontSize: el.fontSize ? `${el.fontSize}px` : undefined,
-                      fontFamily: el.fontFamily || 'Inter, sans-serif',
-                      fontWeight: el.fontWeight || '400',
-                      fontStyle: el.fontStyle || 'normal',
-                      textDecoration: el.textDecoration || 'none',
-                      color: el.color || '#191c1e',
-                      textAlign: el.align || 'left',
-                      whiteSpace: 'pre-wrap',
-                      lineHeight: '1.25',
-                      overflow: 'hidden',
-                      padding: el.bgColor && el.bgColor !== 'transparent' && el.type !== 'shape' ? '4px 8px' : '0',
-                    }}>
-                      {el.heading && (
-                        <span style={{ display: 'block', fontSize: '8px', fontWeight: '800', fontFamily: 'Inter, sans-serif', textTransform: 'uppercase', color: el.alertColor || '#717783', marginBottom: '2px', letterSpacing: '1.2px' }}>
-                          {el.heading}
-                        </span>
-                      )}
+                    {isSelected && (
+                      <div className={`absolute left-0 bg-white dark:bg-slate-800 shadow-xl min-w-max px-2 py-1.5 rounded-lg border border-slate-200 dark:border-white/10 flex items-center gap-1 z-[9999] pointer-events-auto transform transition-all origin-bottom-left ${el.y * zoomLevel < 60 ? 'top-[calc(100%+8px)]' : '-top-[48px]'}`}
+                        style={{ transform: `scale(${1 / zoomLevel})` }}
+                        onMouseDown={e => e.stopPropagation()}
+                      >
+                        <div className="flex gap-0.5 shrink-0 pr-1.5 border-r border-slate-200 dark:border-white/10">
+                          {[
+                            ['front', 'flip_to_front'],
+                            ['up', 'keyboard_arrow_up'],
+                            ['down', 'keyboard_arrow_down'],
+                            ['back', 'flip_to_back']
+                          ].map(([d, icon]) => (
+                            <button key={d} onClick={e => { e.stopPropagation(); moveLayer(el.id, d); }}
+                              className="p-1 rounded hover:bg-slate-100 dark:hover:bg-white/5 text-slate-500 hover:text-blue-600 transition-colors" title={`Move ${d}`}>
+                              <span className="material-symbols-outlined text-[16px]">{icon}</span>
+                            </button>
+                          ))}
+                        </div>
 
-                      {el.type === 'barcode' ? (
-                        <div className="w-full h-full flex items-center justify-center pointer-events-none">
-                          <Barcode
-                            value={el.text || '123456789012'}
-                            format="CODE128"
-                            lineColor={el.color || '#191c1e'}
-                            background="transparent"
-                            width={1.2}
-                            height={Math.max(20, elH - 32)}
-                            margin={0}
-                            fontSize={12}
-                            displayValue={true}
+                        {/* Table Specific Controls */}
+                        {el.type === 'table' && (
+                          <div className="flex gap-0.5 shrink-0 px-1.5 border-r border-slate-200 dark:border-white/10">
+                            <button onClick={e => {
+                              e.stopPropagation();
+                              const lines = (el.text || '').split('\n');
+                              const colCount = lines[0].split('|').length;
+                              lines.push(Array(colCount).fill('').join('|'));
+                              updateElement(el.id, { text: lines.join('\n'), height: (el.height || 0) + 25 });
+                              commitUpdate();
+                            }} className="p-1 rounded hover:bg-slate-100 text-slate-500 hover:text-blue-600 transition-colors" title="Add Row">
+                              <span className="material-symbols-outlined text-[16px]">add_row</span>
+                            </button>
+                            <button onClick={e => {
+                              e.stopPropagation();
+                              const lines = (el.text || '').split('\n');
+                              const next = lines.map(l => l + '|');
+                              updateElement(el.id, { text: next.join('\n'), width: (el.width || 0) + 50 });
+                              commitUpdate();
+                            }} className="p-1 rounded hover:bg-slate-100 text-slate-500 hover:text-blue-600 transition-colors" title="Add Column">
+                              <span className="material-symbols-outlined text-[16px]">add_column</span>
+                            </button>
+                          </div>
+                        )}
+
+                        {/* Barcode Data Editor */}
+                        {el.type === 'barcode' && (
+                          <div className="flex items-center gap-1.5 px-2 border-r border-slate-200 dark:border-white/10">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Data:</span>
+                            <input
+                              type="text"
+                              className="w-24 bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px] font-mono outline-none focus:border-blue-400"
+                              value={el.text || ''}
+                              onChange={e => { updateElement(el.id, { text: e.target.value }); }}
+                              onBlur={commitUpdate}
+                            />
+                          </div>
+                        )}
+
+                        <div className="flex gap-0.5 shrink-0 pl-1.5">
+                          <button onClick={e => { e.stopPropagation(); duplicateElement(el.id); }}
+                            className="p-1 rounded hover:bg-slate-100 dark:hover:bg-white/5 text-slate-500 hover:text-blue-600 transition-colors" title="Duplicate">
+                            <span className="material-symbols-outlined text-[16px]">content_copy</span>
+                          </button>
+                          <button onClick={e => { e.stopPropagation(); deleteElement(el.id); }}
+                            className="p-1 rounded hover:bg-red-50 dark:hover:bg-red-500/10 text-slate-500 hover:text-red-600 transition-colors" title="Delete">
+                            <span className="material-symbols-outlined text-[16px]">delete</span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                    <div
+                      data-id={el.id}
+                      className={`w-full h-full relative text-content-wrapper ${editingElementId === el.id ? '' : 'select-none'} ${isSelected ? 'outline outline-2 outline-blue-500 outline-offset-0 ring-4 ring-blue-500/10' : ''}`}
+                      style={{
+                        transform: `rotate(${el.rotation || 0}deg)`,
+                        transformOrigin: '50% 50%',
+                        opacity: el.opacity !== undefined ? el.opacity : 1,
+                      }}
+                    >
+                      <div className="w-full h-full relative" style={{
+                        backgroundColor: (el.type === 'shape' && el.shapeType === 'line') ? 'transparent' : (el.bgColor || 'transparent'),
+                        borderWidth: (el.type === 'shape' && el.shapeType === 'line') ? 0 : (el.borderWidth ? `${el.borderWidth}px` : 0),
+                        borderTopWidth: (el.type === 'shape' && el.shapeType === 'line') ? `${el.height || 4}px` : undefined,
+                        borderTopStyle: (el.type === 'shape' && el.shapeType === 'line') ? (el.borderStyle || 'solid') : undefined,
+                        borderTopColor: (el.type === 'shape' && el.shapeType === 'line') ? (el.bgColor || '#191c1e') : undefined,
+                        borderColor: (el.type === 'shape' && el.shapeType === 'line') ? 'transparent' : (el.borderColor || 'transparent'),
+                        borderStyle: el.borderStyle || 'solid',
+                        borderRadius: el.type === 'shape' && el.shapeType === 'circle' ? '50%' : `${el.borderRadius || 0}px`,
+                        fontSize: `${el.fontSize || 16}px`,
+                        fontFamily: el.fontFamily || 'Inter, sans-serif',
+                        fontWeight: el.fontWeight || '400',
+                        fontStyle: el.fontStyle || 'normal',
+                        textDecoration: el.textDecoration || 'none',
+                        color: el.color || '#191c1e',
+                        textAlign: el.align || 'left',
+                        whiteSpace: 'pre-wrap',
+                        wordBreak: 'break-word',
+                        lineHeight: el.lineHeight || '1.25',
+                        letterSpacing: el.letterSpacing ? `${el.letterSpacing}px` : undefined,
+                        overflow: 'visible',
+                        padding: (el.bgColor && el.bgColor !== 'transparent' && el.type !== 'shape') ? '4px 8px' : '0',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: el.type === 'shape' ? 'center' : 'flex-start',
+                        alignItems: el.type === 'shape' ? (el.align === 'center' ? 'center' : el.align === 'right' ? 'flex-end' : 'flex-start') : 'stretch',
+                      }}>
+                        {el.heading && (
+                          <span style={{ display: 'block', fontSize: '8px', fontWeight: '800', fontFamily: 'Inter, sans-serif', textTransform: 'uppercase', color: el.alertColor || '#717783', marginBottom: '2px', letterSpacing: '1.2px' }}>
+                            {el.heading}
+                          </span>
+                        )}
+
+                        {el.type === 'barcode' ? (
+                          <div className="w-full h-full flex items-center justify-center pointer-events-none">
+                            <Barcode
+                              value={el.text || '123456789012'}
+                              format={el.barcodeFormat || 'CODE128'}
+                              lineColor={el.color || '#191c1e'}
+                              background="transparent"
+                              width={1.2}
+                              height={Math.max(20, elH - 32)}
+                              margin={0}
+                              fontSize={12}
+                              displayValue={true}
+                            />
+                          </div>
+                        ) : el.type === 'qrcode' ? (
+                          <div className="w-full h-full">
+                            <QRCodeSVG
+                              value={el.text || 'https://pharma-precision.com/scan'}
+                              fgColor={el.color || '#191c1e'}
+                              bgColor="transparent"
+                              style={{ width: '100%', height: '100%', display: 'block' }}
+                              level="M"
+                            />
+                          </div>
+                        ) : el.type === 'image' ? (
+                          <img src={el.src} alt="Uploaded" className="w-full h-full pointer-events-none" style={{ objectFit: el.imageFit || 'contain' }} />
+                        ) : el.type === 'icon' ? (
+                          <div className="w-full h-full flex items-center justify-center overflow-hidden">
+                            <span className="material-symbols-outlined leading-[0]" style={{ fontSize: `${Math.min(elW, elH)}px`, color: el.color || '#191c1e' }}>{el.iconName}</span>
+                          </div>
+                        ) : el.type === 'IconsIcon' ? (
+                          <div className="w-full h-full p-1 flex items-center justify-center pointer-events-none" dangerouslySetInnerHTML={{ __html: el.svg }} />
+                        ) : el.type === 'table' ? (
+                          <table className="w-full h-full table-fixed" style={{ borderCollapse: 'collapse' }}>
+                            <tbody>
+                              {(el.text || '').split('\n').map((row, i) => (
+                                <tr key={i} style={{ backgroundColor: el.tableStriped && i > 0 && i % 2 === 0 ? 'rgba(0,0,0,0.04)' : undefined }}>
+                                  {row.split('|').map((cell, j) => (
+                                    <td key={j}
+                                      onClick={(e) => {
+                                        if (isSelected) {
+                                          e.stopPropagation();
+                                          setEditingCell({ r: i, c: j });
+                                        }
+                                      }}
+                                      className={`p-1 break-words relative transition-colors ${editingCell?.r === i && editingCell?.c === j ? 'p-0 ring-2 ring-blue-500 z-10' : 'hover:bg-blue-50/50'}`}
+                                      style={{
+                                        borderColor: el.color || '#94a3b8',
+                                        borderWidth: el.borderWidth ? `${el.borderWidth}px` : '1px',
+                                        borderStyle: el.borderStyle || 'solid',
+                                        verticalAlign: 'top',
+                                        fontSize: `${el.fontSize || 10}px`,
+                                        fontFamily: el.fontFamily || 'inherit',
+                                        ...(i === 0 && el.tableHeader !== false && { fontWeight: 'bold', backgroundColor: el.color ? el.color + '18' : 'rgba(0,0,0,0.05)' })
+                                      }}>
+                                      {editingCell?.r === i && editingCell?.c === j ? (
+                                        <textarea
+                                          autoFocus
+                                          className="w-full h-full bg-white dark:bg-slate-700 outline-none border-none p-1 text-inherit font-inherit resize-none block m-0"
+                                          value={cell}
+                                          onChange={e => {
+                                            const lines = (el.text || '').split('\n');
+                                            const cells = lines[i].split('|');
+                                            cells[j] = e.target.value.replace(/\|/g, ''); // prevent nested separators
+                                            lines[i] = cells.join('|');
+                                            updateElement(el.id, { text: lines.join('\n') });
+                                          }}
+                                          onBlur={() => { setEditingCell(null); commitUpdate(); }}
+                                          onKeyDown={e => {
+                                            if (e.key === 'Enter' && !e.shiftKey) { setEditingCell(null); commitUpdate(); }
+                                            if (e.key === 'Tab') {
+                                              e.preventDefault();
+                                              const maxCols = row.split('|').length;
+                                              const lines = (el.text || '').split('\n');
+                                              if (j < maxCols - 1) setEditingCell({ r: i, c: j + 1 });
+                                              else if (i < lines.length - 1) setEditingCell({ r: i + 1, c: 0 });
+                                              else setEditingCell(null);
+                                              commitUpdate();
+                                            }
+                                          }}
+                                        />
+                                      ) : (
+                                        cell || <span className="text-slate-300 italic opacity-50">Empty</span>
+                                      )}
+                                    </td>
+                                  ))}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        ) : editingElementId === el.id ? (
+                          <textarea
+                            autoFocus
+                            className="w-full h-full bg-transparent outline-none resize-none border-none p-0 m-0 overflow-hidden"
+                            value={el.text || ''}
+                            onChange={e => {
+                              updateElement(el.id, { text: e.target.value });
+                              // Precise height adjustment
+                              const target = e.target;
+                              target.style.height = '0px';
+                              const sh = target.scrollHeight;
+                              target.style.height = '100%';
+                              const newHeight = Math.max(22, sh);
+                              if (el.type !== 'shape' && Math.abs(newHeight - (el.height || 0)) > 2) {
+                                updateElement(el.id, { height: newHeight });
+                              }
+                            }}
+                            onBlur={() => { setEditingElementId(null); commitUpdate(); }}
+                            onFocus={e => e.target.setSelectionRange(e.target.value.length, e.target.value.length)}
+                            style={{
+                              fontFamily: 'inherit',
+                              fontSize: 'inherit',
+                              fontWeight: 'inherit',
+                              fontStyle: 'inherit',
+                              textDecoration: 'inherit',
+                              color: 'inherit',
+                              textAlign: 'inherit',
+                              lineHeight: 'inherit',
+                              overflow: 'visible',
+                              height: 'auto',
+                              width: '100%',
+                              textAlign: el.align || (el.type === 'shape' ? 'center' : 'left'),
+                            }}
                           />
-                        </div>
-                      ) : el.type === 'qrcode' ? (
-                        <div className="w-full h-full">
-                          <QRCodeSVG
-                            value={el.text || 'https://pharma-precision.com/scan'}
-                            fgColor={el.color || '#191c1e'}
-                            bgColor="transparent"
-                            style={{ width: '100%', height: '100%', display: 'block' }}
-                            level="M"
-                          />
-                        </div>
-                      ) : el.type === 'image' ? (
-                        <img src={el.src} alt="Uploaded" className="w-full h-full object-contain pointer-events-none" />
-                      ) : el.type === 'icon' ? (
-                        <div className="w-full h-full flex items-center justify-center overflow-hidden">
-                          <span className="material-symbols-outlined leading-[0]" style={{ fontSize: `${Math.min(elW, elH)}px`, color: el.color || '#191c1e' }}>{el.iconName}</span>
-                        </div>
-                      ) : el.type === 'premiumIcon' ? (
-                        <div className="w-full h-full p-1 flex items-center justify-center" dangerouslySetInnerHTML={{ __html: el.svg }} />
-                      ) : editingElementId === el.id ? (
-                        <textarea
-                          autoFocus
-                          className="w-full h-full bg-transparent outline-none resize-none border-none p-0 m-0"
-                          value={el.text || ''}
-                          onChange={e => updateElement(el.id, { text: e.target.value })}
-                          onBlur={() => { setEditingElementId(null); commitUpdate(); }}
-                          onFocus={e => e.target.setSelectionRange(e.target.value.length, e.target.value.length)}
-                          style={{
-                            fontFamily: 'inherit',
-                            fontSize: 'inherit',
-                            fontWeight: 'inherit',
-                            fontStyle: 'inherit',
-                            textDecoration: 'inherit',
-                            color: 'inherit',
-                            textAlign: 'inherit',
-                            lineHeight: 'inherit',
-                            overflow: 'hidden',
+                        ) : (
+                          <span className="block w-full" style={{
+                            wordBreak: 'break-word',
+                            textAlign: el.align || (el.type === 'shape' ? 'center' : 'left'),
+                          }}>{el.text}</span>
+                        )}
+                      </div>
+                      {isSelected && (
+                        <button
+                          onMouseDown={e => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            const elNode = document.querySelector(`[data-id="${el.id}"]`);
+                            if (!elNode) return;
+                            const rect = elNode.getBoundingClientRect();
+                            const centerX = rect.left + rect.width / 2;
+                            const centerY = rect.top + rect.height / 2;
+
+                            const handleMove = (moveEvent) => {
+                              const dx = moveEvent.clientX - centerX;
+                              const dy = moveEvent.clientY - centerY;
+                              let angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                              angle = (angle + 90 + 360) % 360;
+
+                              const rot = Math.round(angle);
+                              const w = el.width || 120;
+                              const h = el.height || 22;
+                              // Check if this rotation would leave boundaries
+                              const clamped = clampPos(el.x, el.y, w, h, rot);
+                              if (clamped.x !== el.x || clamped.y !== el.y) {
+                                return; // Stop rotating if edge is hit
+                              }
+                              updateElement(el.id, { rotation: rot });
+                            };
+                            const handleUp = () => {
+                              document.removeEventListener('mousemove', handleMove);
+                              document.removeEventListener('mouseup', handleUp);
+                              commitUpdate();
+                            };
+                            document.addEventListener('mousemove', handleMove);
+                            document.addEventListener('mouseup', handleUp);
                           }}
-                        />
-                      ) : (
-                        <span className="block w-full h-full">{el.text}</span>
+                          className="absolute -top-10 left-1/2 -translate-x-1/2 bg-white border border-slate-200 rounded-full w-8 h-8 flex items-center justify-center shadow-lg hover:bg-slate-50 text-blue-600 z-[60] cursor-grab active:cursor-grabbing"
+                          title="Drag to rotate"
+                        >
+                          <span className="material-symbols-outlined text-[18px]">rotate_right</span>
+                        </button>
                       )}
                     </div>
                   </Rnd>
@@ -831,13 +1195,9 @@ export default function LabelEditor() {
               {/* Position Block */}
               <div className="p-4 border-b border-black/5 bg-slate-50/50">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-[9px] font-bold uppercase tracking-widest text-blue-600">Position & Layers</span>
-                  <div className="flex gap-1">
-                    <button onClick={() => duplicateElement(selectedElement.id)} className="p-1 rounded text-primary hover:bg-blue-50" title="Duplicate"><span className="material-symbols-outlined text-[14px]">content_copy</span></button>
-                    <button onClick={() => deleteElement(selectedElement.id)} className="p-1 rounded text-error hover:bg-red-50" title="Delete"><span className="material-symbols-outlined text-[14px]">delete</span></button>
-                  </div>
+                  <span className="text-[9px] font-bold uppercase tracking-widest text-blue-600">Position & Size</span>
                 </div>
-                <div className="grid grid-cols-2 gap-2 mb-3">
+                <div className="grid grid-cols-2 gap-2 mb-2">
                   {['x', 'y'].map(axis => (
                     <div key={axis} className="bg-white border border-slate-200 rounded-lg p-1.5 flex items-center">
                       <span className="text-[9px] font-bold text-slate-400 w-4 pl-1">{axis.toUpperCase()}</span>
@@ -845,34 +1205,44 @@ export default function LabelEditor() {
                     </div>
                   ))}
                 </div>
-                <div className="grid grid-cols-4 gap-1">
-                  {[['front', 'flip_to_front'], ['up', 'arrow_upward'], ['down', 'arrow_downward'], ['back', 'flip_to_back']].map(([d, icon]) => (
-                    <button key={d} onClick={() => moveLayer(selectedElement.id, d)}
-                      className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 flex justify-center text-slate-500 transition-colors" title={d}>
-                      <span className="material-symbols-outlined text-[13px]">{icon}</span>
-                    </button>
+                <div className="grid grid-cols-2 gap-2">
+                  {[['width', 'W'], ['height', 'H']].map(([dim, label]) => (
+                    <div key={dim} className="bg-white border border-slate-200 rounded-lg p-1.5 flex items-center">
+                      <span className="text-[9px] font-bold text-slate-400 w-4 pl-1">{label}</span>
+                      <input type="number" className="w-full text-[11px] font-mono outline-none text-right bg-transparent"
+                        value={Math.round(selectedElement[dim]) || 0}
+                        onChange={e => { updateElement(selectedElement.id, { [dim]: Math.max(1, parseInt(e.target.value) || 1) }); commitUpdate(); }} />
+                    </div>
                   ))}
                 </div>
               </div>
 
               {/* Data / Content Block — for all text-bearing types */}
-              {['text', 'warnings', 'barcode', 'qrcode', 'manufacturing', 'dosage', 'storage', 'subtext'].includes(selectedElement.type) && (
+              {['text', 'warnings', 'barcode', 'qrcode', 'manufacturing', 'dosage', 'storage', 'subtext', 'table'].includes(selectedElement.type) && (
                 <div className="p-4 border-b border-black/5">
                   <span className="text-[11px] font-bold uppercase tracking-widest text-slate-500 block mb-2">
-                    {['barcode', 'qrcode'].includes(selectedElement.type) ? 'Data String' : 'Text Content'}
+                    {['barcode', 'qrcode'].includes(selectedElement.type) ? 'Data String' : (selectedElement.type === 'table' ? 'Table Data' : 'Text Content')}
                   </span>
                   <textarea
-                    className="w-full bg-slate-50 border border-slate-200 text-[12px] py-2 px-2.5 focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none rounded-lg resize-none min-h-[56px]"
+                    className="w-full bg-slate-50 border border-slate-200 text-[12px] py-2 px-2.5 focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none rounded-lg resize-none"
+                    style={{ minHeight: '80px', height: 'auto' }}
                     value={selectedElement.text || ''}
                     placeholder={selectedElement.type === 'qrcode' ? 'https://...' : selectedElement.type === 'barcode' ? '123456789012' : 'Enter text…'}
-                    onChange={e => updateElement(selectedElement.id, { text: e.target.value })}
+                    onChange={e => {
+                      updateElement(selectedElement.id, { text: e.target.value });
+                      e.target.style.height = 'auto';
+                      e.target.style.height = e.target.scrollHeight + 'px';
+                    }}
                     onBlur={commitUpdate}
                   />
+                  {selectedElement.type === 'table' && (
+                    <p className="text-[9px] text-slate-400 mt-1.5">Use <b>|</b> to separate columns, and <b>Enter</b> for new rows.</p>
+                  )}
                 </div>
               )}
 
               {/* Typography — only for non-media types */}
-              {!['image', 'barcode', 'qrcode', 'icon'].includes(selectedElement.type) && (
+              {!['image', 'barcode', 'qrcode', 'icon', 'IconsIcon'].includes(selectedElement.type) && (
                 <div className="p-4 border-b border-black/5">
                   <span className="text-[11px] font-bold uppercase tracking-widest text-slate-500 block mb-3">Typography</span>
                   <div className="space-y-3">
@@ -884,8 +1254,35 @@ export default function LabelEditor() {
                           onChange={e => { updateElement(selectedElement.id, { fontFamily: e.target.value }); commitUpdate(); }}>
                           <option value="Inter, sans-serif">Inter</option>
                           <option value="Roboto, sans-serif">Roboto</option>
+                          <option value="Poppins, sans-serif">Poppins</option>
+                          <option value="Outfit, sans-serif">Outfit</option>
+                          <option value="Lato, sans-serif">Lato</option>
+                          <option value="Open Sans, sans-serif">Open Sans</option>
+                          <option value="Nunito, sans-serif">Nunito</option>
+                          <option value="Raleway, sans-serif">Raleway</option>
+                          <option value="Montserrat, sans-serif">Montserrat</option>
+                          <option value="Source Sans Pro, sans-serif">Source Sans Pro</option>
+                          <option value="DM Sans, sans-serif">DM Sans</option>
+                          <option value="Noto Sans, sans-serif">Noto Sans</option>
+                          <option value="Ubuntu, sans-serif">Ubuntu</option>
+                          <option value="Josefin Sans, sans-serif">Josefin Sans</option>
+                          <option value="Barlow, sans-serif">Barlow</option>
+                          <option value="Mulish, sans-serif">Mulish</option>
+                          <option value="Quicksand, sans-serif">Quicksand</option>
+                          <option value="Exo 2, sans-serif">Exo 2</option>
+                          <option value="Playfair Display, serif">Playfair Display</option>
+                          <option value="Merriweather, serif">Merriweather</option>
+                          <option value="Lora, serif">Lora</option>
+                          <option value="EB Garamond, serif">EB Garamond</option>
                           <option value="Times New Roman, serif">Times New Roman</option>
-                          <option value="Courier New, monospace">Courier</option>
+                          <option value="Georgia, serif">Georgia</option>
+                          <option value="PT Serif, serif">PT Serif</option>
+                          <option value="Libre Baskerville, serif">Libre Baskerville</option>
+                          <option value="Courier Prime, monospace">Courier Prime</option>
+                          <option value="Courier New, monospace">Courier New</option>
+                          <option value="Space Mono, monospace">Space Mono</option>
+                          <option value="IBM Plex Mono, monospace">IBM Plex Mono</option>
+                          <option value="Fira Code, monospace">Fira Code</option>
                         </select>
                       </div>
                       <div>
@@ -898,6 +1295,7 @@ export default function LabelEditor() {
                           <option value="600">Semibold</option>
                           <option value="500">Medium</option>
                           <option value="400">Regular</option>
+                          <option value="300">Light</option>
                         </select>
                       </div>
                     </div>
@@ -910,6 +1308,23 @@ export default function LabelEditor() {
                         value={selectedElement.fontSize || 12}
                         onChange={e => updateElement(selectedElement.id, { fontSize: parseInt(e.target.value) })}
                         onMouseUp={commitUpdate} />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-[10px] font-bold uppercase text-slate-400 mb-1 flex justify-between"><span>Line Height</span><span className="font-mono">{selectedElement.lineHeight || '1.25'}</span></label>
+                        <input type="range" min="1" max="3" step="0.05" className="w-full accent-blue-600"
+                          value={parseFloat(selectedElement.lineHeight) || 1.25}
+                          onChange={e => updateElement(selectedElement.id, { lineHeight: parseFloat(e.target.value) })}
+                          onMouseUp={commitUpdate} />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold uppercase text-slate-400 mb-1 flex justify-between"><span>Spacing</span><span className="font-mono">{selectedElement.letterSpacing || 0}px</span></label>
+                        <input type="range" min="-2" max="20" step="0.5" className="w-full accent-blue-600"
+                          value={selectedElement.letterSpacing || 0}
+                          onChange={e => updateElement(selectedElement.id, { letterSpacing: parseFloat(e.target.value) })}
+                          onMouseUp={commitUpdate} />
+                      </div>
                     </div>
 
                     <div className="flex gap-1 bg-slate-50 p-1 rounded-lg border border-slate-200">
@@ -952,10 +1367,61 @@ export default function LabelEditor() {
                     </div>
                   )}
 
-                  {/* Text / Ink color (all non-shape) */}
+                  {/* Barcode Options */}
+                  {selectedElement.type === 'barcode' && (
+                    <div>
+                      <label className="text-[8px] font-bold uppercase text-slate-400 mb-1.5 block">Barcode Format</label>
+                      <select className="w-full bg-slate-50 border border-slate-200 text-[11px] py-1.5 px-1.5 rounded-lg outline-none cursor-pointer"
+                        value={selectedElement.barcodeFormat || 'CODE128'}
+                        onChange={e => { updateElement(selectedElement.id, { barcodeFormat: e.target.value }); commitUpdate(); }}>
+                        <option value="CODE128">CODE 128 (default)</option>
+                        <option value="EAN13">EAN-13</option>
+                        <option value="EAN8">EAN-8</option>
+                        <option value="UPC">UPC-A</option>
+                        <option value="ITF14">ITF-14</option>
+                        <option value="CODE39">CODE 39</option>
+                        <option value="MSI">MSI</option>
+                      </select>
+                    </div>
+                  )}
+
+                  {/* Image Fit Mode */}
+                  {selectedElement.type === 'image' && (
+                    <div>
+                      <label className="text-[8px] font-bold uppercase text-slate-400 mb-1.5 block">Image Fit</label>
+                      <div className="grid grid-cols-3 gap-1">
+                        {['contain', 'cover', 'fill'].map(fit => (
+                          <button key={fit} onClick={() => { updateElement(selectedElement.id, { imageFit: fit }); commitUpdate(); }}
+                            className={`p-1.5 rounded-lg border text-[9px] font-bold capitalize transition-colors ${(selectedElement.imageFit || 'contain') === fit ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-slate-200 bg-slate-50 text-slate-500 hover:bg-slate-100'}`}>
+                            {fit}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Table options */}
+                  {selectedElement.type === 'table' && (
+                    <div className="flex gap-3">
+                      <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                        <input type="checkbox" className="accent-blue-600 w-3.5 h-3.5"
+                          checked={selectedElement.tableHeader !== false}
+                          onChange={e => { updateElement(selectedElement.id, { tableHeader: e.target.checked }); commitUpdate(); }} />
+                        <span className="text-[9px] font-bold text-slate-500">Header Row</span>
+                      </label>
+                      <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                        <input type="checkbox" className="accent-blue-600 w-3.5 h-3.5"
+                          checked={!!selectedElement.tableStriped}
+                          onChange={e => { updateElement(selectedElement.id, { tableStriped: e.target.checked }); commitUpdate(); }} />
+                        <span className="text-[9px] font-bold text-slate-500">Striped Rows</span>
+                      </label>
+                    </div>
+                  )}
+
+                  {/* Text / Ink color */}
                   <div>
                     <label className="text-[8px] font-bold uppercase text-slate-400 mb-1.5 block">
-                      {['shape'].includes(selectedElement.type) ? 'Fill Color' : 'Text / Ink Color'}
+                      {selectedElement.type === 'shape' ? 'Fill Color' : selectedElement.type === 'table' ? 'Border / Text Color' : 'Text / Ink Color'}
                     </label>
                     <div className="flex gap-2 h-8">
                       <div className="w-8 h-full rounded-lg shrink-0 border border-slate-200 relative overflow-hidden">
@@ -972,7 +1438,7 @@ export default function LabelEditor() {
                   </div>
 
                   {/* Background (non-shape, non-barcode) */}
-                  {!['shape', 'barcode', 'qrcode', 'icon'].includes(selectedElement.type) && (
+                  {!['shape', 'barcode', 'qrcode', 'icon', 'IconsIcon'].includes(selectedElement.type) && (
                     <div>
                       <label className="text-[8px] font-bold uppercase text-slate-400 mb-1.5 flex justify-between">
                         <span>Background</span>
@@ -1037,6 +1503,72 @@ export default function LabelEditor() {
                         onMouseUp={commitUpdate} />
                     </div>
                   )}
+
+                  {/* Line style for line shapes */}
+                  {selectedElement.type === 'shape' && selectedElement.shapeType === 'line' && (
+                    <div>
+                      <label className="text-[8px] font-bold uppercase text-slate-400 mb-2 block">Line Style</label>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        {[
+                          { label: 'Solid', value: 'solid', preview: 'border-solid' },
+                          { label: 'Dashed', value: 'dashed', preview: 'border-dashed' },
+                          { label: 'Dotted', value: 'dotted', preview: 'border-dotted' },
+                          { label: 'Double', value: 'double', preview: 'border-double' },
+                        ].map(({ label, value, preview }) => (
+                          <button
+                            key={value}
+                            onClick={() => { updateElement(selectedElement.id, { borderStyle: value }); commitUpdate(); }}
+                            className={`p-2 rounded-lg border text-[9px] font-bold flex flex-col items-center gap-1 transition-colors ${(selectedElement.borderStyle || 'solid') === value
+                                ? 'border-blue-500 bg-blue-50 text-blue-600'
+                                : 'border-slate-200 bg-slate-50 text-slate-500 hover:bg-slate-100'
+                              }`}
+                          >
+                            <div className={`w-full h-0 border-t-2 ${preview}`} style={{ borderColor: selectedElement.bgColor || '#191c1e' }} />
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                      {/* Line weight */}
+                      <label className="text-[8px] font-bold uppercase text-slate-400 mt-2 mb-1 flex justify-between">
+                        <span>Thickness</span><span className="font-mono">{selectedElement.height || 4}px</span>
+                      </label>
+                      <input type="range" min="1" max="40" className="w-full accent-blue-600"
+                        value={selectedElement.height || 4}
+                        onChange={e => updateElement(selectedElement.id, { height: parseInt(e.target.value) })}
+                        onMouseUp={commitUpdate} />
+                    </div>
+                  )}
+
+                  {/* Opacity */}
+                  <div>
+                    <label className="text-[8px] font-bold uppercase text-slate-400 mb-1.5 flex justify-between">
+                      <span>Opacity</span><span className="font-mono">{Math.round((selectedElement.opacity !== undefined ? selectedElement.opacity : 1) * 100)}%</span>
+                    </label>
+                    <input type="range" min="0" max="1" step="0.01" className="w-full accent-blue-600"
+                      value={selectedElement.opacity !== undefined ? selectedElement.opacity : 1}
+                      onChange={e => updateElement(selectedElement.id, { opacity: parseFloat(e.target.value) })}
+                      onMouseUp={commitUpdate} />
+                  </div>
+
+                  {/* Rotation Slider */}
+                  <div>
+                    <label className="text-[8px] font-bold uppercase text-slate-400 mb-1.5 flex justify-between">
+                      <span>Rotation</span><span className="font-mono">{selectedElement.rotation || 0}°</span>
+                    </label>
+                    <div className="flex gap-2 items-center">
+                      <input type="range" min="0" max="360" step="1" className="flex-1 accent-blue-600"
+                        value={selectedElement.rotation || 0}
+                        onChange={e => {
+                          const rot = parseInt(e.target.value);
+                          const w = selectedElement.width || 120;
+                          const h = selectedElement.height || 22;
+                          const clamped = clampPos(selectedElement.x, selectedElement.y, w, h, rot);
+                          updateElement(selectedElement.id, { rotation: rot, ...clamped });
+                        }}
+                        onMouseUp={commitUpdate} />
+                      <button onClick={() => { updateElement(selectedElement.id, { rotation: 0 }); commitUpdate(); }} className="p-1 px-2 bg-slate-100 rounded text-[9px] font-bold text-slate-500">Reset</button>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
