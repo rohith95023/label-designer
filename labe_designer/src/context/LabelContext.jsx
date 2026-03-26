@@ -22,7 +22,7 @@ export const LABEL_PRESETS = [
   { id: 'custom',   name: 'Custom …',        w: 600, h: 400 },
 ];
 
-const DEFAULT_META = { fileId: null, fileName: null, labelSize: { w: 600, h: 400 } };
+const DEFAULT_META = { fileId: null, fileName: null, labelSize: { w: 302, h: 454 }, bgColor: '#FFFFFF' };
 const SETTINGS_KEY = 'plabel_settings';
 const LOGS_KEY = 'plabel_logs';
 const fileHistoryKey = (id) => `plabel_history_${id}`;

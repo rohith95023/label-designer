@@ -115,9 +115,9 @@
 .dark .text-on-primary-fixed    { color: #001c3a !important; }
 .dark .text-slate-800           { color: #e2e6ea !important; }
 .dark .text-slate-700           { color: #cdd2d8 !important; }
-.dark .text-slate-600           { color: #9aa3af !important; }
-.dark .text-slate-500           { color: #7a8490 !important; }
-.dark .text-slate-400           { color: #5a636e !important; }
+.dark .text-slate-600           { color: #cdd2d8 !important; }
+.dark .text-slate-500           { color: #9aa3af !important; }
+.dark .text-slate-400           { color: #8a95a3 !important; }
 .dark .text-blue-700            { color: #78aff5 !important; }
 .dark .text-blue-900            { color: #93c5fd !important; }
 /* Keep primary/secondary/tertiary accent colors visible */
@@ -151,10 +151,10 @@
 .dark .hover\:bg-primary-fixed:hover { background-color: rgba(30, 64, 120, 0.35) !important; }
 .dark .bg-surface-container-high.text-primary { background-color: #1e3870 !important; }
 
-/* ── Artboard: always white (physical printed label) ─────────────────────── */
-.dark #pharma-artboard {
-  background-color: #ffffff !important;
-  color: #191c1e !important;
+/* ── Artboard: default white, but allows dynamic overrides ───────────────── */
+.pharma-artboard {
+  background-color: #ffffff;
+  color: #191c1e;
 }
 
 /* ── Template card badges ────────────────────────────────────────────────── */

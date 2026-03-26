@@ -11,6 +11,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import FileNameModal from '../components/modals/FileNameModal';
 import LabelSizeModal from '../components/modals/LabelSizeModal';
 import { IconsIcons } from '../data/premiumIcons';
+import { WORDART_CATEGORIES, WORDART_STYLES } from '../data/wordArtPresets';
 
 function TableSetupModal({ onConfirm, onCancel }) {
   const [rows, setRows] = useState(3);
@@ -123,7 +124,7 @@ function TableSetupModal({ onConfirm, onCancel }) {
 export default function LabelEditor() {
   const { theme, toggleTheme } = useTheme();
   const {
-    meta, setFileName, setLabelSize, newFile,
+    meta, setMeta, setFileName, setLabelSize, newFile,
     elements, setElements, selectedElementId, setSelectedElementId,
     addElement, duplicateElement, updateElement, commitUpdate,
     deleteElement, moveLayer,
@@ -136,6 +137,7 @@ export default function LabelEditor() {
   } = useLabel();
 
   const artboardRef = useRef(null);
+  const drawingCanvasRef = useRef(null);
   const fileInputRef = useRef(null);
   const jsonInputRef = useRef(null);
   const navigate = useNavigate();
@@ -153,6 +155,14 @@ export default function LabelEditor() {
   const [editingElementId, setEditingElementId] = useState(null);
   const [editingCell, setEditingCell] = useState(null); // { r, c }
   const [showTableModal, setShowTableModal] = useState(false);
+  const [showWordArtModal, setShowWordArtModal] = useState(false);
+  const [wordArtTab, setWordArtTab] = useState('Premium');
+  const [isDrawingMode, setIsDrawingMode] = useState(false);
+  const [currentLines, setCurrentLines] = useState([]); // [[{x,y},...], ...]
+  const [penColor, setPenColor] = useState('#191C1E');
+  const [penWidth, setPenWidth] = useState(3);
+  const [isEraserMode, setIsEraserMode] = useState(false);
+  const [eraserPos, setEraserPos] = useState(null); // {x, y} for visual brush
 
   // Show FileNameModal only AFTER hydration is complete and no saved file exists
   useEffect(() => {
@@ -321,7 +331,19 @@ export default function LabelEditor() {
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (ev) => addElement({ type: 'image', src: ev.target.result, width: 100, height: 100 });
+    reader.onload = (ev) => {
+      const img = new Image();
+      img.onload = () => {
+        const max = 150;
+        let w = img.width;
+        let h = img.height;
+        if (w > h) { h = (h / w) * max; w = max; }
+        else { w = (w / h) * max; h = max; }
+        addElement({ type: 'image', src: ev.target.result, width: Math.round(w), height: Math.round(h), imageFit: 'contain' });
+        e.target.value = ''; // Reset for re-uploading same file
+      };
+      img.src = ev.target.result;
+    };
     reader.readAsDataURL(file);
   };
 
@@ -354,7 +376,8 @@ export default function LabelEditor() {
   const addTable = () => addElement({ type: 'table', text: 'Ingredient|Amount\nVitamin C|500mg\nZinc|15mg', fontSize: 10, fontFamily: 'Inter, sans-serif', fontWeight: '500', color: '#191c1e', width: 200, height: 70, borderColor: '#94a3b8', borderWidth: 1, align: 'left' });
 
   const selectedElement = elements.find(e => e.id === selectedElementId);
-  const { w: AW, h: AH } = meta.labelSize || { w: 600, h: 400 };
+  const AW = meta.labelSize?.w || 302;
+  const AH = meta.labelSize?.h || 454;
 
   // ── Artboard element clamp ───────────────────────────────────────────────────
   // Strictly enforce bounds based on rotated bounding box
@@ -381,7 +404,7 @@ export default function LabelEditor() {
   const statusLabel = savedStatus === 'saved' ? 'Saved' : savedStatus === 'saving' ? 'Saving…' : 'Unsaved';
 
   return (
-    <div className="font-body text-on-surface h-screen flex flex-col overflow-hidden bg-[#F1F3F6]">
+    <div className="font-body text-on-surface h-screen flex flex-col overflow-hidden bg-[#E2E8F0] dark:bg-slate-950 transition-colors">
 
       {/* ── Modals ──────────────────────────────────────────────────────────── */}
       {modalStep === 'filename' && (
@@ -430,6 +453,46 @@ export default function LabelEditor() {
         />
       )}
 
+      {/* WordArt Modal */}
+      {showWordArtModal && (
+        <div className="fixed inset-0 z-[1001] flex items-center justify-center bg-slate-900/60 backdrop-blur-md animate-fade-in p-6">
+          <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-[700px] h-[75vh] flex flex-col overflow-hidden">
+             <div className="p-6 border-b border-black/5 flex items-center justify-between bg-slate-50/50 dark:bg-white/5">
+                <div className="flex items-center gap-3">
+                   <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-lg">
+                      <span className="material-symbols-outlined">abc</span>
+                   </div>
+                   <div>
+                      <h3 className="text-lg font-bold text-slate-800 dark:text-white">WordArt Gallery</h3>
+                      <p className="text-[11px] text-slate-500">Stylized branding typography</p>
+                   </div>
+                </div>
+                <button onClick={() => setShowWordArtModal(false)} className="w-8 h-8 rounded-full hover:bg-slate-200 dark:hover:bg-white/10 flex items-center justify-center text-slate-500 transition-colors"><span className="material-symbols-outlined text-xl">close</span></button>
+             </div>
+             
+             <div className="flex border-b border-black/5 bg-[#F8FAFC] dark:bg-slate-900 px-4 pt-2 shrink-0">
+                {WORDART_CATEGORIES.map(t => (
+                  <button key={t} onClick={() => setWordArtTab(t)}
+                    className={`px-4 py-3 text-[11px] font-bold uppercase tracking-widest transition-all border-b-2 ${wordArtTab === t ? 'text-primary border-primary bg-white dark:bg-slate-800' : 'text-slate-400 border-transparent hover:text-slate-600 dark:hover:text-slate-200'}`}
+                  >{t}</button>
+                ))}
+             </div>
+
+             <div className="p-6 grid grid-cols-2 gap-4 overflow-y-auto bg-slate-50/30 dark:bg-transparent custom-scrollbar flex-1">
+                {(WORDART_STYLES[wordArtTab] || []).map((art, idx) => (
+                  <button key={idx} onClick={() => {
+                    addElement({ type: 'text', text: art.name, ...art.style, width: 220, height: 40, fontFamily: 'Outfit, sans-serif' });
+                    setShowWordArtModal(false);
+                    commitUpdate();
+                  }} className="flex flex-col items-center justify-center p-8 border border-slate-200 dark:border-white/10 rounded-2xl bg-white dark:bg-slate-900/50 hover:border-blue-500 hover:shadow-2xl transition-all group active:scale-95 overflow-hidden min-h-[140px]">
+                     <span style={art.style} className="mb-3 block text-center leading-normal break-words w-full">{art.name}</span>
+                     <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400 group-hover:text-blue-500 transition-colors">Apply Style</span>
+                  </button>
+                ))}
+             </div>
+          </div>
+        </div>
+      )}
       {/* Save As Dialog */}
       {showSaveAs && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 backdrop-blur-sm">
@@ -596,6 +659,22 @@ export default function LabelEditor() {
           </button>
         </div>
 
+        <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
+          <button 
+            onClick={() => setShowWordArtModal(true)}
+            className="flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-slate-700 border border-blue-200 dark:border-white/10 rounded-full shadow-sm hover:shadow-md hover:border-blue-400 transition-all text-blue-700 dark:text-blue-300 font-bold text-[10px] uppercase tracking-widest"
+          >
+            <span className="material-symbols-outlined text-[16px]">abc</span> WordArt
+          </button>
+          <div className="w-[1px] h-3 bg-slate-200 mx-1"></div>
+          <button 
+            onClick={() => setIsDrawingMode(true)}
+            className={`flex items-center gap-1.5 px-3 py-1 border rounded-full shadow-sm hover:shadow-md transition-all font-bold text-[10px] uppercase tracking-widest ${isDrawingMode ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white dark:bg-slate-700 border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:border-blue-400'}`}
+          >
+            <span className="material-symbols-outlined text-[16px]">edit_note</span> Writing
+          </button>
+        </div>
+
         <div className="flex-1" />
       </div>
 
@@ -650,14 +729,22 @@ export default function LabelEditor() {
                   </div>
                   <div className="space-y-1">
                     {[
-                      { label: '+ Brand Name', icon: 'label', payload: { type: 'text', subtype: 'brand', text: 'BRAND NAME', fontSize: 22, fontFamily: 'Inter, sans-serif', fontWeight: '800', color: '#0a2540', width: 200, height: 32 } },
-                      { label: 'Composition Block', icon: 'science', payload: { type: 'text', heading: 'Composition', text: 'Active Ingredient 250mg\nExcipients q.s.', fontSize: 10, fontFamily: 'Inter, sans-serif', fontWeight: '400', color: '#191C1E', width: 220, height: 54 } },
-                      { label: 'Mfg & Licensing', icon: 'factory', payload: { type: 'text', heading: 'Manufacturing', text: 'Mfg. by: \nLic. No.: ', fontSize: 10, fontFamily: 'Inter, sans-serif', fontWeight: '400', color: '#191C1E', width: 220, height: 44 } },
-                      { label: 'Batch & Expiry', icon: 'calendar_today', payload: { type: 'text', heading: 'Batch / Expiry', text: 'B.No: \nMfg: \nExp: ', fontSize: 11, fontFamily: 'Roboto, sans-serif', fontWeight: '700', color: '#191C1E', width: 160, height: 60 } },
-                      { label: 'Schedule H Warning', icon: 'warning', payload: { type: 'warnings', heading: 'Warning', alertColor: '#ba1a1a', text: 'To be sold by retail on the prescription of a Registered Medical Practitioner only.', fontSize: 9, fontFamily: 'Inter, sans-serif', fontWeight: '600', color: '#191C1E', width: 220, height: 40 } },
-                      { label: 'Dosage Instructions', icon: 'medication', payload: { type: 'text', heading: 'Dosage', text: 'As directed by physician.', fontSize: 10, fontFamily: 'Inter, sans-serif', fontWeight: '500', color: '#191C1E', width: 200, height: 36 } },
-                      { label: 'Storage Conditions', icon: 'ac_unit', payload: { type: 'text', heading: 'Storage', text: 'Store below 30°C. Keep dry.', fontSize: 10, fontFamily: 'Inter, sans-serif', fontWeight: '400', color: '#191C1E', width: 200, height: 36 } },
-                      { label: 'Net Contents', icon: 'inventory', payload: { type: 'text', heading: 'Net Content', text: '100 mL / 10 Tablets', fontSize: 12, fontFamily: 'Inter, sans-serif', fontWeight: '600', color: '#191C1E', width: 160, height: 28 } },
+                      { label: 'Rx Symbol', icon: 'medical_services', payload: { type: 'text', text: 'Rx', fontSize: 32, fontFamily: 'serif', fontWeight: '900', color: '#ba1a1a', width: 60, height: 48 } },
+                      { label: 'Prominent Generic', icon: 'text_fields', payload: { type: 'text', text: 'GENERIC NAME IP\n(Brand Name)', fontSize: 18, fontFamily: 'Inter, sans-serif', fontWeight: '900', color: '#191C1E', width: 240, height: 72, align: 'center' } },
+                      { label: 'Schedule H Warning', icon: 'warning', payload: { type: 'text', heading: 'SCHEDULE H DRUG - WARNING', text: 'To be sold by retail on the prescription of a Registered Medical Practitioner only.', fontSize: 8, fontFamily: 'Inter, sans-serif', fontWeight: '700', color: '#ba1a1a', bgColor: '#fff1f0', borderColor: '#ffccc7', borderWidth: 1, borderRadius: 4, width: 260, height: 54 } },
+                      { label: 'Schedule G Warning', icon: 'g_translate', payload: { type: 'text', heading: 'SCHEDULE G DRUG - CAUTION', text: 'It is dangerous to take this preparation except under medical supervision.', fontSize: 8, fontFamily: 'Inter, sans-serif', fontWeight: '700', color: '#ba1a1a', bgColor: '#fff1f0', borderColor: '#ffccc7', borderWidth: 1, borderRadius: 4, width: 260, height: 54 } },
+                      { label: 'Schedule X Warning', icon: 'dangerous', payload: { type: 'text', heading: 'SCHEDULE X DRUG - WARNING', text: 'It is dangerous to take this preparation except under medical supervision. To be sold by retail on the prescription of a Registered Medical Practitioner only.', fontSize: 8, fontFamily: 'Inter, sans-serif', fontWeight: '700', color: '#ba1a1a', bgColor: '#fff1f0', borderColor: '#ffccc7', borderWidth: 1, borderRadius: 4, width: 260, height: 60 } },
+                      { label: 'Composition', icon: 'science', payload: { type: 'text', heading: 'Composition', text: 'Each 5ml contains:\nActive Ingredient IP 250mg\nExcipients q.s.\nColor: Tartrazine', fontSize: 10, fontFamily: 'Inter, sans-serif', fontWeight: '400', color: '#191C1E', width: 240, height: 74 } },
+                      { label: 'Batch / Mfg / Exp / MRP', icon: 'calendar_today', payload: { type: 'text', heading: 'Batch Information', text: 'B.No: \nMfg.Date: \nExp.Date: \nM.R.P. ₹: \n(Incl. of all taxes)', fontSize: 10, fontFamily: 'Roboto Mono, monospace', fontWeight: '700', color: '#191C1E', width: 200, height: 90 } },
+                      { label: 'Storage & Stability', icon: 'device_thermostat', payload: { type: 'text', heading: 'Storage', text: 'Store below 25°C. Protected from light and moisture. Do not freeze.', fontSize: 10, fontFamily: 'Inter, sans-serif', fontWeight: '500', color: '#191C1E', width: 240, height: 44 } },
+                      { label: 'Child Safety Warning', icon: 'child_care', payload: { type: 'text', text: 'KEEP OUT OF REACH OF CHILDREN', fontSize: 11, fontFamily: 'Inter, sans-serif', fontWeight: '900', color: '#191C1E', width: 240, height: 24, align: 'center' } },
+                      { label: 'Precautions/Warnings', icon: 'report_problem', payload: { type: 'text', heading: 'Precautions', text: 'If symptoms persist, consult your doctor. Keep the container tightly closed.', fontSize: 10, fontFamily: 'Inter, sans-serif', fontWeight: '400', color: '#191C1E', width: 240, height: 48 } },
+                      { label: 'Special Warnings', icon: 'info', payload: { type: 'text', heading: 'Special Warnings', text: 'Pregnancy & Lactation: Consult your physician before use.', fontSize: 9, fontFamily: 'Inter, sans-serif', fontWeight: '600', color: '#191C1E', width: 240, height: 44 } },
+                      { label: 'Sterility Warning', icon: 'clean_hands', payload: { type: 'text', heading: 'Sterility', text: 'STRICTLY FOR INJECTABLES - Check for clarity before use.', fontSize: 10, fontFamily: 'Inter, sans-serif', fontWeight: '700', color: '#ba1a1a', width: 240, height: 44 } },
+                      { label: 'Shake Well (Susp.)', icon: 'shake', payload: { type: 'text', text: 'SHAKE WELL BEFORE USE', fontSize: 11, fontFamily: 'Inter, sans-serif', fontWeight: '900', color: '#191C1E', width: 240, height: 24, align: 'center' } },
+                      { label: 'Mfg & Licensing', icon: 'factory', payload: { type: 'text', heading: 'Manufacturing', text: 'Mfg. Lic No: \nBatch No: \nMarketed by:', fontSize: 10, fontFamily: 'Inter, sans-serif', fontWeight: '400', color: '#191C1E', width: 240, height: 60 } },
+                      { label: 'Dosage Instructions', icon: 'medication', payload: { type: 'text', heading: 'Dosage', text: 'As directed by the Physician.', fontSize: 10, fontFamily: 'Inter, sans-serif', fontWeight: '500', color: '#191C1E', width: 220, height: 36 } },
+                      { label: 'Net Contents', icon: 'inventory', payload: { type: 'text', heading: 'Net Content', text: '100 mL / 10 Tablets', fontSize: 12, fontFamily: 'Inter, sans-serif', fontWeight: '600', color: '#191C1E', width: 180, height: 32 } },
                     ].map(item => (
                       <div key={item.label}
                         onClick={() => addElement(item.payload)}
@@ -762,12 +849,25 @@ export default function LabelEditor() {
                   return (
                     <div key={`layer-${el.id}`}
                       onClick={() => setSelectedElementId(el.id)}
-                      className={`flex items-center justify-between p-2.5 rounded-lg border text-[11px] cursor-pointer transition-all ${isSelected ? 'bg-blue-50 border-primary/50 text-primary font-bold' : 'bg-slate-50 border-transparent hover:border-slate-200 text-slate-600'}`}>
+                      className={`flex items-center justify-between p-2 rounded-lg border text-[11px] cursor-pointer transition-all ${isSelected ? 'bg-blue-50 border-primary/50 text-primary font-bold' : 'bg-slate-50 border-transparent hover:border-slate-200 text-slate-600'}`}>
                       <div className="flex items-center gap-2 overflow-hidden">
-                        <span className="material-symbols-outlined text-[13px]">
+                        <span className="material-symbols-outlined text-[13px] opacity-70">
                           {el.type === 'image' ? 'image' : el.type === 'shape' ? 'category' : (el.type === 'icon' || el.type === 'IconsIcon') ? 'star' : el.type === 'barcode' ? 'barcode' : el.type === 'qrcode' ? 'qr_code_2' : 'match_case'}
                         </span>
                         <span className="truncate max-w-[100px]">{el.name || el.text || el.iconName || el.shapeType || 'Layer'}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                        <button 
+                          onClick={(e) => { 
+                            e.stopPropagation(); 
+                            updateElement(el.id, { locked: !el.locked }); 
+                            commitUpdate();
+                          }}
+                          className={`p-1 rounded-md transition-all ${el.locked ? 'bg-blue-100 text-blue-600' : 'text-slate-400 hover:bg-slate-200 hover:text-slate-600'}`}
+                          title={el.locked ? "Unlock Layer" : "Lock Layer"}
+                        >
+                          <span className="material-symbols-outlined text-[15px]">{el.locked ? 'lock' : 'lock_open'}</span>
+                        </button>
                       </div>
                     </div>
                   );
@@ -780,7 +880,7 @@ export default function LabelEditor() {
 
         {/* CENTER CANVAS */}
         <section
-          className="flex-1 overflow-auto bg-[#E8EAF0] relative"
+          className="flex-1 overflow-auto bg-[#E8EAF0] relative custom-scrollbar"
           style={{ backgroundImage: 'radial-gradient(circle, #b0b8c8 1px, transparent 1px)', backgroundSize: '20px 20px' }}
           onClick={() => {
             setSelectedElementId(null);
@@ -816,23 +916,175 @@ export default function LabelEditor() {
             }
           }}
         >
+          {/* Sticky Drawing Toolbar */}
+          {isDrawingMode && (
+            <div className="sticky top-4 left-0 right-0 z-[1005] flex justify-center pointer-events-none px-4">
+              <div className="flex items-center gap-3 bg-white dark:bg-slate-800 p-2.5 rounded-2xl shadow-2xl border border-slate-200 dark:border-white/10 pointer-events-auto animate-in fade-in slide-in-from-top-4 duration-300">
+                 <div className="flex gap-2 px-3 border-r border-slate-200 dark:border-white/10 items-center">
+                    <button onClick={() => setIsEraserMode(false)} className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${!isEraserMode ? 'bg-primary text-white shadow-lg shadow-primary/30' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-white/5'}`}>
+                       <span className="material-symbols-outlined text-lg">edit</span>
+                    </button>
+                    <button onClick={() => setIsEraserMode(true)} className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${isEraserMode ? 'bg-primary text-white shadow-lg shadow-primary/30' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-white/5'}`}>
+                       <span className="material-symbols-outlined text-lg">ink_eraser</span>
+                    </button>
+                 </div>
+                 <div className="flex gap-2 px-3 border-r border-slate-200 dark:border-white/10">
+                    {['#191C1E', '#BA1A1A', '#1D4ED8', '#15803D'].map(c => (
+                      <button key={c} onClick={() => { setPenColor(c); setIsEraserMode(false); }} className={`w-6 h-6 rounded-full ring-2 transition-all ${(!isEraserMode && penColor === c) ? 'ring-primary ring-offset-2 scale-110' : 'ring-transparent opacity-80 hover:opacity-100'}`} style={{backgroundColor: c}} />
+                    ))}
+                 </div>
+                 <div className="flex items-center gap-3 px-3 border-r border-slate-200 dark:border-white/10">
+                    <span className="material-symbols-outlined text-slate-400 text-sm">{isEraserMode ? 'circle' : 'line_weight'}</span>
+                    <input type="range" min="1" max="15" value={penWidth} onChange={e => setPenWidth(e.target.value)} className="w-20 h-1 bg-slate-200 dark:bg-slate-700 rounded-lg accent-primary" title={isEraserMode ? "Eraser Size" : "Pen Size"} />
+                 </div>
+                 <div className="flex items-center gap-2 pr-1">
+                    <button onClick={() => setCurrentLines(currentLines.slice(0, -1))} className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-500 hover:bg-slate-100 dark:hover:bg-white/5 transition-all" title="Undo Last Stroke">
+                       <span className="material-symbols-outlined text-lg">undo</span>
+                    </button>
+                    <button onClick={() => setCurrentLines([])} className="px-3 py-2 text-[10px] font-extrabold uppercase tracking-tight text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-all">Clear Canvas</button>
+                    <button onClick={() => {
+                      if (currentLines.length > 0) {
+                        // Group strokes by style to minimize elements but keep visual integrity
+                        const groups = {};
+                        currentLines.forEach(stroke => {
+                          if (stroke.points.length < 2) return;
+                          const key = `${stroke.color}-${stroke.width}`;
+                          if (!groups[key]) groups[key] = { color: stroke.color, width: stroke.width, strokes: [] };
+                          groups[key].strokes.push(stroke.points);
+                        });
+
+                        Object.values(groups).forEach(group => {
+                          const flattened = group.strokes.flat();
+                          if (flattened.length === 0) return;
+
+                          const minX = Math.min(...flattened.map(p => p.x)) - 2;
+                          const maxX = Math.max(...flattened.map(p => p.x)) + 2;
+                          const minY = Math.min(...flattened.map(p => p.y)) - 2;
+                          const maxY = Math.max(...flattened.map(p => p.y)) + 2;
+                          const w = Math.max(10, maxX - minX);
+                          const h = Math.max(10, maxY - minY);
+                          
+                          const pData = group.strokes.map(points => 
+                            `M ${points.map(p => `${p.x - minX},${p.y - minY}`).join(' L ')}`
+                          ).join(' ');
+
+                          addElement({ 
+                            type: 'path', 
+                            pathData: pData, 
+                            x: minX, 
+                            y: minY, 
+                            width: w, 
+                            height: h, 
+                            color: group.color, 
+                            penWidth: group.width 
+                          });
+                        });
+                      }
+                      setIsDrawingMode(false);
+                      setCurrentLines([]);
+                      setEraserPos(null);
+                      commitUpdate();
+                    }} className="px-5 py-2.5 text-[10px] font-black uppercase tracking-widest bg-primary text-white rounded-xl shadow-xl shadow-primary/20 hover:bg-blue-700 hover:shadow-2xl transition-all active:scale-95">Finish ✓</button>
+                 </div>
+              </div>
+            </div>
+          )}
           {/* Artboard container — centered, scrollable */}
           <div className="flex items-center justify-center min-h-full p-12">
             <div
               ref={artboardRef}
               id="pharma-artboard"
-              className="bg-white shadow-2xl relative pharma-artboard"
+              className="shadow-3xl relative pharma-artboard border border-black/15 dark:border-white/10"
               style={{
                 width: `${AW}px`,
                 height: `${AH}px`,
+                backgroundColor: meta.bgColor || '#ffffff',
                 transform: `scale(${zoomLevel})`,
                 transformOrigin: 'center top',
                 marginBottom: `${(zoomLevel - 1) * AH}px`,
               }}
-              onClick={e => e.stopPropagation()}
+              onClick={e => {
+                // If we click the artboard itself (not an element), deselect
+                if (e.target.id === 'pharma-artboard') {
+                  setSelectedElementId(null);
+                  if (editingElementId) {
+                    setEditingElementId(null);
+                    commitUpdate();
+                  }
+                }
+              }}
             >
+              {/* ── DRWAING OVERLAY ────────────────────────────────────────────── */}
+              {isDrawingMode && (
+                <div 
+                  className={`absolute inset-0 z-[1000] bg-transparent ${isEraserMode ? 'cursor-[url("https://fonts.gstatic.com/s/i/short-term/release/googlesymbols/ink_eraser/default/24px.svg"),_auto]' : 'cursor-crosshair'}`}
+                  onMouseDown={e => {
+                    const rect = artboardRef.current.getBoundingClientRect();
+                    const x = (e.clientX - rect.left) / zoomLevel;
+                    const y = (e.clientY - rect.top) / zoomLevel;
+                    if (!isEraserMode) {
+                      setCurrentLines([...currentLines, { points: [{ x, y }], color: penColor, width: penWidth }]);
+                    } else {
+                      const radius = parseFloat(penWidth) * 2.5;
+                      const next = [];
+                      currentLines.forEach(stroke => {
+                         let chunk = [];
+                         stroke.points.forEach(p => {
+                            if (Math.hypot(p.x - x, p.y - y) > radius) { chunk.push(p); }
+                            else { if (chunk.length > 1) { next.push({ ...stroke, points: chunk }); } chunk = []; }
+                         });
+                         if (chunk.length > 1) next.push({ ...stroke, points: chunk });
+                      });
+                      setCurrentLines(next);
+                    }
+                  }}
+                  onMouseMove={e => {
+                    const rect = artboardRef.current.getBoundingClientRect();
+                    const x = (e.clientX - rect.left) / zoomLevel;
+                    const y = (e.clientY - rect.top) / zoomLevel;
+                    
+                    if (isEraserMode) setEraserPos({ x, y });
+                    else if (eraserPos) setEraserPos(null);
+
+                    if (e.buttons !== 1) return;
+                    
+                    if (isEraserMode) {
+                      const radius = parseFloat(penWidth) * 2.5;
+                      const next = [];
+                      currentLines.forEach(stroke => {
+                         let chunk = [];
+                         stroke.points.forEach(p => {
+                            if (Math.hypot(p.x - x, p.y - y) > radius) { chunk.push(p); }
+                            else { if (chunk.length > 1) { next.push({ ...stroke, points: chunk }); } chunk = []; }
+                         });
+                         if (chunk.length > 1) next.push({ ...stroke, points: chunk });
+                      });
+                      setCurrentLines(next);
+                    } else if (currentLines.length > 0) {
+                      const lastStroke = currentLines[currentLines.length - 1];
+                      const nextPoints = [...lastStroke.points, { x, y }];
+                      const nextStroke = { ...lastStroke, points: nextPoints };
+                      const newLines = [...currentLines.slice(0, -1), nextStroke];
+                      setCurrentLines(newLines);
+                    }
+                  }}
+                  onMouseLeave={() => setEraserPos(null)}
+                >
+                  <svg className="absolute inset-0 pointer-events-none w-full h-full">
+                    {currentLines.map((stroke, i) => (
+                      <path key={i} 
+                        d={`M ${stroke.points.map(p => `${p.x},${p.y}`).join(' L ')}`} 
+                        stroke={stroke.color} strokeWidth={stroke.width} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                    ))}
+                    {isEraserMode && eraserPos && (
+                       <circle cx={eraserPos.x} cy={eraserPos.y} r={parseFloat(penWidth) * 2.5} fill="rgba(37, 99, 235, 0.15)" stroke="#2563eb" strokeWidth="1" strokeDasharray="2 2" />
+                    )}
+                  </svg>
+                </div>
+              )}
+
               {/* Label Name watermark */}
-              {!elements.length && (
+              {!elements.length && !isDrawingMode && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none gap-2">
                   <span className="material-symbols-outlined text-[48px] text-slate-200">edit_square</span>
                   <p className="text-[11px] font-bold uppercase tracking-widest text-slate-300">Start adding elements</p>
@@ -850,7 +1102,8 @@ export default function LabelEditor() {
                     size={{ width: elW, height: elH }}
                     position={{ x: el.x, y: el.y }}
                     bounds="parent"
-                    enableResizing={{
+                    disableDragging={el.locked}
+                    enableResizing={el.locked ? false : {
                       top: isSelected, left: isSelected, bottom: isSelected, right: isSelected,
                       topLeft: isSelected, topRight: isSelected, bottomLeft: isSelected, bottomRight: isSelected,
                     }}
@@ -875,7 +1128,7 @@ export default function LabelEditor() {
                     }}
                     onClick={e => {
                       e.stopPropagation();
-                      if (selectedElementId === el.id && ['text', 'warnings', 'manufacturing', 'dosage', 'storage', 'subtext', 'shape', 'table'].includes(el.type)) {
+                      if (!el.locked && selectedElementId === el.id && ['text', 'warnings', 'manufacturing', 'dosage', 'storage', 'subtext', 'shape', 'table'].includes(el.type)) {
                         setEditingElementId(el.id);
                       } else {
                         setSelectedElementId(el.id);
@@ -886,121 +1139,134 @@ export default function LabelEditor() {
                       }
                     }}
                     onDoubleClick={e => {
-                      if (['text', 'warnings', 'manufacturing', 'dosage', 'storage', 'subtext', 'shape', 'table'].includes(el.type)) {
+                      if (!el.locked && ['text', 'warnings', 'manufacturing', 'dosage', 'storage', 'subtext', 'shape', 'table'].includes(el.type)) {
                         e.stopPropagation();
                         setEditingElementId(el.id);
-                      } else if (['barcode', 'qrcode'].includes(el.type)) {
+                      } else if (!el.locked && ['barcode', 'qrcode'].includes(el.type)) {
                         e.stopPropagation();
                         // No prompt here anymore, handled in properties or toolbar
                       }
                     }}
                   >
                     {isSelected && (
-                      <div className={`absolute left-0 bg-white dark:bg-slate-800 shadow-xl min-w-max px-2 py-1.5 rounded-lg border border-slate-200 dark:border-white/10 flex items-center gap-1 z-[9999] pointer-events-auto transform transition-all origin-bottom-left ${el.y * zoomLevel < 60 ? 'top-[calc(100%+8px)]' : '-top-[48px]'}`}
+                      <div className={`absolute left-0 bg-white dark:bg-slate-800 shadow-xl min-w-max px-2 py-1.5 rounded-lg border border-slate-200 dark:border-white/10 flex items-center gap-1 z-[9999] pointer-events-auto transform transition-all origin-top-left ${
+                        (el.y * zoomLevel > AH * zoomLevel - 60 || (el.rotation > 110 && el.rotation < 250)) 
+                        ? '-top-[56px]' 
+                        : 'top-[calc(100%+8px)]'
+                      }`}
                         style={{ transform: `scale(${1 / zoomLevel})` }}
                         onMouseDown={e => e.stopPropagation()}
-                      >
-                        <div className="flex gap-0.5 shrink-0 pr-1.5 border-r border-slate-200 dark:border-white/10">
-                          {[
-                            ['front', 'flip_to_front'],
-                            ['up', 'keyboard_arrow_up'],
-                            ['down', 'keyboard_arrow_down'],
-                            ['back', 'flip_to_back']
-                          ].map(([d, icon]) => (
-                            <button key={d} onClick={e => { e.stopPropagation(); moveLayer(el.id, d); }}
-                              className="p-1 rounded hover:bg-slate-100 dark:hover:bg-white/5 text-slate-500 hover:text-blue-600 transition-colors" title={`Move ${d}`}>
-                              <span className="material-symbols-outlined text-[16px]">{icon}</span>
-                            </button>
-                          ))}
-                        </div>
+                       >
 
-                        {/* Table Specific Controls */}
-                        {el.type === 'table' && (
-                          <div className="flex gap-0.5 shrink-0 px-1.5 border-r border-slate-200 dark:border-white/10">
-                            <button onClick={e => {
-                              e.stopPropagation();
-                              const lines = (el.text || '').split('\n');
-                              const colCount = lines[0].split('|').length;
-                              lines.push(Array(colCount).fill('').join('|'));
-                              updateElement(el.id, { text: lines.join('\n'), height: (el.height || 0) + 25 });
-                              commitUpdate();
-                            }} className="p-1 rounded hover:bg-slate-100 text-slate-500 hover:text-blue-600 transition-colors" title="Add Row">
-                              <span className="material-symbols-outlined text-[16px]">add_row</span>
-                            </button>
-                            <button onClick={e => {
-                              e.stopPropagation();
-                              const lines = (el.text || '').split('\n');
-                              const next = lines.map(l => l + '|');
-                              updateElement(el.id, { text: next.join('\n'), width: (el.width || 0) + 50 });
-                              commitUpdate();
-                            }} className="p-1 rounded hover:bg-slate-100 text-slate-500 hover:text-blue-600 transition-colors" title="Add Column">
-                              <span className="material-symbols-outlined text-[16px]">add_column</span>
-                            </button>
+                        {el.locked ? (
+                          <div className="flex items-center gap-2 px-3 py-1 text-blue-600 font-bold text-[10px] uppercase tracking-wider animate-pulse">
+                            <span className="material-symbols-outlined text-[16px]">lock</span> Layer Locked
                           </div>
-                        )}
+                        ) : (
+                          <>
+                            {/* Table Specific Controls */}
+                            {el.type === 'table' && (
+                              <div className="flex gap-1 shrink-0 px-2 border-r border-slate-200 dark:border-white/10">
+                                <button onClick={e => {
+                                  e.stopPropagation();
+                                  const lines = (el.text || '').split('\n');
+                                  const colCount = lines[0].split('|').length;
+                                  lines.push(Array(colCount).fill('').join('|'));
+                                  updateElement(el.id, { text: lines.join('\n'), height: (el.height || 0) + 25 });
+                                  commitUpdate();
+                                }} className="px-2 py-0.5 rounded bg-blue-50 hover:bg-blue-100 text-blue-700 text-[10px] font-bold flex items-center gap-1 transition-all" title="Add Row">
+                                  <span className="material-symbols-outlined text-[14px]">add</span> Row
+                                </button>
+                                <button onClick={e => {
+                                  e.stopPropagation();
+                                  const lines = (el.text || '').split('\n');
+                                  const next = lines.map(l => l + '|');
+                                  updateElement(el.id, { text: next.join('\n'), width: (el.width || 0) + 50 });
+                                  commitUpdate();
+                                }} className="px-2 py-0.5 rounded bg-blue-50 hover:bg-blue-100 text-blue-700 text-[10px] font-bold flex items-center gap-1 transition-all" title="Add Column">
+                                  <span className="material-symbols-outlined text-[14px]">add</span> Column
+                                </button>
+                              </div>
+                            )}
 
-                        {/* Barcode Data Editor */}
-                        {el.type === 'barcode' && (
-                          <div className="flex items-center gap-1.5 px-2 border-r border-slate-200 dark:border-white/10">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Data:</span>
-                            <input
-                              type="text"
-                              className="w-24 bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px] font-mono outline-none focus:border-blue-400"
-                              value={el.text || ''}
-                              onChange={e => { updateElement(el.id, { text: e.target.value }); }}
-                              onBlur={commitUpdate}
-                            />
-                          </div>
-                        )}
+                            {/* Barcode Data Editor */}
+                            {el.type === 'barcode' && (
+                              <div className="flex items-center gap-1.5 px-2 border-r border-slate-200 dark:border-white/10">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Data:</span>
+                                <input
+                                  type="text"
+                                  className="w-24 bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px] font-mono outline-none focus:border-blue-400"
+                                  value={el.text || ''}
+                                  onChange={e => { updateElement(el.id, { text: e.target.value }); }}
+                                  onBlur={commitUpdate}
+                                />
+                              </div>
+                            )}
 
-                        <div className="flex gap-0.5 shrink-0 pl-1.5">
-                          <button onClick={e => { e.stopPropagation(); duplicateElement(el.id); }}
-                            className="p-1 rounded hover:bg-slate-100 dark:hover:bg-white/5 text-slate-500 hover:text-blue-600 transition-colors" title="Duplicate">
-                            <span className="material-symbols-outlined text-[16px]">content_copy</span>
-                          </button>
-                          <button onClick={e => { e.stopPropagation(); deleteElement(el.id); }}
-                            className="p-1 rounded hover:bg-red-50 dark:hover:bg-red-500/10 text-slate-500 hover:text-red-600 transition-colors" title="Delete">
-                            <span className="material-symbols-outlined text-[16px]">delete</span>
-                          </button>
-                        </div>
+                            <div className="flex gap-0.5 shrink-0 pl-1.5">
+                              <button onClick={e => { e.stopPropagation(); duplicateElement(el.id); }}
+                                className="p-1 rounded hover:bg-slate-100 dark:hover:bg-white/5 text-slate-500 hover:text-blue-600 transition-colors" title="Duplicate">
+                                <span className="material-symbols-outlined text-[16px]">content_copy</span>
+                              </button>
+                              <button onClick={e => { e.stopPropagation(); deleteElement(el.id); }}
+                                className="p-1 px-2.5 rounded bg-red-600 hover:bg-red-700 text-white shadow-sm flex items-center gap-1 transition-colors" title="Delete">
+                                <span className="material-symbols-outlined text-[16px]">delete</span>
+                                <span className="text-[10px] font-bold">Delete</span>
+                              </button>
+                            </div>
+                          </>
+                        )}
                       </div>
                     )}
                     <div
                       data-id={el.id}
-                      className={`w-full h-full relative text-content-wrapper ${editingElementId === el.id ? '' : 'select-none'} ${isSelected ? 'outline outline-2 outline-blue-500 outline-offset-0 ring-4 ring-blue-500/10' : ''}`}
+                      className={`w-full h-full relative text-content-wrapper overflow-visible ${editingElementId === el.id ? '' : 'select-none'} ${isSelected ? 'outline outline-2 outline-blue-500 outline-offset-0 ring-4 ring-blue-500/10' : ''}`}
                       style={{
                         transform: `rotate(${el.rotation || 0}deg)`,
                         transformOrigin: '50% 50%',
                         opacity: el.opacity !== undefined ? el.opacity : 1,
                       }}
                     >
-                      <div className="w-full h-full relative" style={{
-                        backgroundColor: (el.type === 'shape' && el.shapeType === 'line') ? 'transparent' : (el.bgColor || 'transparent'),
-                        borderWidth: (el.type === 'shape' && el.shapeType === 'line') ? 0 : (el.borderWidth ? `${el.borderWidth}px` : 0),
-                        borderTopWidth: (el.type === 'shape' && el.shapeType === 'line') ? `${el.height || 4}px` : undefined,
-                        borderTopStyle: (el.type === 'shape' && el.shapeType === 'line') ? (el.borderStyle || 'solid') : undefined,
-                        borderTopColor: (el.type === 'shape' && el.shapeType === 'line') ? (el.bgColor || '#191c1e') : undefined,
-                        borderColor: (el.type === 'shape' && el.shapeType === 'line') ? 'transparent' : (el.borderColor || 'transparent'),
-                        borderStyle: el.borderStyle || 'solid',
-                        borderRadius: el.type === 'shape' && el.shapeType === 'circle' ? '50%' : `${el.borderRadius || 0}px`,
-                        fontSize: `${el.fontSize || 16}px`,
-                        fontFamily: el.fontFamily || 'Inter, sans-serif',
+                        <div className="w-full h-full relative" style={{
+                          boxSizing: 'border-box',
+                          backgroundColor: (el.type === 'shape' && el.shapeType === 'line') ? 'transparent' : (el.bgColor || 'transparent'),
+                          ...( (el.type === 'shape' && el.shapeType === 'line') 
+                            ? { 
+                                borderTop: `${el.height || 4}px ${el.borderStyle || 'solid'} ${el.bgColor || '#191c1e'}` 
+                              } 
+                            : { 
+                                border: `${el.borderWidth || 0}px ${el.borderStyle || 'solid'} ${el.borderColor || 'transparent'}`,
+                              }
+                          ),
+                          borderRadius: el.type === 'shape' && el.shapeType === 'circle' ? '50%' : `${el.borderRadius || 0}px`,
+                          fontSize: `${el.fontSize || 16}px`,
+                          fontFamily: el.fontFamily || 'Inter, sans-serif',
                         fontWeight: el.fontWeight || '400',
                         fontStyle: el.fontStyle || 'normal',
                         textDecoration: el.textDecoration || 'none',
-                        color: el.color || '#191c1e',
+                        color: (editingElementId === el.id && (el.backgroundImage || el.WebkitBackgroundClip || el.color === 'transparent' || el.color === 'white' || el.WebkitTextFillColor === 'transparent')) ? '#2563eb' : (el.color || '#191c1e'),
+                        backgroundImage: editingElementId === el.id ? 'none' : (el.backgroundImage || undefined),
+                        WebkitBackgroundClip: editingElementId === el.id ? 'initial' : (el.WebkitBackgroundClip || undefined),
+                        WebkitTextFillColor: editingElementId === el.id ? 'initial' : (el.WebkitTextFillColor || undefined),
+                        textShadow: (editingElementId === el.id && (el.backgroundImage || el.WebkitBackgroundClip || el.color === 'transparent' || el.color === 'white' || el.WebkitTextFillColor === 'transparent')) ? 'none' : (el.textShadow || 'none'),
+                        WebkitTextStroke: el.WebkitTextStroke || undefined,
                         textAlign: el.align || 'left',
                         whiteSpace: 'pre-wrap',
                         wordBreak: 'break-word',
                         lineHeight: el.lineHeight || '1.25',
                         letterSpacing: el.letterSpacing ? `${el.letterSpacing}px` : undefined,
-                        overflow: 'visible',
+                        overflow: el.type === 'table' ? 'hidden' : 'visible',
                         padding: (el.bgColor && el.bgColor !== 'transparent' && el.type !== 'shape') ? '4px 8px' : '0',
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: el.type === 'shape' ? 'center' : 'flex-start',
                         alignItems: el.type === 'shape' ? (el.align === 'center' ? 'center' : el.align === 'right' ? 'flex-end' : 'flex-start') : 'stretch',
                       }}>
+                        {el.type === 'path' && (
+                          <svg className="w-full h-full" viewBox={`0 0 ${el.width} ${el.height}`} preserveAspectRatio="none">
+                            <path d={el.pathData} stroke={el.color || '#191C1E'} strokeWidth={el.penWidth || 3} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        )}
                         {el.heading && (
                           <span style={{ display: 'block', fontSize: '8px', fontWeight: '800', fontFamily: 'Inter, sans-serif', textTransform: 'uppercase', color: el.alertColor || '#717783', marginBottom: '2px', letterSpacing: '1.2px' }}>
                             {el.heading}
@@ -1052,7 +1318,7 @@ export default function LabelEditor() {
                                           setEditingCell({ r: i, c: j });
                                         }
                                       }}
-                                      className={`p-1 break-words relative transition-colors ${editingCell?.r === i && editingCell?.c === j ? 'p-0 ring-2 ring-blue-500 z-10' : 'hover:bg-blue-50/50'}`}
+                                      className={`p-0 px-1 break-words relative transition-colors ${editingCell?.r === i && editingCell?.c === j ? 'p-0 ring-2 ring-blue-500 z-10' : 'hover:bg-blue-50/50'}`}
                                       style={{
                                         borderColor: el.color || '#94a3b8',
                                         borderWidth: el.borderWidth ? `${el.borderWidth}px` : '1px',
@@ -1100,7 +1366,7 @@ export default function LabelEditor() {
                         ) : editingElementId === el.id ? (
                           <textarea
                             autoFocus
-                            className="w-full h-full bg-transparent outline-none resize-none border-none p-0 m-0 overflow-hidden"
+                            className="flex-1 w-full bg-transparent outline-none resize-none border-none p-0 m-0 overflow-y-auto custom-scrollbar"
                             value={el.text || ''}
                             onChange={e => {
                               updateElement(el.id, { text: e.target.value });
@@ -1109,7 +1375,9 @@ export default function LabelEditor() {
                               target.style.height = '0px';
                               const sh = target.scrollHeight;
                               target.style.height = '100%';
-                              const newHeight = Math.max(22, sh);
+                              // Add balance for heading if present
+                              const headingBuffer = el.heading ? 18 : 0;
+                              const newHeight = Math.max(22, sh + headingBuffer);
                               if (el.type !== 'shape' && Math.abs(newHeight - (el.height || 0)) > 2) {
                                 updateElement(el.id, { height: newHeight });
                               }
@@ -1123,12 +1391,11 @@ export default function LabelEditor() {
                               fontStyle: 'inherit',
                               textDecoration: 'inherit',
                               color: 'inherit',
-                              textAlign: 'inherit',
                               lineHeight: 'inherit',
-                              overflow: 'visible',
+                              overflowY: 'auto',
                               height: 'auto',
                               width: '100%',
-                              textAlign: el.align || (el.type === 'shape' ? 'center' : 'left'),
+                              textAlign: el.align || 'inherit',
                             }}
                           />
                         ) : (
@@ -1138,49 +1405,51 @@ export default function LabelEditor() {
                           }}>{el.text}</span>
                         )}
                       </div>
-                      {isSelected && (
-                        <button
-                          onMouseDown={e => {
-                            e.stopPropagation();
-                            e.preventDefault();
-                            const elNode = document.querySelector(`[data-id="${el.id}"]`);
-                            if (!elNode) return;
-                            const rect = elNode.getBoundingClientRect();
-                            const centerX = rect.left + rect.width / 2;
-                            const centerY = rect.top + rect.height / 2;
+                       {isSelected && !el.locked && (
+                         <>
+                           <button
+                             onMouseDown={e => {
+                               e.stopPropagation();
+                               e.preventDefault();
+                               const elNode = document.querySelector(`[data-id="${el.id}"]`);
+                               if (!elNode) return;
+                               const rect = elNode.getBoundingClientRect();
+                               const centerX = rect.left + rect.width / 2;
+                               const centerY = rect.top + rect.height / 2;
 
-                            const handleMove = (moveEvent) => {
-                              const dx = moveEvent.clientX - centerX;
-                              const dy = moveEvent.clientY - centerY;
-                              let angle = Math.atan2(dy, dx) * 180 / Math.PI;
-                              angle = (angle + 90 + 360) % 360;
+                               const handleMove = (moveEvent) => {
+                                 const dx = moveEvent.clientX - centerX;
+                                 const dy = moveEvent.clientY - centerY;
+                                 let angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                                 angle = (angle + 90 + 360) % 360;
 
-                              const rot = Math.round(angle);
-                              const w = el.width || 120;
-                              const h = el.height || 22;
-                              // Check if this rotation would leave boundaries
-                              const clamped = clampPos(el.x, el.y, w, h, rot);
-                              if (clamped.x !== el.x || clamped.y !== el.y) {
-                                return; // Stop rotating if edge is hit
-                              }
-                              updateElement(el.id, { rotation: rot });
-                            };
-                            const handleUp = () => {
-                              document.removeEventListener('mousemove', handleMove);
-                              document.removeEventListener('mouseup', handleUp);
-                              commitUpdate();
-                            };
-                            document.addEventListener('mousemove', handleMove);
-                            document.addEventListener('mouseup', handleUp);
-                          }}
-                          className="absolute -top-10 left-1/2 -translate-x-1/2 bg-white border border-slate-200 rounded-full w-8 h-8 flex items-center justify-center shadow-lg hover:bg-slate-50 text-blue-600 z-[60] cursor-grab active:cursor-grabbing"
-                          title="Drag to rotate"
-                        >
-                          <span className="material-symbols-outlined text-[18px]">rotate_right</span>
-                        </button>
-                      )}
-                    </div>
-                  </Rnd>
+                                 const rot = Math.round(angle);
+                                 const w = el.width || 120;
+                                 const h = el.height || 22;
+                                 // Check if this rotation would leave boundaries
+                                 const clamped = clampPos(el.x, el.y, w, h, rot);
+                                 if (clamped.x !== el.x || clamped.y !== el.y) {
+                                   return; // Stop rotating if edge is hit
+                                 }
+                                 updateElement(el.id, { rotation: rot });
+                               };
+                               const handleUp = () => {
+                                 document.removeEventListener('mousemove', handleMove);
+                                 document.removeEventListener('mouseup', handleUp);
+                                 commitUpdate();
+                               };
+                               document.addEventListener('mousemove', handleMove);
+                               document.addEventListener('mouseup', handleUp);
+                             }}
+                             className="absolute -top-10 left-1/2 -translate-x-1/2 bg-white border border-slate-200 rounded-full w-8 h-8 flex items-center justify-center shadow-lg hover:bg-slate-50 text-blue-600 z-[60] cursor-grab active:cursor-grabbing"
+                             title="Drag to rotate"
+                           >
+                           <span className="material-symbols-outlined text-[18px]">rotate_right</span>
+                         </button>
+                         </>
+                       )}
+                     </div>
+                   </Rnd>
                 );
               })}
             </div>
@@ -1190,12 +1459,36 @@ export default function LabelEditor() {
         {/* RIGHT PROPERTIES PANEL */}
         <aside className="w-80 bg-[#F8FAFC] dark:bg-slate-900 border-l border-black/5 flex flex-col overflow-y-auto shrink-0 custom-scrollbar">
           {selectedElement ? (
-            <div className="animate-fade-in pb-16">
+            <div className="animate-fade-in pb-16 relative">
+              {/* Sticky Global Lock Toggle for the Layer */}
+              <div className="sticky top-0 z-[20] shadow-sm flex items-center justify-between bg-primary-container px-4 py-2 border-b border-black/5 rounded-b-xl mb-2">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-primary flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[15px]">{selectedElement.locked ? 'lock' : 'lock_open'}</span>
+                  {selectedElement.locked ? 'Layer Secured' : 'Unsecured Layer'}
+                </span>
+                <button 
+                   onClick={() => { 
+                     updateElement(selectedElement.id, { locked: !selectedElement.locked }); 
+                     commitUpdate(); 
+                   }} 
+                   className={`h-7 px-3 rounded-xl border text-[10px] font-extrabold uppercase transition-all flex items-center gap-2 shadow-sm ${selectedElement.locked ? 'bg-blue-600 border-blue-700 text-white hover:bg-blue-700' : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700'}`}
+                 >
+                   <span className="material-symbols-outlined text-[15px]">{selectedElement.locked ? 'lock_open' : 'lock'}</span>
+                   <span>{selectedElement.locked ? 'Unlock' : 'Lock'}</span>
+                </button>
+              </div>
+
+              {/* Protected Property Sections */}
+              <div className={selectedElement.locked ? 'pointer-events-none opacity-50 grayscale-[50%]' : ''}>
 
               {/* Position Block */}
               <div className="p-4 border-b border-black/5 bg-slate-50/50">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-[9px] font-bold uppercase tracking-widest text-blue-600">Position & Size</span>
+                  <button onClick={() => deleteElement(selectedElement.id)} className="h-6 px-2 bg-red-50 hover:bg-red-100 text-red-600 text-[9px] font-bold uppercase rounded border border-red-200 transition-all flex items-center gap-1">
+                    <span className="material-symbols-outlined text-[14px]">delete</span>
+                    <span className="uppercase">Delete</span>
+                  </button>
                 </div>
                 <div className="grid grid-cols-2 gap-2 mb-2">
                   {['x', 'y'].map(axis => (
@@ -1223,20 +1516,69 @@ export default function LabelEditor() {
                   <span className="text-[11px] font-bold uppercase tracking-widest text-slate-500 block mb-2">
                     {['barcode', 'qrcode'].includes(selectedElement.type) ? 'Data String' : (selectedElement.type === 'table' ? 'Table Data' : 'Text Content')}
                   </span>
-                  <textarea
-                    className="w-full bg-slate-50 border border-slate-200 text-[12px] py-2 px-2.5 focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none rounded-lg resize-none"
-                    style={{ minHeight: '80px', height: 'auto' }}
-                    value={selectedElement.text || ''}
-                    placeholder={selectedElement.type === 'qrcode' ? 'https://...' : selectedElement.type === 'barcode' ? '123456789012' : 'Enter text…'}
-                    onChange={e => {
-                      updateElement(selectedElement.id, { text: e.target.value });
-                      e.target.style.height = 'auto';
-                      e.target.style.height = e.target.scrollHeight + 'px';
-                    }}
-                    onBlur={commitUpdate}
-                  />
-                  {selectedElement.type === 'table' && (
-                    <p className="text-[9px] text-slate-400 mt-1.5">Use <b>|</b> to separate columns, and <b>Enter</b> for new rows.</p>
+                   {selectedElement.type === 'table' ? (
+                    <div className="space-y-1.5">
+                      <div className="max-h-[320px] overflow-y-auto overflow-x-hidden custom-scrollbar border border-slate-200/50 rounded-xl bg-slate-50/30 p-2 space-y-1">
+                        {(selectedElement.text || '').split('\n').map((row, i) => (
+                          <div key={i} className="flex gap-1 group">
+                            <div className="w-4 h-7 flex items-center justify-center text-[9px] font-bold text-slate-300 select-none">{i + 1}</div>
+                            {row.split('|').map((cell, j) => (
+                              <input
+                                key={j}
+                                className="flex-1 min-w-0 h-7 bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 text-[10px] px-2 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 outline-none transition-all"
+                                value={cell}
+                                onChange={e => {
+                                  const lines = (selectedElement.text || '').split('\n');
+                                  const cells = lines[i].split('|');
+                                  cells[j] = e.target.value.replace(/\|/g, '');
+                                  lines[i] = cells.join('|');
+                                  updateElement(selectedElement.id, { text: lines.join('\n') });
+                                }}
+                                onBlur={commitUpdate}
+                              />
+                            ))}
+                          </div>
+                        ))}
+                      </div>
+                      <div className="flex gap-2">
+                        <button 
+                          onClick={() => {
+                            const lines = (selectedElement.text || '').split('\n');
+                            const colCount = lines[0].split('|').length;
+                            lines.push(Array(colCount).fill('').join('|'));
+                            updateElement(selectedElement.id, { text: lines.join('\n'), height: (selectedElement.height || 0) + 25 });
+                            commitUpdate();
+                          }}
+                          className="flex-1 h-8 bg-blue-50 hover:bg-blue-100 text-blue-700 text-[10px] font-bold rounded-lg border border-blue-200 transition-colors flex items-center justify-center gap-1.5"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">add</span> Add Row
+                        </button>
+                        <button 
+                          onClick={() => {
+                            const lines = (selectedElement.text || '').split('\n');
+                            const next = lines.map(l => l + '|');
+                            updateElement(selectedElement.id, { text: next.join('\n'), width: (selectedElement.width || 0) + 100 });
+                            commitUpdate();
+                          }}
+                          className="flex-1 h-8 bg-blue-50 hover:bg-blue-100 text-blue-700 text-[10px] font-bold rounded-lg border border-blue-200 transition-colors flex items-center justify-center gap-1.5"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">view_column</span> Add Column
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <textarea
+                      className="w-full bg-slate-50 border border-slate-200 text-[12px] py-2 px-2.5 focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none rounded-lg resize-none"
+                      style={{ minHeight: '80px', height: 'auto' }}
+                      value={selectedElement.text || ''}
+                      placeholder={selectedElement.type === 'qrcode' ? 'https://...' : selectedElement.type === 'barcode' ? '123456789012' : 'Enter text…'}
+                      onChange={e => {
+                        updateElement(selectedElement.id, { text: e.target.value });
+                        e.target.style.height = 'auto';
+                        e.target.style.height = e.target.scrollHeight + 'px';
+                      }}
+                      onBlur={commitUpdate}
+                    />
                   )}
                 </div>
               )}
@@ -1572,11 +1914,57 @@ export default function LabelEditor() {
                 </div>
               )}
             </div>
-          ) : (
-            <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-              <span className="material-symbols-outlined text-[52px] text-slate-200 mb-3">touch_app</span>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Click any element</p>
-              <p className="text-[9px] text-slate-300 mt-1 max-w-[160px]">to unlock its properties</p>
+          </div>
+        ) : (
+            <div className="p-6 animate-fade-in space-y-8">
+              <div className="flex flex-col items-center text-center px-4">
+                <div className="w-16 h-16 bg-blue-100/50 dark:bg-blue-900/20 rounded-2xl flex items-center justify-center mb-4 transition-colors">
+                  <span className="material-symbols-outlined text-[32px] text-blue-600 dark:text-blue-400">settings_overscan</span>
+                </div>
+                <h3 className="text-[13px] font-bold text-slate-900 dark:text-slate-100 uppercase tracking-widest">Label Settings</h3>
+                <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1.5 leading-tight">Configure global properties for the entire label surface</p>
+              </div>
+
+              <div className="space-y-6">
+                <div className="bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-white/10 rounded-2xl p-5 shadow-sm">
+                  <label className="text-[11px] font-extrabold uppercase text-slate-700 dark:text-slate-300 mb-4 flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[16px]">palette</span>
+                    Label Background
+                  </label>
+                  <div className="flex gap-3">
+                    <div className="w-12 h-12 rounded-xl border-2 border-slate-100 relative overflow-hidden ring-4 ring-slate-50 shadow-inner">
+                      <input type="color" className="absolute -inset-6 w-24 h-24 cursor-pointer"
+                        value={meta.bgColor || '#ffffff'}
+                        onChange={e => setMeta({ ...meta, bgColor: e.target.value })}
+                        onBlur={commitUpdate} />
+                    </div>
+                    <div className="flex-1 space-y-1.5">
+                      <input type="text" className="w-full text-[11px] font-mono uppercase px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-blue-500 transition-all font-bold"
+                        value={meta.bgColor || '#FFFFFF'}
+                        onChange={e => setMeta({ ...meta, bgColor: e.target.value })}
+                        onBlur={commitUpdate} />
+                      <div className="flex gap-1.5">
+                        {['#FFFFFF', '#F8FAFC', '#F1F5F9', '#FFF7ED', '#F0FDF4'].map(c => (
+                          <button key={c} onClick={() => { 
+                            const newM = { ...meta, bgColor: c };
+                            setMeta(newM); 
+                            commitUpdate(elements, newM); 
+                          }} 
+                            className={`w-6 h-6 rounded-full border border-black/10 ring-2 ${meta.bgColor === c ? 'ring-blue-500 ring-offset-2' : 'ring-transparent'}`}
+                            style={{ backgroundColor: c }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-slate-100/30 rounded-2xl border border-dashed border-slate-300 text-center">
+                   <span className="material-symbols-outlined text-[24px] text-slate-400 mb-1">touch_app</span>
+                   <p className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-tight">Select an element</p>
+                   <p className="text-[9px] text-slate-500 dark:text-slate-500">to edit specific properties</p>
+                </div>
+              </div>
             </div>
           )}
         </aside>
