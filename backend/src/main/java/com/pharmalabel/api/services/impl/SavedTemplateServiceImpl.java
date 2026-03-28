@@ -18,10 +18,13 @@ public class SavedTemplateServiceImpl implements SavedTemplateService {
 
     private final SavedTemplateRepository repository;
     private final com.pharmalabel.api.repositories.TemplateVersionRepository versionRepository;
+    private final com.pharmalabel.api.services.UserService userService;
 
     @Override
     @Transactional(readOnly = true)
     public List<SavedTemplate> getUserTemplates(String userId) {
+        // Migration: If we find a user by this guest ID (userId is the string guest id), we should also return their files
+        // But for now, just keep the standard legacy behavior if it exists.
         return repository.findByUserIdOrderByUpdatedAtDesc(userId);
     }
 
@@ -35,6 +38,10 @@ public class SavedTemplateServiceImpl implements SavedTemplateService {
     @Override
     @Transactional
     public SavedTemplate createTemplate(SavedTemplate template) {
+        // Set owner if not set
+        if (template.getOwner() == null) {
+            template.setOwner(userService.getCurrentUser());
+        }
         return repository.save(template);
     }
 
@@ -43,6 +50,12 @@ public class SavedTemplateServiceImpl implements SavedTemplateService {
     public SavedTemplate updateTemplate(UUID id, SavedTemplate templateData) {
         SavedTemplate existing = getTemplateById(id);
         
+        // Reset workflow if content changed (SoD reset)
+        if (templateData.getElementsData() != null && !templateData.getElementsData().equals(existing.getElementsData())) {
+            existing.setCompletedBy(null);
+            existing.setApprovedBy(null);
+        }
+
         existing.setName(templateData.getName());
         existing.setLabelSize(templateData.getLabelSize());
         existing.setBgColor(templateData.getBgColor());
@@ -61,6 +74,29 @@ public class SavedTemplateServiceImpl implements SavedTemplateService {
         versionRepository.save(version);
 
         return saved;
+    }
+
+    @Override
+    @Transactional
+    public SavedTemplate completeTemplate(UUID id) {
+        SavedTemplate template = getTemplateById(id);
+        template.setCompletedBy(userService.getCurrentUser());
+        return repository.save(template);
+    }
+
+    @Override
+    @Transactional
+    public SavedTemplate approveTemplate(UUID id) {
+        SavedTemplate template = getTemplateById(id);
+        com.pharmalabel.api.models.User currentUser = userService.getCurrentUser();
+
+        // GxP Requirement: Backend Segregation of Duties (SoD) enforcement
+        if (template.getCompletedBy() != null && template.getCompletedBy().getId().equals(currentUser.getId())) {
+            throw new RuntimeException("Segregation of Duties Violation: You cannot approve a label you marked as complete.");
+        }
+
+        template.setApprovedBy(currentUser);
+        return repository.save(template);
     }
 
     @Override

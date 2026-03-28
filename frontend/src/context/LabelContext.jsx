@@ -2,6 +2,7 @@ import React, { createContext, useState, useContext, useCallback, useEffect, use
 import { v4 as uuidv4 } from 'uuid';
 import { api } from '../services/api';
 import { getGuestId } from '../utils/auth';
+import { useAuth } from './AuthContext';
 
 const LabelContext = createContext();
 export const useLabel = () => useContext(LabelContext);
@@ -50,7 +51,9 @@ export const LabelProvider = ({ children }) => {
   const [loading, setLoading]           = useState(true);
   const [userFiles, setUserFiles]       = useState([]);
 
+  const { user } = useAuth();
   const guestId = getGuestId();
+  const effectiveId = user?.id || guestId;
   const debounceRef = useRef(null);
 
   // ── Toast helper ──
@@ -59,14 +62,27 @@ export const LabelProvider = ({ children }) => {
     setTimeout(() => setToast(null), 3000);
   };
 
-  // ── Hydrate from Backend ──
+  // ── Hydrate from Backend (only when authenticated) ──
   useEffect(() => {
     const init = async () => {
       try {
         setLoading(true);
+
+        if (!user) {
+          // Not authenticated — load public templates but skip user-specific data
+          try {
+            const systemTemplates = await api.getTemplates();
+            setTemplates(systemTemplates);
+          } catch (tempErr) {
+            console.error('Failed to fetch templates', tempErr);
+          }
+          setHydrated(true);
+          return;
+        }
+
         // 1. Fetch Dashboard (Settings & Logs)
         try {
-          const session = await api.getDashboard(guestId);
+          const session = await api.getDashboard(effectiveId);
           if (session.dashboardPreferences) {
             setSettings(prev => ({ ...prev, ...session.dashboardPreferences }));
           }
@@ -88,7 +104,7 @@ export const LabelProvider = ({ children }) => {
 
         // 3. Fetch User Files
         try {
-          const files = await api.getUserTemplates(guestId);
+          const files = await api.getUserTemplates(effectiveId);
           setUserFiles(files);
 
           // 4. Last session restore (optional)
@@ -117,27 +133,30 @@ export const LabelProvider = ({ children }) => {
       }
     };
     init();
-  }, [guestId]);
+  }, [user, effectiveId]);
 
   // ── Activity Log Sync ──
   const addActivityLog = useCallback(async (action, fileId, fileName) => {
+    if (!user) return; // Skip if not authenticated
     const newLog = { id: uuidv4(), action, fileId, fileName, time: Date.now() };
     setActivityLogs(prev => {
       const next = [newLog, ...prev].slice(0, 100);
       // Sync to backend
-      api.saveDashboard(guestId, { recentActivityLog: next }).catch(console.error);
+      api.saveDashboard(effectiveId, { recentActivityLog: next }).catch(console.error);
       return next;
     });
-  }, [guestId]);
+  }, [user, effectiveId]);
 
   // ── Settings Sync ──
   const updateSettings = useCallback((updates) => {
     setSettings(prev => {
       const next = { ...prev, ...updates };
-      api.saveDashboard(guestId, { dashboardPreferences: next }).catch(console.error);
+      if (user) {
+        api.saveDashboard(effectiveId, { dashboardPreferences: next }).catch(console.error);
+      }
       return next;
     });
-  }, [guestId]);
+  }, [user, effectiveId]);
 
   // ── Debounced auto-save ──
   useEffect(() => {
@@ -250,6 +269,31 @@ export const LabelProvider = ({ children }) => {
     }
   };
 
+  const saveFileAs = async (newName) => {
+    try {
+      setSavedStatus('saving');
+      const newTemplate = await api.createUserTemplate(guestId, {
+        name: newName,
+        elementsData: elements,
+        labelSize: meta.labelSize,
+        bgColor: meta.bgColor
+      });
+      setMeta({ 
+        fileId: newTemplate.id, 
+        fileName: newName, 
+        labelSize: meta.labelSize,
+        bgColor: meta.bgColor 
+      });
+      setUserFiles(prev => [...prev, newTemplate]);
+      setSavedStatus('saved');
+      showToast('File copy saved ✓', 'success');
+      addActivityLog('Saved as new file', newTemplate.id, newName);
+    } catch (err) {
+      console.error('Save as failed', err);
+      showToast('Save as failed', 'error');
+    }
+  };
+
   const openFileById = async (id) => {
     try {
       setLoading(true);
@@ -281,6 +325,32 @@ export const LabelProvider = ({ children }) => {
     a.download = `${meta.fileName || 'label'}.json`;
     a.click();
     addActivityLog('Exported JSON', meta.fileId, meta.fileName);
+  };
+
+  const openFileFromJSON = (jsonString) => {
+    try {
+      const data = JSON.parse(jsonString);
+      if (data.meta) {
+        setMeta({ 
+          fileId: null, // New file ID will be created when saved
+          fileName: data.meta.fileName || 'Imported Label',
+          labelSize: data.meta.labelSize || { w: 600, h: 400 },
+          bgColor: data.meta.bgColor || '#FFFFFF'
+        });
+      }
+      if (data.elements && Array.isArray(data.elements)) {
+        setElements(data.elements);
+        setHistory([data.elements]);
+        setHistoryIndex(0);
+      }
+      setSelectedElementId(null);
+      setSavedStatus('unsaved');
+      showToast('File imported successfully ✓', 'success');
+      addActivityLog('Imported JSON file', null, data.meta?.fileName || 'Imported Label');
+    } catch (err) {
+      console.error('Failed to parse JSON file', err);
+      showToast('Invalid JSON file format', 'error');
+    }
   };
 
   const getAllFiles = () => userFiles;
@@ -417,8 +487,8 @@ export const LabelProvider = ({ children }) => {
     activityLogs,
     // File ops
     newFile, setFileName, setLabelSize,
-    saveFile,
-    openFileById,
+    saveFile, saveFileAs,
+    openFileById, openFileFromJSON,
     exportJSON, getAllFiles,
     getTemplateHistory, getTemplateById,
     // Template

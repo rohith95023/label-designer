@@ -48,4 +48,16 @@ public class SavedTemplateController {
     public ResponseEntity<List<com.pharmalabel.api.models.TemplateVersion>> getHistory(@PathVariable UUID id) {
         return ResponseEntity.ok(service.getHistory(id));
     }
+
+    @PostMapping("/{id}/complete")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('OPERATOR', 'ADMIN')")
+    public ResponseEntity<SavedTemplate> completeTemplate(@PathVariable UUID id) {
+        return ResponseEntity.ok(service.completeTemplate(id));
+    }
+
+    @PostMapping("/{id}/approve")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('REVIEWER', 'ADMIN')")
+    public ResponseEntity<SavedTemplate> approveTemplate(@PathVariable UUID id) {
+        return ResponseEntity.ok(service.approveTemplate(id));
+    }
 }

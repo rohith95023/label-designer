@@ -11,4 +11,6 @@ public interface SavedTemplateService {
     SavedTemplate updateTemplate(UUID id, SavedTemplate template);
     void deleteTemplate(UUID id);
     List<com.pharmalabel.api.models.TemplateVersion> getHistory(UUID templateId);
+    SavedTemplate completeTemplate(UUID id);
+    SavedTemplate approveTemplate(UUID id);
 }

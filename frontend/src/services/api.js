@@ -1,81 +1,71 @@
-const BASE_URL = 'http://localhost:8080/api/v1';
-
-const handleResponse = async (response) => {
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: 'An unknown error occurred' }));
-    throw new Error(error.message || `HTTP error! status: ${response.status}`);
-  }
-  return response.json();
-};
+import authApi from '../context/AuthContext';
 
 export const api = {
   // Dashboard / User Session
   getDashboard: (userId) => 
-    fetch(`${BASE_URL}/dashboard/${userId}`).then(handleResponse),
+    authApi.get(`/dashboard/${userId}`).then(res => res.data),
   
   saveDashboard: (userId, data) => 
-    fetch(`${BASE_URL}/dashboard/${userId}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    }).then(handleResponse),
+    authApi.post(`/dashboard/${userId}`, data).then(res => res.data),
 
-  // Templates
+  // Templates (System)
   getTemplates: () => 
-    fetch(`${BASE_URL}/templates`).then(handleResponse),
+    authApi.get('/templates').then(res => res.data),
 
   getTemplate: (id) => 
-    fetch(`${BASE_URL}/templates/${id}`).then(handleResponse),
+    authApi.get(`/templates/${id}`).then(res => res.data),
 
   createTemplate: (data) => 
-    fetch(`${BASE_URL}/templates`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    }).then(handleResponse),
+    authApi.post('/templates', data).then(res => res.data),
 
   updateTemplate: (id, data) => 
-    fetch(`${BASE_URL}/templates/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    }).then(handleResponse),
+    authApi.put(`/templates/${id}`, data).then(res => res.data),
 
   deleteTemplate: (id) => 
-    fetch(`${BASE_URL}/templates/${id}`, {
-      method: 'DELETE',
-    }).then(res => res.ok),
+    authApi.delete(`/templates/${id}`).then(res => res.status === 200),
 
-  // User Templates
+  // User Templates (Saved templates)
   getUserTemplates: (userId) => 
-    fetch(`${BASE_URL}/user-templates/user/${userId}`).then(handleResponse),
+    authApi.get(`/user-templates/user/${userId}`).then(res => res.data),
 
   getUserTemplate: (id) => 
-    fetch(`${BASE_URL}/user-templates/${id}`).then(handleResponse),
+    authApi.get(`/user-templates/${id}`).then(res => res.data),
 
   createUserTemplate: (userId, data) => 
-    fetch(`${BASE_URL}/user-templates/user/${userId}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    }).then(handleResponse),
+    authApi.post(`/user-templates/user/${userId}`, data).then(res => res.data),
 
   updateUserTemplate: (id, data) => 
-    fetch(`${BASE_URL}/user-templates/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    }).then(handleResponse),
+    authApi.put(`/user-templates/${id}`, data).then(res => res.data),
 
   deleteUserTemplate: (id) => 
-    fetch(`${BASE_URL}/user-templates/${id}`, {
-      method: 'DELETE',
-    }).then(res => res.ok),
+    authApi.delete(`/user-templates/${id}`).then(res => res.status === 200),
 
   // Versions (History)
   getHistory: (templateId) => 
-    fetch(`${BASE_URL}/templates/${templateId}/history`).then(handleResponse),
+    authApi.get(`/templates/${templateId}/history`).then(res => res.data),
 
   getUserHistory: (templateId) => 
-    fetch(`${BASE_URL}/user-templates/${templateId}/history`).then(handleResponse),
+    authApi.get(`/user-templates/${templateId}/history`).then(res => res.data),
+
+  // Users (Admin Only)
+  getUsers: () => 
+    authApi.get('/users').then(res => res.data),
+    
+  createUser: (data) => 
+    authApi.post('/users', data).then(res => res.data),
+    
+  updateUser: (id, data) => 
+    authApi.put(`/users/${id}`, data).then(res => res.data),
+    
+  deleteUser: (id) => 
+    authApi.delete(`/users/${id}`).then(res => res.status === 200),
+    
+  lockUser: (id) => 
+    authApi.post(`/users/${id}/lock`).then(res => res.status === 200),
+    
+  unlockUser: (id) => 
+    authApi.post(`/users/${id}/unlock`).then(res => res.status === 200),
+    
+  getRoles: () => 
+    authApi.get('/users/roles').then(res => res.data),
 };

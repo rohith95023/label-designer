@@ -10,4 +10,5 @@ import java.util.UUID;
 @Repository
 public interface SavedTemplateRepository extends JpaRepository<SavedTemplate, UUID> {
     List<SavedTemplate> findByUserIdOrderByUpdatedAtDesc(String userId);
+    List<SavedTemplate> findByUserId(String userId);
 }
