@@ -1,161 +1,376 @@
-.login-container {
-  min-height: 100vh;
+.login-root {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #0f172a;
+  overflow: hidden;
+  font-family: 'Inter', sans-serif;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MEDICAL BACKGROUND ANIMATIONS
+   ═══════════════════════════════════════════════════════════════════════════ */
+.medical-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.bg-sphere {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  opacity: 0.15;
+  transition: all 4s ease-in-out;
+}
+
+.sphere-1 {
+  top: -10%; left: -10%;
+  width: 60%; height: 60%;
+  background: radial-gradient(circle, #2563eb, transparent);
+  animation: sphere-float 20s infinite alternate ease-in-out;
+}
+
+.sphere-2 {
+  bottom: -10%; right: -10%;
+  width: 50%; height: 50%;
+  background: radial-gradient(circle, #7c3aed, transparent);
+  animation: sphere-float 25s infinite alternate-reverse ease-in-out;
+}
+
+.bg-grid-overlay {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(37,99,235,0.05) 1.5px, transparent 1.5px);
+  background-size: 40px 40px;
+  mask-image: linear-gradient(to bottom, black, transparent 80%);
+}
+
+@keyframes sphere-float {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(50px, 30px) scale(1.1); }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CONTENT LAYOUT
+   ═══════════════════════════════════════════════════════════════════════════ */
+.login-content-wrapper {
+  position: relative;
+  z-index: 10;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  width: 1000px;
+  max-width: 95vw;
+  height: 600px;
+  background: rgba(255, 255, 255, 0.01);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 40px;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(20px) scale(0.98);
+  transition: all 1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.login-content-wrapper.visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* ─── Visual Section ─── */
+.login-visual-section {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, rgba(37,99,235,0.05) 0%, rgba(124,58,237,0.05) 100%);
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 60px;
+}
+
+.pharma-logo-container {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  margin-bottom: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(circle at top left, #1a2a44 0%, #0d1117 100%);
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  padding: 2rem;
 }
 
-.login-glass-card {
-  width: 100%;
-  max-width: 440px;
-  background: rgba(23, 32, 48, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 24px;
-  padding: 3rem;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-  animation: fadeIn 0.6s ease-out;
+.pharma-logo-core {
+  width: 100px;
+  height: 100px;
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  border-radius: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 15px 45px -5px rgba(37,99,235,0.4);
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+.logo-rings {
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(37,99,235,0.2);
+  border-radius: 50%;
+  animation: ring-pulse 4s infinite cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.login-header {
+@keyframes ring-pulse {
+  0% { transform: scale(0.6); opacity: 0; }
+  50% { opacity: 0.5; }
+  100% { transform: scale(1.4); opacity: 0; }
+}
+
+.branding-text {
   text-align: center;
-  margin-bottom: 2.5rem;
 }
 
-.logo-icon {
-  font-size: 3rem;
-  margin-bottom: 1rem;
+.compliance-badges {
+  margin-top: 60px;
+  display: flex;
+  gap: 24px;
 }
 
-.login-header h1 {
-  color: #f0f6fc;
-  font-size: 1.75rem;
-  font-weight: 700;
-  margin-bottom: 0.5rem;
-  letter-spacing: -0.025em;
-}
-
-.login-header p {
-  color: #8b949e;
-  font-size: 0.875rem;
-  font-weight: 500;
+.badge-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.25);
+  font-size: 10px;
+  font-weight: 800;
   text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.badge-item span:first-child {
+  font-size: 14px;
+}
+
+/* ─── Form Section ─── */
+.login-form-section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 60px;
+  background: rgba(15, 23, 42, 0.6);
+}
+
+.login-card-glass {
+  width: 100%;
+  max-width: 360px;
+}
+
+.form-header {
+  margin-bottom: 32px;
+}
+
+.login-form-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.login-error-alert {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 12px;
+  color: #f87171;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.animate-shake {
+  animation: pharma-shake 0.4s cubic-bezier(.36, .07, .19, .97) both;
+}
+
+@keyframes pharma-shake {
+  10%, 90% { transform: translate3d(-1px, 0, 0); }
+  20%, 80% { transform: translate3d(2px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+  40%, 60% { transform: translate3d(4px, 0, 0); }
+}
+
+.pharma-input-group label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: #8D97B5;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: 14px;
+  font-size: 18px;
+  color: rgba(96, 165, 250, 0.4);
+  transition: all 0.2s;
+}
+
+.input-wrapper input {
+  width: 100%;
+  padding: 14px 14px 14px 44px;
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 14px;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  outline: none;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.input-wrapper input:focus {
+  background: rgba(30, 41, 59, 0.8);
+  border-color: #3b82f6;
+  box-shadow: 0 0 20px rgba(37, 99, 235, 0.15);
+}
+
+.input-wrapper input:focus + .input-icon {
+  color: #3b82f6;
+}
+
+/* ─── Button ─── */
+.pharma-auth-btn {
+  margin-top: 10px;
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(90deg, #2563eb, #7c3aed);
+  background-size: 200% auto;
+  border-radius: 16px;
+  color: white;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: -0.2px;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.3);
+}
+
+.pharma-auth-btn:hover:not(:disabled) {
+  background-position: right center;
+  transform: translateY(-2px);
+  box-shadow: 0 15px 35px -5px rgba(37, 99, 235, 0.4);
+}
+
+.pharma-auth-btn:disabled {
+  opacity: 0.8;
+  cursor: wait;
+}
+
+.auth-processing {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.auth-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: pharma-spin 0.8s infinite linear;
+}
+
+@keyframes pharma-spin {
+  to { transform: rotate(360deg); }
+}
+
+.login-support {
+  margin-top: 24px;
+  text-align: center;
+  font-size: 11px;
+  color: #8D97B5;
+  font-weight: 500;
+}
+
+.login-support button {
+  background: none;
+  border: none;
+  color: #3b82f6;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   FOOTER
+   ═══════════════════════════════════════════════════════════════════════════ */
+.login-system-footer {
+  position: absolute;
+  bottom: 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  z-index: 10;
+  width: 100%;
+}
+
+.footer-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: rgba(0,0,0,0.3);
+  border-radius: 99px;
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #10b981;
   letter-spacing: 0.05em;
 }
 
-.login-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.error-banner {
-  background: rgba(248, 81, 73, 0.1);
-  border: 1px solid rgba(248, 81, 73, 0.4);
-  color: #ff7b72;
-  padding: 0.75rem 1rem;
-  border-radius: 12px;
-  font-size: 0.875rem;
-  line-height: 1.4;
-}
-
-.input-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.input-group label {
-  color: #c9d1d9;
-  font-size: 0.875rem;
-  font-weight: 600;
-  margin-left: 0.25rem;
-}
-
-.input-group input {
-  background: rgba(13, 17, 23, 0.8);
-  border: 1px solid #30363d;
-  border-radius: 12px;
-  padding: 0.75rem 1rem;
-  color: #f0f6fc;
-  font-size: 1rem;
-  transition: all 0.2s ease;
-}
-
-.input-group input:focus {
-  outline: none;
-  border-color: #58a6ff;
-  box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.15);
-  background: #0d1117;
-}
-
-.login-button {
-  margin-top: 1rem;
-  background: #238636;
-  color: #ffffff;
-  border: none;
-  border-radius: 12px;
-  padding: 0.875rem;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.login-button:hover {
-  background: #2ea043;
-  transform: translateY(-1px);
-}
-
-.login-button:active {
-  transform: translateY(0);
-}
-
-.login-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.login-footer {
-  margin-top: 3rem;
-  text-align: center;
-  color: #6e7681;
-  font-size: 0.75rem;
-}
-
-.footer-links {
-  margin-top: 0.75rem;
-}
-
-.footer-links span {
-  cursor: pointer;
-}
-
-.footer-links span:hover {
-  color: #58a6ff;
-}
-
-.spinner {
-  width: 20px;
-  height: 20px;
-  border: 3px solid rgba(255, 255, 255, 0.3);
-  border-top-color: #ffffff;
+.status-dot {
+  width: 4px;
+  height: 4px;
+  background: #10b981;
   border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  animation: pharma-pulse 2s infinite;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
+@keyframes pharma-pulse {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  70% { transform: scale(1.2); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+.login-system-footer p {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.2);
+  font-weight: 600;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MOBILE RESPONSIVENESS
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .login-content-wrapper {
+    grid-template-columns: 1fr;
+    height: auto;
+    width: 400px;
+    margin: 20px;
+  }
+  
+  .login-visual-section {
+    padding: 40px;
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
 }

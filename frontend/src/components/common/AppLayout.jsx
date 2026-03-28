@@ -6,6 +6,7 @@ import { useTheme } from '../../context/ThemeContext';
 const NAV_ITEMS = [
   { key: 'dashboard', to: '/', icon: 'grid_view', label: 'Dashboard', roles: ['ADMIN', 'REVIEWER', 'OPERATOR', 'EXTERNAL'] },
   { key: 'assets', to: '/assets', icon: 'auto_awesome_mosaic', label: 'Template Library', roles: ['ADMIN', 'REVIEWER', 'OPERATOR', 'EXTERNAL'] },
+  { key: 'saved-templates', to: '/saved-templates', icon: 'folder_open', label: 'Saved Templates', roles: ['ADMIN', 'REVIEWER', 'OPERATOR'] },
   { key: 'editor', to: '/editor', icon: 'edit_document', label: 'Label Editor', roles: ['ADMIN', 'OPERATOR'] },
   { key: 'translation', to: '/translation', icon: 'translate', label: 'Translation', roles: ['ADMIN', 'REVIEWER', 'OPERATOR', 'EXTERNAL'] },
   { key: 'history', to: '/history', icon: 'history', label: 'History', roles: ['ADMIN', 'REVIEWER', 'OPERATOR'] },
@@ -207,20 +208,6 @@ export default function AppLayout({ children, activePage = '', searchBar = null 
           </nav>
 
           {/* Bottom: version badge */}
-          {!collapsed && (
-            <div className="p-4 border-t border-outline-variant/20 dark:border-white/5 shrink-0">
-              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-primary/5 to-tertiary/5 border border-primary/10">
-                <span className="material-symbols-outlined text-primary text-sm"
-                  style={{ fontVariationSettings: "'FILL' 1" }}>
-                  verified
-                </span>
-                <div>
-                  <p className="text-[11px] font-bold text-primary leading-none">FDA Ready</p>
-                  <p className="text-[10px] text-outline">Compliance v2.0</p>
-                </div>
-              </div>
-            </div>
-          )}
         </aside>
 
         {/* ── Main Content ─────────────────────────────────────────────── */}

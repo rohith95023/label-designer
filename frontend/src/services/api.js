@@ -68,4 +68,22 @@ export const api = {
     
   getRoles: () => 
     authApi.get('/users/roles').then(res => res.data),
+
+  // System Config (Admin Only)
+  getSystemConfigs: () =>
+    authApi.get('/system-configs').then(res => res.data),
+  
+  updateSystemConfig: (key, value) =>
+    authApi.post('/system-configs', { key, value }).then(res => res.data),
+
+  // Permissions (Admin Only)
+  getPermissionsByRole: (roleId) =>
+    authApi.get(`/permissions/role/${roleId}`).then(res => res.data),
+
+  updatePermission: (permissionId, allowed) =>
+    authApi.patch(`/permissions/${permissionId}`, allowed).then(res => res.data),
+
+  // Electronic Signatures
+  createSignature: (data) =>
+    authApi.post('/signatures', data).then(res => res.data),
 };

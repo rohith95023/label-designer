@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import AppLayout from '../components/common/AppLayout';
+import PermissionMatrix from '../components/users/PermissionMatrix';
 import './UserManagement.css';
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
   const [roles, setRoles] = useState([]);
+  const [systemConfigs, setSystemConfigs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
@@ -17,8 +19,11 @@ const UserManagement = () => {
     username: '',
     email: '',
     password: '',
-    role: ''
+    role: '',
+    isExternal: false,
+    permissions: []
   });
+  const [passwordError, setPasswordError] = useState('');
 
   useEffect(() => {
     fetchData();
@@ -27,12 +32,14 @@ const UserManagement = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [usersData, rolesData] = await Promise.all([
+      const [usersData, rolesData, configsData] = await Promise.all([
         api.getUsers(),
-        api.getRoles()
+        api.getRoles(),
+        api.getSystemConfigs()
       ]);
       setUsers(usersData);
       setRoles(rolesData);
+      setSystemConfigs(configsData);
       setError(null);
     } catch (err) {
       console.error('Error fetching data:', err);
@@ -43,13 +50,44 @@ const UserManagement = () => {
   };
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({ 
+      ...prev, 
+      [name]: type === 'checkbox' ? checked : value 
+    }));
+    if (name === 'password') {
+      setPasswordError('');
+    }
+  };
+
+  const validatePassword = (password) => {
+    if (!password) return true; // Allow empty for edit mode
+    if (password.length < 8) {
+      setPasswordError('Password must be at least 8 characters');
+      return false;
+    }
+    if (!/[a-z]/.test(password)) {
+      setPasswordError('Password must contain at least one lowercase letter');
+      return false;
+    }
+    if (!/[A-Z]/.test(password)) {
+      setPasswordError('Password must contain at least one uppercase letter');
+      return false;
+    }
+    if (!/\d/.test(password)) {
+      setPasswordError('Password must contain at least one digit');
+      return false;
+    }
+    if (!/[@$!%*?&]/.test(password)) {
+      setPasswordError('Password must contain at least one special character (@$!%*?&)');
+      return false;
+    }
+    return true;
   };
 
   const openAddModal = () => {
     setIsEditing(false);
-    setFormData({ id: null, username: '', email: '', password: '', role: roles[0] || '' });
+    setFormData({ id: null, username: '', email: '', password: '', role: roles[0] || '', isExternal: false, permissions: [] });
     setShowModal(true);
   };
 
@@ -60,7 +98,9 @@ const UserManagement = () => {
       username: user.username,
       email: user.email,
       password: '', // Blank unless they want to change it
-      role: user.role
+      role: user.role,
+      isExternal: user.isExternal || false,
+      permissions: user.permissions || []
     });
     setShowModal(true);
   };
@@ -72,13 +112,20 @@ const UserManagement = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!isEditing && !validatePassword(formData.password)) {
+      return;
+    }
+    if (isEditing && formData.password && !validatePassword(formData.password)) {
+      return;
+    }
     try {
       if (isEditing) {
         await api.updateUser(formData.id, {
-          username: formData.username,
           email: formData.email,
           password: formData.password || null,
-          role: formData.role
+          role: formData.role,
+          isExternal: formData.isExternal,
+          permissions: formData.permissions
         });
       } else {
         await api.createUser(formData);
@@ -116,6 +163,19 @@ const UserManagement = () => {
     }
   };
 
+  const handleToggleSystemConfig = async (key, currentValue) => {
+    try {
+      const newValue = currentValue === 'true' ? 'false' : 'true';
+      await api.updateSystemConfig(key, newValue);
+      fetchData(); // Refresh list to get new config values
+    } catch (err) {
+      console.error('Error updating system config:', err);
+      setError('Failed to update compliance setting.');
+    }
+  };
+
+  const sodConfig = systemConfigs.find(c => c.configKey === 'sod.prevent_same_user_approve');
+
   if (loading && users.length === 0) return (
     <AppLayout activePage="users">
       <div className="user-management-loading">Loading users...</div>
@@ -127,8 +187,26 @@ const UserManagement = () => {
       <div className="user-management-container">
         <div className="header-actions">
           <h1>User Management</h1>
-        <button className="primary-btn" onClick={openAddModal}>+ Add User</button>
-      </div>
+          <button className="primary-btn" onClick={openAddModal}>+ Add User</button>
+        </div>
+
+        {sodConfig && (
+          <div className="compliance-banner glass-card">
+            <div className="banner-content">
+              <span className="material-symbols-outlined banner-icon">verified_user</span>
+              <div className="banner-text">
+                <h3>Global Compliance Module</h3>
+                <p>Segregation of Duties (SoD) is currently <strong>{sodConfig.configValue === 'true' ? 'Active' : 'Disabled'}</strong>.</p>
+              </div>
+            </div>
+            <button 
+              className={`toggle-btn ${sodConfig.configValue === 'true' ? 'enforced' : ''}`}
+              onClick={() => handleToggleSystemConfig(sodConfig.configKey, sodConfig.configValue)}
+            >
+              {sodConfig.configValue === 'true' ? 'Deactivate SoD' : 'Enforce SoD Policy'}
+            </button>
+          </div>
+        )}
 
       {error && <div className="error-alert">{error}</div>}
 
@@ -138,7 +216,8 @@ const UserManagement = () => {
             <tr>
               <th>Username</th>
               <th>Email</th>
-              <th>Role</th>
+               <th>Role</th>
+              <th>Type</th>
               <th>Status</th>
               <th>Failed Attempts</th>
               <th>Actions</th>
@@ -149,7 +228,12 @@ const UserManagement = () => {
               <tr key={user.id} className={user.status === 'LOCKED' ? 'locked-row' : ''}>
                 <td>{user.username}</td>
                 <td>{user.email}</td>
-                <td><span className={`role-badge role-${user.role.toLowerCase()}`}>{user.role}</span></td>
+                 <td><span className={`role-badge role-${user.role.toLowerCase()}`}>{user.role}</span></td>
+                <td>
+                  <span className={`type-badge ${user.isExternal ? 'type-external' : 'type-internal'}`}>
+                    {user.isExternal ? 'External' : 'Internal'}
+                  </span>
+                </td>
                 <td>
                   <span className={`status-badge status-${user.status.toLowerCase()}`}>
                     {user.status}
@@ -183,49 +267,89 @@ const UserManagement = () => {
           <div className="modal-content">
             <h2>{isEditing ? 'Edit User' : 'Add New User'}</h2>
             <form onSubmit={handleSubmit}>
-              <div className="form-group">
-                <label>Username</label>
-                <input 
-                  type="text" 
-                  name="username" 
-                  value={formData.username} 
-                  onChange={handleInputChange} 
-                  required 
-                />
-              </div>
-              
-              <div className="form-group">
-                <label>Email</label>
-                <input 
-                  type="email" 
-                  name="email" 
-                  value={formData.email} 
-                  onChange={handleInputChange} 
-                  required 
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="form-group">
+                  <label>Username</label>
+                  <input 
+                    type="text" 
+                    name="username" 
+                    placeholder="Enter unique clinical ID"
+                    value={formData.username} 
+                    onChange={handleInputChange} 
+                    disabled={isEditing}
+                    required 
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label>Email Address</label>
+                  <input 
+                    type="email" 
+                    name="email" 
+                    placeholder="name@organization.com"
+                    value={formData.email} 
+                    onChange={handleInputChange} 
+                    required 
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Personnel Role</label>
+                  <select 
+                    name="role" 
+                    value={formData.role} 
+                    onChange={handleInputChange} 
+                    required
+                  >
+                    <option value="" disabled>Select clinical role...</option>
+                    {roles.map(role => (
+                      <option key={role} value={role}>{role}</option>
+                    ))}
+                  </select>
+                  <p className="text-[10px] mt-1 text-on-surface-variant font-medium opacity-60 italic">Determines base access privileges.</p>
+                </div>
+
+                <div className="form-group">
+                  <label>Authentication</label>
+                  <div className="relative">
+                    <input 
+                      type="password" 
+                      name="password" 
+                      placeholder={isEditing ? "••••••••" : "Min 8 chars..."}
+                      value={formData.password} 
+                      onChange={handleInputChange} 
+                      required={!isEditing}
+                      minLength={8}
+                    />
+                    {passwordError && <p className="password-error">{passwordError}</p>}
+                  </div>
+                </div>
               </div>
 
-              <div className="form-group">
-                <label>{isEditing ? 'New Password (leave blank to keep current)' : 'Password'}</label>
-                <input 
-                  type="password" 
-                  name="password" 
-                  value={formData.password} 
-                  onChange={handleInputChange} 
-                  required={!isEditing}
-                  minLength={8}
-                />
+              <div className="flex items-center gap-6 p-4 rounded-xl bg-surface-container-low border border-outline-variant/5 mt-4">
+                <div className="flex-1">
+                  <h4 className="text-xs font-bold text-on-surface mb-0.5">External Identity</h4>
+                  <p className="text-[10px] text-on-surface-variant opacity-70">Mark if this user is a third-party vendor or auditor.</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    name="isExternal" 
+                    className="sr-only peer"
+                    checked={formData.isExternal} 
+                    onChange={handleInputChange} 
+                  />
+                  <div className="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                </label>
               </div>
 
-              <div className="form-group">
-                <label>Role</label>
-                <select name="role" value={formData.role} onChange={handleInputChange} required>
-                  <option value="" disabled>Select a role...</option>
-                  {roles.map(role => (
-                    <option key={role} value={role}>{role}</option>
-                  ))}
-                </select>
-              </div>
+              <div className="form-divider"></div>
+
+              <PermissionMatrix 
+                permissions={formData.permissions} 
+                onChange={(perms) => setFormData(prev => ({ ...prev, permissions: perms }))}
+                role={formData.role}
+              />
 
               <div className="modal-actions">
                 <button type="button" className="secondary-btn" onClick={closeModal}>Cancel</button>

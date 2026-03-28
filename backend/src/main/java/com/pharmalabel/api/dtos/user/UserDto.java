@@ -2,6 +2,7 @@ package com.pharmalabel.api.dtos.user;
 
 import lombok.Data;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -15,4 +16,6 @@ public class UserDto {
     private OffsetDateTime passwordChangedAt;
     private Integer failedLoginAttempts;
     private OffsetDateTime lockedUntil;
+    private Boolean isExternal;
+    private List<PermissionRequestDto> permissions;
 }

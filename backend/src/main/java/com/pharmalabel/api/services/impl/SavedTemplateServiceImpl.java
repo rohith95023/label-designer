@@ -2,8 +2,14 @@ package com.pharmalabel.api.services.impl;
 
 import com.pharmalabel.api.exceptions.ResourceNotFoundException;
 import com.pharmalabel.api.models.SavedTemplate;
+import com.pharmalabel.api.models.User;
+import com.pharmalabel.api.models.TemplateVersion;
 import com.pharmalabel.api.repositories.SavedTemplateRepository;
+import com.pharmalabel.api.repositories.TemplateVersionRepository;
 import com.pharmalabel.api.services.SavedTemplateService;
+import com.pharmalabel.api.services.UserService;
+import com.pharmalabel.api.services.SystemConfigService;
+import com.pharmalabel.api.services.AuditLogService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,15 +23,35 @@ import java.util.UUID;
 public class SavedTemplateServiceImpl implements SavedTemplateService {
 
     private final SavedTemplateRepository repository;
-    private final com.pharmalabel.api.repositories.TemplateVersionRepository versionRepository;
-    private final com.pharmalabel.api.services.UserService userService;
+    private final TemplateVersionRepository versionRepository;
+    private final UserService userService;
+    private final SystemConfigService systemConfigService;
+    private final AuditLogService auditLogService;
 
     @Override
     @Transactional(readOnly = true)
     public List<SavedTemplate> getUserTemplates(String userId) {
-        // Migration: If we find a user by this guest ID (userId is the string guest id), we should also return their files
-        // But for now, just keep the standard legacy behavior if it exists.
-        return repository.findByUserIdOrderByUpdatedAtDesc(userId);
+        User currentUser = null;
+        try {
+            currentUser = userService.getCurrentUser();
+        } catch (Exception e) {
+            // Probably anonymous/guest accessing editor
+        }
+
+        // Admin override: Admins see everything in the system
+        if (currentUser != null && currentUser.getRole() != null && 
+            currentUser.getRole().getName().equalsIgnoreCase("ADMIN")) {
+            return repository.findAllByOrderByUpdatedAtDesc();
+        }
+
+        // Search by both guest string ID and authenticated owner UUID
+        try {
+            UUID userUuid = UUID.fromString(userId);
+            return repository.findByUserIdOrOwner_IdOrderByUpdatedAtDesc(userId, userUuid);
+        } catch (IllegalArgumentException e) {
+            // Not a UUID (anonymous session id), search by string only
+            return repository.findByUserIdOrderByUpdatedAtDesc(userId);
+        }
     }
 
     @Override
@@ -42,7 +68,19 @@ public class SavedTemplateServiceImpl implements SavedTemplateService {
         if (template.getOwner() == null) {
             template.setOwner(userService.getCurrentUser());
         }
-        return repository.save(template);
+        SavedTemplate saved = repository.save(template);
+
+        // Audit: Log template creation
+        auditLogService.logEvent(
+            template.getOwner(),
+            "CREATE",
+            "TEMPLATES",
+            "TEMPLATE_CREATED",
+            null,
+            saved.getId().toString()
+        );
+
+        return saved;
     }
 
     @Override
@@ -63,10 +101,20 @@ public class SavedTemplateServiceImpl implements SavedTemplateService {
         existing.setUpdatedAt(OffsetDateTime.now());
 
         SavedTemplate saved = repository.save(existing);
-        
+
+        // Audit: Log template update
+        auditLogService.logEvent(
+            userService.getCurrentUser(),
+            "UPDATE",
+            "TEMPLATES",
+            "TEMPLATE_UPDATED",
+            null,
+            saved.getId().toString()
+        );
+
         // Save version
         int nextVersion = versionRepository.findMaxVersionNumberUser(saved.getId()) + 1;
-        com.pharmalabel.api.models.TemplateVersion version = com.pharmalabel.api.models.TemplateVersion.builder()
+        TemplateVersion version = TemplateVersion.builder()
                 .savedTemplate(saved)
                 .versionNumber(nextVersion)
                 .elementsData(saved.getElementsData())
@@ -80,35 +128,73 @@ public class SavedTemplateServiceImpl implements SavedTemplateService {
     @Transactional
     public SavedTemplate completeTemplate(UUID id) {
         SavedTemplate template = getTemplateById(id);
-        template.setCompletedBy(userService.getCurrentUser());
-        return repository.save(template);
+        User currentUser = userService.getCurrentUser();
+        template.setCompletedBy(currentUser);
+        
+        SavedTemplate saved = repository.save(template);
+        
+        auditLogService.logEvent(
+            currentUser, 
+            "COMPLETE", 
+            "TEMPLATES", 
+            "TEMPLATE_COMPLETED", 
+            null, 
+            saved.getId().toString()
+        );
+        
+        return saved;
     }
 
     @Override
     @Transactional
     public SavedTemplate approveTemplate(UUID id) {
         SavedTemplate template = getTemplateById(id);
-        com.pharmalabel.api.models.User currentUser = userService.getCurrentUser();
+        User currentUser = userService.getCurrentUser();
 
-        // GxP Requirement: Backend Segregation of Duties (SoD) enforcement
-        if (template.getCompletedBy() != null && template.getCompletedBy().getId().equals(currentUser.getId())) {
+        // GxP Requirement: Backend Segregation of Duties (SoD) enforcement based on configuration
+        boolean preventSameUser = systemConfigService.getBooleanConfig("sod.prevent_same_user_approve", true);
+        
+        if (preventSameUser && template.getCompletedBy() != null && template.getCompletedBy().getId().equals(currentUser.getId())) {
             throw new RuntimeException("Segregation of Duties Violation: You cannot approve a label you marked as complete.");
         }
 
         template.setApprovedBy(currentUser);
-        return repository.save(template);
+        SavedTemplate saved = repository.save(template);
+        
+        auditLogService.logEvent(
+            currentUser, 
+            "APPROVE", 
+            "TEMPLATES", 
+            "TEMPLATE_APPROVED", 
+            null, 
+            saved.getId().toString()
+        );
+        
+        return saved;
     }
 
     @Override
     @Transactional
     public void deleteTemplate(UUID id) {
         SavedTemplate existing = getTemplateById(id);
+        User currentUser = userService.getCurrentUser();
+        String templateId = existing.getId().toString();
         repository.delete(existing);
+
+        // Audit: Log template deletion
+        auditLogService.logEvent(
+            currentUser,
+            "DELETE",
+            "TEMPLATES",
+            "TEMPLATE_DELETED",
+            null,
+            templateId
+        );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<com.pharmalabel.api.models.TemplateVersion> getHistory(UUID templateId) {
+    public List<TemplateVersion> getHistory(UUID templateId) {
         return versionRepository.findBySavedTemplateIdOrderByVersionNumberDesc(templateId);
     }
 }

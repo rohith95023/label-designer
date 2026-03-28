@@ -1,25 +1,36 @@
 package com.pharmalabel.api.services.impl;
 
 import com.pharmalabel.api.models.User;
+import com.pharmalabel.api.models.Role;
+import com.pharmalabel.api.models.SavedTemplate;
 import com.pharmalabel.api.repositories.UserRepository;
+import com.pharmalabel.api.repositories.SavedTemplateRepository;
+import com.pharmalabel.api.repositories.RoleRepository;
 import com.pharmalabel.api.services.UserService;
+import com.pharmalabel.api.dtos.user.UserDto;
+import com.pharmalabel.api.dtos.user.CreateUserRequest;
+import com.pharmalabel.api.dtos.user.UpdateUserRequest;
+import com.pharmalabel.api.services.PermissionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
-    private final com.pharmalabel.api.repositories.SavedTemplateRepository savedTemplateRepository;
-    private final com.pharmalabel.api.repositories.RoleRepository roleRepository;
-    private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
+    private final SavedTemplateRepository savedTemplateRepository;
+    private final RoleRepository roleRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final PermissionService permissionService;
 
     @Override
     public User getCurrentUser() {
@@ -69,10 +80,10 @@ public class UserServiceImpl implements UserService {
         User currentUser = getCurrentUser();
         
         // Transfer all saved templates
-        List<com.pharmalabel.api.models.SavedTemplate> templates = 
+        List<SavedTemplate> templates = 
                 savedTemplateRepository.findByUserId(guestId);
         
-        for (com.pharmalabel.api.models.SavedTemplate t : templates) {
+        for (SavedTemplate t : templates) {
             t.setOwner(currentUser);
             // Optionally update old field, but owner field is now the primary GxP source
             savedTemplateRepository.save(t);
@@ -80,15 +91,15 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<com.pharmalabel.api.dtos.user.UserDto> getAllUsers() {
+    public List<UserDto> getAllUsers() {
         return userRepository.findAll().stream()
                 .map(this::mapToDto)
-                .collect(java.util.stream.Collectors.toList());
+                .collect(Collectors.toList());
     }
 
     @Override
     @Transactional
-    public com.pharmalabel.api.dtos.user.UserDto createUser(com.pharmalabel.api.dtos.user.CreateUserRequest request) {
+    public UserDto createUser(CreateUserRequest request) {
         if (userRepository.findByUsername(request.getUsername()).isPresent()) {
             throw new RuntimeException("Username already exists");
         }
@@ -96,7 +107,7 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("Email already exists");
         }
 
-        com.pharmalabel.api.models.Role role = roleRepository.findByName(request.getRole())
+        Role role = roleRepository.findByName(request.getRole())
                 .orElseThrow(() -> new RuntimeException("Role not found"));
 
         User user = User.builder()
@@ -108,14 +119,22 @@ public class UserServiceImpl implements UserService {
                 .tokenVersion(0)
                 .failedLoginAttempts(0)
                 .mustChangePassword(true)
+                .isExternal(request.getIsExternal() != null ? request.getIsExternal() : false)
                 .build();
+        
+        User saved = userRepository.save(user);
+        
+        // Save granular permissions if provided
+        if (request.getPermissions() != null) {
+            permissionService.saveUserPermissions(saved, request.getPermissions());
+        }
 
-        return mapToDto(userRepository.save(user));
+        return mapToDto(saved);
     }
 
     @Override
     @Transactional
-    public com.pharmalabel.api.dtos.user.UserDto updateUser(UUID id, com.pharmalabel.api.dtos.user.UpdateUserRequest request) {
+    public UserDto updateUser(UUID id, UpdateUserRequest request) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -139,12 +158,23 @@ public class UserServiceImpl implements UserService {
         }
 
         if (request.getRole() != null) {
-            com.pharmalabel.api.models.Role role = roleRepository.findByName(request.getRole())
+            Role role = roleRepository.findByName(request.getRole())
                     .orElseThrow(() -> new RuntimeException("Role not found"));
             user.setRole(role);
         }
 
-        return mapToDto(userRepository.save(user));
+        if (request.getIsExternal() != null) {
+            user.setIsExternal(request.getIsExternal());
+        }
+
+        User saved = userRepository.save(user);
+
+        // Update granular permissions if provided
+        if (request.getPermissions() != null) {
+            permissionService.saveUserPermissions(saved, request.getPermissions());
+        }
+
+        return mapToDto(saved);
     }
 
     @Override
@@ -180,12 +210,12 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<String> getAllRoles() {
         return roleRepository.findAll().stream()
-                .map(com.pharmalabel.api.models.Role::getName)
-                .collect(java.util.stream.Collectors.toList());
+                .map(Role::getName)
+                .collect(Collectors.toList());
     }
 
-    private com.pharmalabel.api.dtos.user.UserDto mapToDto(User user) {
-        com.pharmalabel.api.dtos.user.UserDto dto = new com.pharmalabel.api.dtos.user.UserDto();
+    private UserDto mapToDto(User user) {
+        UserDto dto = new UserDto();
         dto.setId(user.getId());
         dto.setUsername(user.getUsername());
         dto.setEmail(user.getEmail());
@@ -195,6 +225,17 @@ public class UserServiceImpl implements UserService {
         dto.setPasswordChangedAt(user.getPasswordChangedAt());
         dto.setFailedLoginAttempts(user.getFailedLoginAttempts());
         dto.setLockedUntil(user.getLockedUntil());
+        dto.setIsExternal(user.getIsExternal());
+        
+        // Include permissions in DTO
+        dto.setPermissions(permissionService.getPermissionsByUser(user.getId()).stream()
+                .map(p -> com.pharmalabel.api.dtos.user.PermissionRequestDto.builder()
+                        .module(p.getModule())
+                        .event(p.getEvent())
+                        .allowed(p.getAllowed())
+                        .build())
+                .collect(Collectors.toList()));
+                
         return dto;
     }
 }

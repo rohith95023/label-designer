@@ -7,6 +7,7 @@ import com.pharmalabel.api.models.UserAuthToken;
 import com.pharmalabel.api.repositories.RoleRepository;
 import com.pharmalabel.api.repositories.UserAuthTokenRepository;
 import com.pharmalabel.api.repositories.UserRepository;
+import com.pharmalabel.api.services.AuditLogService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,6 +33,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
+    private final AuditLogService auditLogService;
 
     @Value("${jwt.refresh-expiration}")
     private long refreshExpiration;
@@ -58,6 +60,10 @@ public class AuthServiceImpl implements AuthService {
         user.setFailedLoginAttempts(0);
         user.setLockedUntil(null);
         userRepository.save(user);
+
+        // Audit: Log successful login
+        auditLogService.logEvent(user, "LOGIN", "AUTH", "USER_LOGIN", null,
+                "User '" + user.getUsername() + "' logged in successfully");
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(user.getUsername());
         String accessToken = jwtService.generateToken(userDetails, user.getTokenVersion());
@@ -87,6 +93,11 @@ public class AuthServiceImpl implements AuthService {
             user.setLockedUntil(OffsetDateTime.now().plusMinutes(30));
         }
         userRepository.save(user);
+
+        // Audit: Log failed login attempt
+        auditLogService.logEvent(user, "FAILED_LOGIN", "AUTH", "LOGIN_FAILED", null,
+                "Failed login attempt for '" + user.getUsername() + "' (attempt " + user.getFailedLoginAttempts() + ")"
+                + (user.getFailedLoginAttempts() >= 5 ? " - Account locked" : ""));
     }
 
     private void saveRefreshToken(User user, String token, UUID familyId) {
@@ -177,15 +188,25 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public void logout(String refreshToken, HttpServletResponse response) {
+        User currentUser = null;
         if (refreshToken != null) {
             List<UserAuthToken> allTokens = authTokenRepository.findAll();
-            allTokens.stream()
+            UserAuthToken matchedToken = allTokens.stream()
                 .filter(t -> passwordEncoder.matches(refreshToken, t.getTokenHash()))
                 .findFirst()
-                .ifPresent(t -> {
-                    t.setRevoked(true);
-                    authTokenRepository.save(t);
-                });
+                .orElse(null);
+
+            if (matchedToken != null) {
+                matchedToken.setRevoked(true);
+                authTokenRepository.save(matchedToken);
+                currentUser = matchedToken.getUser();
+            }
+        }
+
+        // Audit: Log logout event
+        if (currentUser != null) {
+            auditLogService.logEvent(currentUser, "LOGOUT", "AUTH", "USER_LOGOUT", null,
+                    "User '" + currentUser.getUsername() + "' logged out");
         }
         
         // Clear cookie

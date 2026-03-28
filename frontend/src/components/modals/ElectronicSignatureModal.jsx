@@ -1,23 +1,44 @@
 import React, { useState } from 'react';
+import { api } from '../../services/api';
 import './ElectronicSignatureModal.css';
 
-const ElectronicSignatureModal = ({ isOpen, onClose, onSign, actionType }) => {
+const ElectronicSignatureModal = ({ isOpen, onClose, onSign, actionType, targetId, versionId }) => {
   const [password, setPassword] = useState('');
   const [reason, setReason] = useState('Standard process compliance');
   const [meaning, setMeaning] = useState('APPROVED_FOR_RELEASE');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!password) {
       setError('Password is required for electronic signature.');
       return;
     }
-    onSign({ password, reason, meaning });
-    setPassword('');
-    onClose();
+
+    try {
+      setLoading(true);
+      setError('');
+      
+      const signature = await api.createSignature({
+        targetId,
+        versionId,
+        meaning,
+        reason,
+        password
+      });
+
+      onSign(signature);
+      setPassword('');
+      onClose();
+    } catch (err) {
+      console.error('Signature error:', err);
+      setError(err.response?.data?.message || 'Verification failed. Incorrect password or role not authorized.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const meanings = [
@@ -73,8 +94,10 @@ const ElectronicSignatureModal = ({ isOpen, onClose, onSign, actionType }) => {
           </div>
 
           <div className="esign-actions">
-            <button type="button" onClick={onClose} className="btn-cancel">Cancel</button>
-            <button type="submit" className="btn-sign">Sign & Authenticate</button>
+            <button type="button" onClick={onClose} className="btn-cancel" disabled={loading}>Cancel</button>
+            <button type="submit" className="btn-sign" disabled={loading}>
+              {loading ? 'Verifying...' : 'Sign & Authenticate'}
+            </button>
           </div>
         </form>
       </div>

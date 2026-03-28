@@ -317,6 +317,22 @@ export const LabelProvider = ({ children }) => {
     }
   };
 
+  const deleteUserTemplate = async (id) => {
+    try {
+      const success = await api.deleteUserTemplate(id);
+      if (success) {
+        setUserFiles(prev => prev.filter(f => f.id !== id));
+        showToast('Template deleted permanently', 'success');
+        addActivityLog('Deleted template', id, 'Removed from repository');
+        return true;
+      }
+      return false;
+    } catch (err) {
+      showToast('Failed to delete template', 'error');
+      return false;
+    }
+  };
+
   const exportJSON = () => {
     const blob = new Blob([JSON.stringify({ meta, elements }, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -374,7 +390,13 @@ export const LabelProvider = ({ children }) => {
 
   const getTemplateById = async (id) => {
     try {
-      return await api.getTemplate(id);
+      // First check user templates
+      try {
+        return await api.getUserTemplate(id);
+      } catch (err) {
+        // Fallback to system templates
+        return await api.getTemplate(id);
+      }
     } catch (err) {
       showToast('Failed to fetch template details', 'error');
       return null;
@@ -488,7 +510,7 @@ export const LabelProvider = ({ children }) => {
     // File ops
     newFile, setFileName, setLabelSize,
     saveFile, saveFileAs,
-    openFileById, openFileFromJSON,
+    openFileById, openFileFromJSON, deleteUserTemplate,
     exportJSON, getAllFiles,
     getTemplateHistory, getTemplateById,
     // Template
