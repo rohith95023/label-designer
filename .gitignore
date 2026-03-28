@@ -1,0 +1,17 @@
+# LLM / AI Agents
+.agents
+.claude
+.gemini
+.cursor-rules
+
+# Vite Project
+labe_designer/node_modules
+labe_designer/dist
+labe_designer/.env
+labe_designer/.env.local
+labe_designer/*.log
+error.log
+
+# Common
+.DS_Store
+Thumbs.db
