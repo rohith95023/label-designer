@@ -14,6 +14,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [accessToken, setAccessToken] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [logoutLoading, setLogoutLoading] = useState(false);
 
   const login = async (username, password) => {
     try {
@@ -29,6 +30,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
+    setLogoutLoading(true);
     try {
       await api.post('/auth/logout');
     } finally {
@@ -102,7 +104,7 @@ export const AuthProvider = ({ children }) => {
   }, [refreshAction]);
 
   return (
-    <AuthContext.Provider value={{ user, accessToken, login, logout, refreshAction, loading }}>
+    <AuthContext.Provider value={{ user, accessToken, login, logout, refreshAction, loading, logoutLoading }}>
       {!loading && children}
     </AuthContext.Provider>
   );

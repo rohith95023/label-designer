@@ -85,37 +85,37 @@ function AppContent() {
       <Route path="/login" element={<Login />} />
       
       <Route path="/" element={
-        <ProtectedRoute>
+        <ProtectedRoute requiredPermission="dashboard">
           <Dashboard />
         </ProtectedRoute>
       } />
       
       <Route path="/assets" element={
-        <ProtectedRoute>
+        <ProtectedRoute requiredPermission="templates">
           <TemplateLibrary />
         </ProtectedRoute>
       } />
 
       <Route path="/saved-templates" element={
-        <ProtectedRoute>
+        <ProtectedRoute requiredPermission="saved-templates">
           <SavedTemplates />
         </ProtectedRoute>
       } />
       
       <Route path="/editor" element={
-        <ProtectedRoute requiredRole="OPERATOR">
+        <ProtectedRoute requiredRole="OPERATOR" requiredPermission="editor">
           <LabelEditor />
         </ProtectedRoute>
       } />
       
       <Route path="/translation" element={
-        <ProtectedRoute>
+        <ProtectedRoute requiredPermission="translation">
           <Translation />
         </ProtectedRoute>
       } />
       
       <Route path="/history" element={
-        <ProtectedRoute>
+        <ProtectedRoute requiredPermission="history">
           <History />
         </ProtectedRoute>
       } />

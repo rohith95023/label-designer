@@ -4,29 +4,72 @@ import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 
 const NAV_ITEMS = [
-  { key: 'dashboard', to: '/', icon: 'grid_view', label: 'Dashboard', roles: ['ADMIN', 'REVIEWER', 'OPERATOR', 'EXTERNAL'] },
-  { key: 'assets', to: '/assets', icon: 'auto_awesome_mosaic', label: 'Template Library', roles: ['ADMIN', 'REVIEWER', 'OPERATOR', 'EXTERNAL'] },
-  { key: 'saved-templates', to: '/saved-templates', icon: 'folder_open', label: 'Saved Templates', roles: ['ADMIN', 'REVIEWER', 'OPERATOR'] },
-  { key: 'editor', to: '/editor', icon: 'edit_document', label: 'Label Editor', roles: ['ADMIN', 'OPERATOR'] },
-  { key: 'translation', to: '/translation', icon: 'translate', label: 'Translation', roles: ['ADMIN', 'REVIEWER', 'OPERATOR', 'EXTERNAL'] },
-  { key: 'history', to: '/history', icon: 'history', label: 'History', roles: ['ADMIN', 'REVIEWER', 'OPERATOR'] },
-  { key: 'users', to: '/admin/users', icon: 'group', label: 'Users', roles: ['ADMIN'] },
-  { key: 'settings', to: '/settings', icon: 'settings', label: 'Settings', roles: ['ADMIN'] },
+  { key: 'dashboard', to: '/', icon: 'grid_view', label: 'Dashboard', roles: ['ADMIN', 'REVIEWER', 'OPERATOR', 'EXTERNAL'], permission: 'dashboard' },
+  { key: 'assets', to: '/assets', icon: 'auto_awesome_mosaic', label: 'Template Library', roles: ['ADMIN', 'REVIEWER', 'OPERATOR', 'EXTERNAL'], permission: 'templates' },
+  { key: 'saved-templates', to: '/saved-templates', icon: 'folder_open', label: 'Saved Templates', roles: ['ADMIN', 'REVIEWER', 'OPERATOR'], permission: 'saved-templates' },
+  { key: 'editor', to: '/editor', icon: 'edit_document', label: 'Label Editor', roles: ['ADMIN', 'OPERATOR'], permission: 'editor' },
+  { key: 'translation', to: '/translation', icon: 'translate', label: 'Translation', roles: ['ADMIN', 'REVIEWER', 'OPERATOR', 'EXTERNAL'], permission: 'translation' },
+  { key: 'history', to: '/history', icon: 'history', label: 'History', roles: ['ADMIN', 'REVIEWER', 'OPERATOR'], permission: 'history' },
+  { key: 'users', to: '/admin/users', icon: 'group', label: 'Users', roles: ['ADMIN'], permission: 'users' },
+  { key: 'settings', to: '/settings', icon: 'settings', label: 'Settings', roles: ['ADMIN'], permission: 'settings' },
 ];
 
 export default function AppLayout({ children, activePage = '', searchBar = null }) {
   const { theme, toggleTheme } = useTheme();
-  const { user, logout } = useAuth();
+  const { user, logout, logoutLoading } = useAuth();
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
-  const filteredNavItems = NAV_ITEMS.filter(item => 
-    !user || item.roles.includes(user.role)
-  );
+  const hasPermission = (item) => {
+    if (!user) return false;
+    // Admins have override access, but we still respect roles for other types
+    if (user.role === 'ADMIN') return true;
+    
+    // Check if the role is allowed at all
+    if (!item.roles.includes(user.role)) return false;
+
+    // Check modular permissions (Restrictive by default)
+    if (item.permission) {
+      const permissions = user.permissions || [];
+      const p = permissions.find(p => 
+        p.module.toLowerCase() === item.permission.toLowerCase() && 
+        p.event === 'VIEW'
+      );
+      return p ? p.allowed : false;
+    }
+
+    return true; // Default to true if no permission defined but role matches
+  };
+
+  const filteredNavItems = NAV_ITEMS.filter(hasPermission);
 
   return (
     <div className="bg-mesh text-on-surface min-h-screen">
+      {/* Logout Animation Overlay */}
+      {logoutLoading && (
+        <div className="fixed inset-0 z-[10000] flex flex-col items-center justify-center bg-mesh/80 dark:bg-[#0D1117]/90 backdrop-blur-2xl animate-in fade-in duration-500">
+          <div className="relative flex flex-col items-center">
+            <div className="w-24 h-24 mb-8 relative">
+              <div className="absolute inset-0 rounded-full border-4 border-primary/10"></div>
+              <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin" style={{ animationDuration: '0.8s' }}></div>
+              <div className="absolute inset-4 rounded-2xl bg-gradient-to-br from-primary to-tertiary flex items-center justify-center shadow-lg shadow-primary/20 animate-bounce-subtle">
+                <span className="material-symbols-outlined text-white text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>medical_services</span>
+              </div>
+            </div>
+            
+            <h2 className="text-2xl font-black text-gradient mb-2 tracking-tight">Securing Session</h2>
+            <p className="text-on-surface-variant font-medium tracking-wide flex items-center gap-1.5 opacity-80">
+              Terminating secure environment
+              <span className="flex gap-1 ml-1">
+                <span className="w-1 h-1 rounded-full bg-primary animate-pulse"></span>
+                <span className="w-1 h-1 rounded-full bg-primary animate-pulse [animation-delay:200ms]"></span>
+                <span className="w-1 h-1 rounded-full bg-primary animate-pulse [animation-delay:400ms]"></span>
+              </span>
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* ── Top Header ─────────────────────────────────────────────────── */}
       <header className="fixed top-0 w-full z-50 glass-header h-16 flex items-center justify-between px-6 gap-4">
@@ -59,7 +102,6 @@ export default function AppLayout({ children, activePage = '', searchBar = null 
           </button>
         </div>
 
-        {/* Center: top navigation (lg+) */}
         <div className="hidden md:flex flex-1 items-center justify-center gap-1 bg-surface-container-low/60 dark:bg-slate-900/40 backdrop-blur-md px-1.5 py-1.5 border border-outline-variant/10 rounded-full max-w-xl mx-auto">
           {filteredNavItems.filter(n => ['dashboard', 'assets', 'editor', 'translation'].includes(n.key)).map(item => (
             <Link

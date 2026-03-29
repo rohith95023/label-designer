@@ -1,44 +1,61 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import styles from './Toast.module.css';
-import { classNames } from '../../utils/css.util';
-import { CheckCircle2, AlertCircle, X } from 'lucide-react';
+import { CheckCircle2, AlertCircle, AlertTriangle, Info, X } from 'lucide-react';
 
 const ToastContext = createContext();
 
 export function useToast() {
-  return useContext(ToastContext);
+  const context = useContext(ToastContext);
+  if (!context) throw new Error('useToast must be used within a ToastProvider');
+  return context;
 }
 
 export function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([]);
 
-  const addToast = useCallback((message, type = 'success') => {
-    const id = Date.now().toString();
-    setToasts(prev => [...prev, { id, message, type }]);
-
-    setTimeout(() => {
-      removeToast(id);
-    }, 4000);
-  }, []);
-
   const removeToast = useCallback((id) => {
     setToasts(prev => prev.filter(t => t.id !== id));
   }, []);
 
+  const addToast = useCallback((message, type = 'success', duration = 4000) => {
+    const id = Date.now().toString();
+    setToasts(prev => [...prev, { id, message, type }]);
+
+    if (duration > 0) {
+      setTimeout(() => {
+        removeToast(id);
+      }, duration);
+    }
+  }, [removeToast]);
+
+  const success = (msg) => addToast(msg, 'success');
+  const error = (msg) => addToast(msg, 'error');
+  const warn = (msg) => addToast(msg, 'warning');
+  const info = (msg) => addToast(msg, 'info');
+
+  const getIcon = (type) => {
+    switch (type) {
+      case 'success': return <CheckCircle2 size={18} />;
+      case 'error': return <AlertCircle size={18} />;
+      case 'warning': return <AlertTriangle size={18} />;
+      case 'info': return <Info size={18} />;
+      default: return <Info size={18} />;
+    }
+  };
+
   return (
-    <ToastContext.Provider value={{ addToast }}>
+    <ToastContext.Provider value={{ addToast, success, error, warn, info }}>
       {children}
-      <div className={styles.toastContainer}>
+      <div className="toast-container">
         {toasts.map(toast => (
           <div 
             key={toast.id} 
-            className={classNames(styles.toast, styles[toast.type])}
+            className={`toast ${toast.type}`}
           >
-            <div className={styles.icon}>
-              {toast.type === 'success' ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
+            <div className="icon">
+              {getIcon(toast.type)}
             </div>
-            <p className={styles.message}>{toast.message}</p>
-            <button className={styles.closeBtn} onClick={() => removeToast(toast.id)}>
+            <p className="message">{toast.message}</p>
+            <button className="close-btn" onClick={() => removeToast(toast.id)}>
               <X size={16} />
             </button>
           </div>

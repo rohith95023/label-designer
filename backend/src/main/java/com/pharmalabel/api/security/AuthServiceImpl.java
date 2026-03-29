@@ -8,6 +8,7 @@ import com.pharmalabel.api.repositories.RoleRepository;
 import com.pharmalabel.api.repositories.UserAuthTokenRepository;
 import com.pharmalabel.api.repositories.UserRepository;
 import com.pharmalabel.api.services.AuditLogService;
+import com.pharmalabel.api.services.PermissionService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,6 +35,7 @@ public class AuthServiceImpl implements AuthService {
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
     private final AuditLogService auditLogService;
+    private final PermissionService permissionService;
 
     @Value("${jwt.refresh-expiration}")
     private long refreshExpiration;
@@ -75,6 +77,9 @@ public class AuthServiceImpl implements AuthService {
         saveRefreshToken(user, refreshToken, familyId);
         setRefreshCookie(response, refreshToken);
 
+        List<com.pharmalabel.api.dtos.user.PermissionRequestDto> perms = 
+            permissionService.getMergedPermissions(user);
+
         return LoginResponse.builder()
                 .accessToken(accessToken)
                 .user(LoginResponse.UserResponse.builder()
@@ -83,6 +88,7 @@ public class AuthServiceImpl implements AuthService {
                         .email(user.getEmail())
                         .role(user.getRole().getName())
                         .mustChangePassword(user.getMustChangePassword())
+                        .permissions(perms)
                         .build())
                 .build();
     }
@@ -161,6 +167,9 @@ public class AuthServiceImpl implements AuthService {
         saveRefreshToken(user, newRefreshToken, matchedToken.getFamilyId());
         setRefreshCookie(response, newRefreshToken);
 
+        List<com.pharmalabel.api.dtos.user.PermissionRequestDto> perms = 
+            permissionService.getMergedPermissions(user);
+
         return LoginResponse.builder()
                 .accessToken(newAccessToken)
                 .user(LoginResponse.UserResponse.builder()
@@ -169,6 +178,7 @@ public class AuthServiceImpl implements AuthService {
                         .email(user.getEmail())
                         .role(user.getRole().getName())
                         .mustChangePassword(user.getMustChangePassword())
+                        .permissions(perms)
                         .build())
                 .build();
     }

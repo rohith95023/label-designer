@@ -56,8 +56,49 @@ public class PermissionService {
     }
 
     @Transactional(readOnly = true)
+    public List<Permission> getPermissionsByRoleName(String roleName) {
+        return permissionRepository.findByRole_Name(roleName);
+    }
+
+    @Transactional(readOnly = true)
     public List<Permission> getPermissionsByUser(UUID userId) {
         return permissionRepository.findByUser_Id(userId);
+    }
+
+    /**
+     * Get a merged list of permissions: 
+     * 1. Start with Role-based permissions
+     * 2. Overlay User-specific overrides (override role-based if same module/event exists)
+     */
+    @Transactional
+    public java.util.List<com.pharmalabel.api.dtos.user.PermissionRequestDto> getMergedPermissions(com.pharmalabel.api.models.User user) {
+        // Start with role permissions
+        java.util.Map<String, com.pharmalabel.api.dtos.user.PermissionRequestDto> map = new java.util.HashMap<>();
+        
+        if (user.getRole() != null) {
+            getPermissionsByRoleName(user.getRole().getName()).forEach(p -> {
+                String key = p.getModule().toLowerCase() + "||" + p.getEvent().toUpperCase();
+                map.put(key, com.pharmalabel.api.dtos.user.PermissionRequestDto.builder()
+                        .module(p.getModule())
+                        .event(p.getEvent())
+                        .allowed(p.getAllowed())
+                        .build());
+            });
+        }
+        
+        // Overlay user overrides
+        getPermissionsByUser(user.getId()).forEach(p -> {
+            String key = p.getModule().toLowerCase() + "||" + p.getEvent().toUpperCase();
+            map.put(key, com.pharmalabel.api.dtos.user.PermissionRequestDto.builder()
+                    .module(p.getModule())
+                    .event(p.getEvent())
+                    .allowed(p.getAllowed())
+                    .build());
+        });
+        
+        java.util.List<com.pharmalabel.api.dtos.user.PermissionRequestDto> result = new java.util.ArrayList<>(map.values());
+        System.out.println("[PermissionService] Merged permissions for " + user.getUsername() + " (Role: " + (user.getRole() != null ? user.getRole().getName() : "None") + "): " + result.size());
+        return result;
     }
 
     @Transactional

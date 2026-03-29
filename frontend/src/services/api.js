@@ -52,10 +52,20 @@ export const api = {
     authApi.get('/users').then(res => res.data),
     
   createUser: (data) => 
-    authApi.post('/users', data).then(res => res.data),
+    authApi.post('/users', data).then(res => {
+      if (res.data && res.data.success === false) {
+        throw { response: { data: { message: res.data.message } } };
+      }
+      return res.data;
+    }),
     
   updateUser: (id, data) => 
-    authApi.put(`/users/${id}`, data).then(res => res.data),
+    authApi.put(`/users/${id}`, data).then(res => {
+      if (res.data && res.data.success === false) {
+        throw { response: { data: { message: res.data.message } } };
+      }
+      return res.data;
+    }),
     
   deleteUser: (id) => 
     authApi.delete(`/users/${id}`).then(res => res.status === 200),

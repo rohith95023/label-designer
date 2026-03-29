@@ -267,15 +267,7 @@ public class UserServiceImpl implements UserService {
         dto.setFailedLoginAttempts(user.getFailedLoginAttempts() != null ? user.getFailedLoginAttempts() : 0);
         dto.setLockedUntil(user.getLockedUntil());
         dto.setIsExternal(user.getIsExternal() != null ? user.getIsExternal() : false);
-        dto.setPermissions(
-            permissionService.getPermissionsByUser(user.getId()).stream()
-                .map(p -> com.pharmalabel.api.dtos.user.PermissionRequestDto.builder()
-                        .module(p.getModule())
-                        .event(p.getEvent())
-                        .allowed(p.getAllowed())
-                        .build())
-                .collect(Collectors.toList())
-        );
+        dto.setPermissions(permissionService.getMergedPermissions(user));
         return dto;
     }
 }

@@ -18,5 +18,6 @@ public class LoginResponse {
         private String email;
         private String role;
         private boolean mustChangePassword;
+        private java.util.List<com.pharmalabel.api.dtos.user.PermissionRequestDto> permissions;
     }
 }

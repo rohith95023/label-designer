@@ -111,6 +111,26 @@
   margin: 2px 0 0;
 }
 
+.um-field-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #d93025;
+  font-size: 12px;
+  font-weight: 500;
+  margin-top: 6px;
+  animation: fieldErrorSlide 0.2s ease-out;
+}
+
+.um-field-error .material-symbols-outlined {
+  font-size: 16px !important;
+}
+
+@keyframes fieldErrorSlide {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .um-add-btn {
   display: flex;
   align-items: center;
@@ -454,7 +474,7 @@
   inset: 0;
   background: rgba(0,0,0,0.4);
   backdrop-filter: blur(4px);
-  z-index: 1000;
+  z-index: 9999;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -472,6 +492,7 @@
   box-shadow: 0 20px 40px rgba(0,0,0,0.2);
   position: relative;
   overflow: hidden;
+  z-index: 10000;
 }
 
 .um-modal-header {
@@ -534,6 +555,101 @@
   background: var(--um-surface);
   color: var(--um-on-surface);
   font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.form-group.has-error label {
+  color: #d93025;
+}
+
+.form-group input.um-input-invalid {
+  border-color: #d93025 !important;
+  background: white !important;
+}
+
+.dark .form-group input.um-input-invalid {
+  background: transparent !important;
+}
+
+.form-group input.um-input-invalid:focus {
+  box-shadow: 0 0 0 1px #d93025;
+}
+
+/* ── Alert Cards ────────────────────────────────────────────────────────── */
+.um-alert-card {
+  display: flex;
+  gap: 1rem;
+  padding: 1.125rem;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  animation: modalScaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.um-alert-danger {
+  background: rgba(239, 68, 68, 0.05);
+  border-color: rgba(239, 68, 68, 0.2);
+  color: #991b1b;
+}
+
+.um-alert-compact {
+  padding: 0.65rem 1rem;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.um-alert-compact .material-symbols-outlined {
+  font-size: 1.25rem;
+  color: #ef4444;
+}
+
+.um-alert-text {
+  flex: 1;
+}
+
+.dark .um-alert-danger {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+}
+
+.um-alert-icon {
+  width: 32px;
+  height: 32px;
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.um-alert-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.um-alert-content h4 {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.um-alert-content p {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 500;
+  line-height: 1.4;
+  opacity: 0.9;
+}
+
+/* ── Legacy Error Styles (for cleanup) ──────────────────────────────────── */
+.um-form-error {
+  display: none;
 }
 
 .modal-actions {

@@ -3,7 +3,7 @@ import { api } from '../services/api';
 import AppLayout from '../components/common/AppLayout';
 import PermissionMatrix from '../components/users/PermissionMatrix';
 import ConfirmDeleteModal from '../components/users/ConfirmDeleteModal';
-import ToastContainer, { useToast } from '../components/common/ToastContainer';
+import { useToast } from '../components/common/ToastContext';
 import { useAuth } from '../context/AuthContext';
 import './UserManagement.css';
 
@@ -39,6 +39,7 @@ const UserManagement = () => {
   const [formData, setFormData] = useState(EMPTY_FORM);
   const [passwordError, setPasswordError] = useState('');
   const [formError, setFormError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
 
   // Delete confirm modal
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -49,7 +50,7 @@ const UserManagement = () => {
   const [auditLogs, setAuditLogs] = useState([]);
   const [auditLoading, setAuditLoading] = useState(false);
 
-  const { toasts, dismissToast, success, error: toastError, warning } = useToast();
+  const { success, error: toastError, warn: warning } = useToast();
 
   useEffect(() => {
     console.log('UserManagement Render. fetchData stable?', Boolean(fetchData));
@@ -98,6 +99,13 @@ const UserManagement = () => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
     if (name === 'password') setPasswordError('');
+    if (fieldErrors[name]) {
+      setFieldErrors(prev => {
+        const next = { ...prev };
+        delete next[name];
+        return next;
+      });
+    }
   };
 
   const validatePassword = (password) => {
@@ -141,11 +149,32 @@ const UserManagement = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!isEditing && !validatePassword(formData.password)) return;
-    if (isEditing && formData.password && !validatePassword(formData.password)) return;
+    console.log("Submit triggered. isEditing:", isEditing);
+
+    // Client-side validation feedback
+    if (!isEditing && !formData.password) {
+      toastError('Password is required for new users.');
+      return;
+    }
+
+    if (!isEditing && !validatePassword(formData.password)) {
+      toastError('Password does not meet security requirements.');
+      return;
+    }
+
+    if (!formData.role) {
+      toastError('Please select a system role.');
+      return;
+    }
+
+    if (isEditing && formData.password && !validatePassword(formData.password)) {
+      toastError('New password does not meet security requirements.');
+      return;
+    }
 
     setActionLoading(true);
     setFormError('');
+    setFieldErrors({});
     try {
       if (isEditing) {
         const updatedUser = await api.updateUser(formData.id, {
@@ -164,7 +193,29 @@ const UserManagement = () => {
       }
       closeModal();
     } catch (err) {
-      setFormError(err.response?.data?.message || 'Failed to save user.');
+      console.error("Submission error:", err);
+      const rawMsg = err.response?.data?.message || err.message || 'Action failed.';
+      const genericError = `Failed to ${isEditing ? 'update' : 'create'} user: ${rawMsg}`;
+      setFormError(genericError);
+      toastError(genericError);
+      
+      let errorsMap = {};
+      
+      // Parse errors to assign them to specific fields or generic alert
+      if (rawMsg.includes('users_email_key') || rawMsg.toLowerCase().includes('email address is already registered')) {
+        errorsMap.email = `This email is already registered.`;
+      } else if (rawMsg.includes('users_username_key') || rawMsg.toLowerCase().includes('duplicate key value violates unique constraint') || rawMsg.toLowerCase().includes('username is already taken')) {
+        errorsMap.username = `This username is already taken.`;
+      } else if (rawMsg.includes('403')) {
+        genericError = 'Permission Denied: You do not have permission to manage users.';
+      } else if (rawMsg.length > 80) {
+        genericError = 'Could not save user. Check for duplicate details.';
+      } else {
+        genericError = rawMsg;
+      }
+
+      setFormError(genericError);
+      setFieldErrors(errorsMap);
     } finally {
       setActionLoading(false);
     }
@@ -255,7 +306,6 @@ const UserManagement = () => {
 
   return (
     <AppLayout activePage="users">
-      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
 
       <div className="um-container animate-fade-in">
         {/* ── Header ──────────────────────────────────────────────────────── */}
@@ -525,16 +575,16 @@ const UserManagement = () => {
             </div>
 
             {formError && (
-              <div className="um-form-error" style={{ margin: '0 1.5rem 1rem' }}>
-                <span className="material-symbols-outlined">error</span>
-                {formError}
+              <div className="um-alert-card um-alert-danger um-alert-compact" style={{ margin: '0 1.5rem 1rem' }}>
+                <span className="material-symbols-outlined">gpp_maybe</span>
+                <span className="um-alert-text">{formError}</span>
               </div>
             )}
 
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
               <div className="modal-body">
               <div className="form-grid">
-                <div className="form-group">
+                <div className={`form-group ${fieldErrors.username ? 'has-error' : ''}`}>
                   <label>Username <span className="required-star">*</span></label>
                   <input
                     type="text"
@@ -543,9 +593,16 @@ const UserManagement = () => {
                     onChange={handleInputChange}
                     disabled={isEditing}
                     required
+                    className={fieldErrors.username ? 'um-input-invalid' : ''}
                   />
+                  {fieldErrors.username && (
+                    <span className="um-field-error">
+                      <span className="material-symbols-outlined">error</span>
+                      {fieldErrors.username}
+                    </span>
+                  )}
                 </div>
-                <div className="form-group">
+                <div className={`form-group ${fieldErrors.email ? 'has-error' : ''}`}>
                   <label>Email <span className="required-star">*</span></label>
                   <input
                     type="email"
@@ -553,7 +610,14 @@ const UserManagement = () => {
                     value={formData.email}
                     onChange={handleInputChange}
                     required
+                    className={fieldErrors.email ? 'um-input-invalid' : ''}
                   />
+                  {fieldErrors.email && (
+                    <span className="um-field-error">
+                      <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>error</span>
+                      {fieldErrors.email}
+                    </span>
+                  )}
                 </div>
                 <div className="form-group">
                   <label>Initial Role <span className="required-star">*</span></label>
@@ -599,8 +663,31 @@ const UserManagement = () => {
 
               <div className="modal-actions">
                 <button type="button" className="um-sod-btn" onClick={closeModal} style={{ color: 'var(--um-on-surface-variant)' }}>Cancel</button>
-                <button type="submit" className="um-add-btn" disabled={actionLoading} style={{ background: 'var(--um-primary)', color: 'white', border: 'none', borderRadius: '8px', padding: '0.6rem 1.5rem', fontWeight: 'bold' }}>
-                  {isEditing ? 'Save Changes' : 'Create User'}
+                <button 
+                  type="submit" 
+                  className="um-add-btn" 
+                  disabled={actionLoading}
+                  onClick={() => console.log('Create/Save button clicked')}
+                  style={{ 
+                    background: 'var(--um-primary)', 
+                    color: 'white', 
+                    border: 'none', 
+                    borderRadius: '8px', 
+                    padding: '0.6rem 1.5rem', 
+                    fontWeight: 'bold', 
+                    minWidth: '140px', 
+                    justifyContent: 'center',
+                    cursor: actionLoading ? 'wait' : 'pointer'
+                  }}
+                >
+                  {actionLoading ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div className="um-spinner" style={{ width: '16px', height: '16px', borderWidth: '2px', borderTopColor: 'white', borderColor: 'rgba(255,255,255,0.2)' }} />
+                      <span>{isEditing ? 'Saving...' : 'Creating...'}</span>
+                    </div>
+                  ) : (
+                    isEditing ? 'Save Changes' : 'Create User'
+                  )}
                 </button>
               </div>
             </form>

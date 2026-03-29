@@ -57,6 +57,26 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
     }
 
+    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
+    public ResponseEntity<Map<String, Object>> handleDataIntegrityViolation(org.springframework.dao.DataIntegrityViolationException ex) {
+        String msg = ex.getRootCause() != null ? ex.getRootCause().getMessage() : ex.getMessage();
+        String userFriendlyMsg = "A database constraint was violated.";
+
+        if (msg.contains("users_username_key")) {
+            userFriendlyMsg = "This username is already taken. Please choose another.";
+        } else if (msg.contains("users_email_key")) {
+            userFriendlyMsg = "This email address is already registered to another account.";
+        } else if (msg.contains("duplicate key value")) {
+            userFriendlyMsg = "A record with these details already exists in the system.";
+        }
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("success", false);
+        body.put("message", userFriendlyMsg);
+        body.put("errorType", "DUPLICATE_ERROR");
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
+
     // Business rule violations from service layer — return 400 (not 500)
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Map<String, Object>> handleRuntimeException(RuntimeException ex) {
