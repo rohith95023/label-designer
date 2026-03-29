@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 
 const MODULE_CONFIG = [
-  { id: 'dashboard',   label: 'Dashboard',    icon: 'dashboard',        desc: 'Main overview and clinical summary' },
-  { id: 'templates',   label: 'Template Lib', icon: 'inventory_2',      desc: 'Validated system template library' },
-  { id: 'saved-templates', label: 'Central Repo', icon: 'folder_managed',   desc: 'User saved labels and repository' },
-  { id: 'editor',      label: 'Label Designer',icon: 'edit_square',      desc: 'High-fidelity label editing tools' },
-  { id: 'translation', label: 'Translation',  icon: 'translate',        desc: 'Multi-language clinical translation' },
-  { id: 'history',     label: 'Audit Trail',  icon: 'history',          desc: 'FDA 21 CFR Part 11 audit history' },
-  { id: 'settings',    label: 'System Config',icon: 'settings',         desc: 'Global application preferences' },
-  { id: 'users',       label: 'User Manager', icon: 'group',            desc: 'IAM and permission oversight' },
+  { id: 'dashboard',       label: 'Dashboard',        icon: 'dashboard',      desc: 'Main overview and clinical summary' },
+  { id: 'templates',       label: 'Template Library', icon: 'inventory_2',    desc: 'Validated system template library' },
+  { id: 'saved-templates', label: 'Saved Labels',     icon: 'folder_managed', desc: 'User saved labels and repository' },
+  { id: 'editor',          label: 'Label Editor',     icon: 'edit_square',    desc: 'High-fidelity label editing tools' },
+  { id: 'translation',     label: 'Translation',      icon: 'translate',      desc: 'Multi-language clinical translation' },
+  { id: 'history',         label: 'History',          icon: 'history',        desc: 'FDA 21 CFR Part 11 audit history' },
+  { id: 'settings',        label: 'Settings',         icon: 'settings',       desc: 'Global application preferences' },
+  { id: 'users',           label: 'Users',            icon: 'group',          desc: 'IAM and permission oversight' },
 ];
 
 const EVENTS = [
@@ -65,70 +65,88 @@ const PermissionMatrix = ({ permissions, onChange }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {MODULE_CONFIG.map(config => {
           const hasPageAccess = isAllowed(config.id, 'VIEW');
-          
+          const isLocked = config.id === 'users';
+
           return (
-            <div 
-              key={config.id} 
-              className={`glass-card rounded-[24px] p-5 border transition-all duration-300 ${
-                hasPageAccess 
-                  ? 'border-primary/20 bg-primary/5 ring-1 ring-primary/5 shadow-glow-sm' 
+            <div
+              key={config.id}
+              className={`glass-card rounded-[24px] p-5 border transition-all duration-300 relative ${
+                isLocked
+                  ? 'border-outline-variant/10 bg-surface-container-lowest opacity-40 cursor-not-allowed select-none'
+                  : hasPageAccess
+                  ? 'border-primary/20 bg-primary/5 ring-1 ring-primary/5 shadow-glow-sm'
                   : 'border-outline-variant/10 bg-surface-container-lowest'
               }`}
             >
-              {/* Card Header: Module Identity + Main Toggle */}
-              <div className="flex items-start justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-sm ${
-                    hasPageAccess ? 'bg-primary text-on-primary' : 'bg-surface-container-high text-outline'
-                  }`}>
-                    <span className="material-symbols-outlined text-xl">{config.icon}</span>
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-bold text-on-surface">{config.label}</h4>
-                    <p className="text-[10px] text-on-surface-variant font-medium opacity-80">{config.desc}</p>
+              {/* Lock overlay for blocked cards */}
+              {isLocked && (
+                <div className="absolute inset-0 rounded-[24px] flex items-center justify-center z-10 pointer-events-none">
+                  <div className="flex flex-col items-center gap-1 opacity-60">
+                    <span className="material-symbols-outlined text-3xl text-outline">lock</span>
+                    <span className="text-[9px] font-black uppercase tracking-widest text-outline">Admin Only</span>
                   </div>
                 </div>
+              )}
 
-                {/* Main Visibility Switch */}
-                <button 
-                  type="button"
-                  onClick={() => handleToggle(config.id, 'VIEW')}
-                  className={`relative w-11 h-6 rounded-full transition-colors duration-200 outline-none border-2 ${
-                    hasPageAccess ? 'bg-primary border-primary' : 'bg-surface-container-highest border-transparent'
-                  }`}
-                >
-                  <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-200 ${
-                    hasPageAccess ? 'translate-x-5' : 'translate-x-0'
-                  }`} />
-                </button>
-              </div>
+              {/* Card content — fully non-interactive when locked */}
+              <div className={isLocked ? 'pointer-events-none' : ''}>
+                {/* Card Header: Module Identity + Main Toggle */}
+                <div className="flex items-start justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-sm ${
+                      hasPageAccess ? 'bg-primary text-on-primary' : 'bg-surface-container-high text-outline'
+                    }`}>
+                      <span className="material-symbols-outlined text-xl">{config.icon}</span>
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-on-surface">{config.label}</h4>
+                      <p className="text-[10px] text-on-surface-variant font-medium opacity-80">{config.desc}</p>
+                    </div>
+                  </div>
 
-              {/* Action Subset Grid */}
-              <div className={`space-y-2 pt-4 border-t border-outline-variant/5 transition-all duration-500 ${
-                hasPageAccess ? 'opacity-100' : 'opacity-20 pointer-events-none'
-              }`}>
-                <p className="text-[9px] font-black uppercase tracking-widest text-primary mb-3">Operational Controls</p>
-                <div className="flex flex-wrap gap-2">
-                  {EVENTS.filter(e => e.id !== 'VIEW').map(event => {
-                    const active = isAllowed(config.id, event.id);
-                    return (
-                      <button
-                        key={event.id}
-                        type="button"
-                        onClick={() => handleToggle(config.id, event.id)}
-                        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-[10px] font-bold transition-all ${
-                          active 
-                            ? 'bg-primary/10 border-primary/20 text-primary shadow-glow-xs scale-[1.05]' 
-                            : 'bg-surface-container-low border-outline-variant/10 text-on-surface-variant hover:bg-surface-container'
-                        }`}
-                      >
-                        <span className="material-symbols-outlined text-[14px]">
-                          {active ? 'check_circle' : event.icon}
-                        </span>
-                        {event.label}
-                      </button>
-                    );
-                  })}
+                  {/* Main Visibility Switch */}
+                  <button
+                    type="button"
+                    onClick={() => handleToggle(config.id, 'VIEW')}
+                    disabled={isLocked}
+                    className={`relative w-11 h-6 rounded-full transition-colors duration-200 outline-none border-2 ${
+                      hasPageAccess ? 'bg-primary border-primary' : 'bg-surface-container-highest border-transparent'
+                    }`}
+                  >
+                    <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-200 ${
+                      hasPageAccess ? 'translate-x-5' : 'translate-x-0'
+                    }`} />
+                  </button>
+                </div>
+
+                {/* Action Subset Grid */}
+                <div className={`space-y-2 pt-4 border-t border-outline-variant/5 transition-all duration-500 ${
+                  hasPageAccess ? 'opacity-100' : 'opacity-20 pointer-events-none'
+                }`}>
+                  <p className="text-[9px] font-black uppercase tracking-widest text-primary mb-3">Operational Controls</p>
+                  <div className="flex flex-wrap gap-2">
+                    {EVENTS.filter(e => e.id !== 'VIEW').map(event => {
+                      const active = isAllowed(config.id, event.id);
+                      return (
+                        <button
+                          key={event.id}
+                          type="button"
+                          onClick={() => handleToggle(config.id, event.id)}
+                          disabled={isLocked}
+                          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-[10px] font-bold transition-all ${
+                            active
+                              ? 'bg-primary/10 border-primary/20 text-primary shadow-glow-xs scale-[1.05]'
+                              : 'bg-surface-container-low border-outline-variant/10 text-on-surface-variant hover:bg-surface-container'
+                          }`}
+                        >
+                          <span className="material-symbols-outlined text-[14px]">
+                            {active ? 'check_circle' : event.icon}
+                          </span>
+                          {event.label}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             </div>

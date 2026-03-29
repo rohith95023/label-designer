@@ -32,6 +32,7 @@ const UserManagement = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterRole, setFilterRole] = useState('ALL');
   const [filterStatus, setFilterStatus] = useState('ALL');
+  const [filterExternal, setFilterExternal] = useState(false);
 
   // Add/Edit modal
   const [showModal, setShowModal] = useState(false);
@@ -91,8 +92,22 @@ const UserManagement = () => {
       u.role?.toLowerCase().includes(q);
     const matchRole = filterRole === 'ALL' || u.role === filterRole;
     const matchStatus = filterStatus === 'ALL' || u.status === filterStatus;
-    return matchSearch && matchRole && matchStatus;
+    const matchExternal = !filterExternal || u.isExternal === true;
+    return matchSearch && matchRole && matchStatus && matchExternal;
   });
+
+  const handleStatCardClick = (type) => {
+    if (type === 'active') {
+      setFilterExternal(false);
+      setFilterStatus(prev => prev === 'ACTIVE' ? 'ALL' : 'ACTIVE');
+    } else if (type === 'locked') {
+      setFilterExternal(false);
+      setFilterStatus(prev => prev === 'LOCKED' ? 'ALL' : 'LOCKED');
+    } else if (type === 'external') {
+      setFilterStatus('ALL');
+      setFilterExternal(prev => !prev);
+    }
+  };
 
   // ── Form Handlers ──────────────────────────────────────────────────────────
   const handleInputChange = (e) => {
@@ -327,7 +342,21 @@ const UserManagement = () => {
 
         {/* ── Stats Row ───────────────────────────────────────────────────── */}
         <div className="um-stats-row">
-          <div className="um-stat-card">
+          <div
+            className="um-stat-card"
+            onClick={() => {
+              setFilterStatus('ALL');
+              setFilterExternal(false);
+              setFilterRole('ALL');
+              setSearchQuery('');
+            }}
+            style={{
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              opacity: (filterStatus !== 'ALL' || filterExternal || filterRole !== 'ALL' || searchQuery !== '') ? 1 : 0.8
+            }}
+            title="Click to reset all filters"
+          >
             <div className="um-stat-icon-box">
               <span className="material-symbols-outlined">group</span>
             </div>
@@ -337,7 +366,18 @@ const UserManagement = () => {
             </div>
           </div>
 
-          <div className="um-stat-card um-stat-active">
+          <div
+            className="um-stat-card um-stat-active"
+            onClick={() => handleStatCardClick('active')}
+            style={{
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              outline: filterStatus === 'ACTIVE' ? '2px solid var(--um-primary, #4ade80)' : '2px solid transparent',
+              transform: filterStatus === 'ACTIVE' ? 'scale(1.04)' : 'scale(1)',
+              boxShadow: filterStatus === 'ACTIVE' ? '0 0 0 4px rgba(74,222,128,0.15)' : '',
+            }}
+            title="Click to filter Active users"
+          >
             <div className="um-stat-icon-box">
               <span className="material-symbols-outlined">verified_user</span>
             </div>
@@ -347,7 +387,18 @@ const UserManagement = () => {
             </div>
           </div>
 
-          <div className="um-stat-card um-stat-locked">
+          <div
+            className="um-stat-card um-stat-locked"
+            onClick={() => handleStatCardClick('locked')}
+            style={{
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              outline: filterStatus === 'LOCKED' ? '2px solid #f87171' : '2px solid transparent',
+              transform: filterStatus === 'LOCKED' ? 'scale(1.04)' : 'scale(1)',
+              boxShadow: filterStatus === 'LOCKED' ? '0 0 0 4px rgba(248,113,113,0.15)' : '',
+            }}
+            title="Click to filter Locked users"
+          >
             <div className="um-stat-icon-box">
               <span className="material-symbols-outlined">lock</span>
             </div>
@@ -357,7 +408,18 @@ const UserManagement = () => {
             </div>
           </div>
 
-          <div className="um-stat-card um-stat-external">
+          <div
+            className="um-stat-card um-stat-external"
+            onClick={() => handleStatCardClick('external')}
+            style={{
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              outline: filterExternal ? '2px solid #a78bfa' : '2px solid transparent',
+              transform: filterExternal ? 'scale(1.04)' : 'scale(1)',
+              boxShadow: filterExternal ? '0 0 0 4px rgba(167,139,250,0.15)' : '',
+            }}
+            title="Click to filter External users"
+          >
             <div className="um-stat-icon-box">
               <span className="material-symbols-outlined">badge</span>
             </div>
@@ -470,7 +532,7 @@ const UserManagement = () => {
                           <div className="um-user-info">
                             <span className="um-username">
                               {user.username}
-                              {isSelf && <span className="um-self-badge">Me</span>}
+                              {isSelf && <span className="um-self-badge">(You)</span>}
                             </span>
                             <span className="um-email">{user.email}</span>
                           </div>

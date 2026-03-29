@@ -181,7 +181,7 @@ export default function TemplateLibrary() {
                   <p className="text-xs text-on-surface-variant">{template.brand}</p>
                   <div className="mt-4 pt-4 flex items-center justify-between border-t border-outline-variant/15">
                     <div>
-                      <p className="text-[10px] text-on-surface-variant uppercase font-bold">Dimensions</p>
+                      <p className="text-[10px] text-on-surface-variant uppercase font-bold">Label Size</p>
                       <p className="text-xs font-semibold text-on-surface">{template.size}</p>
                     </div>
                     <button

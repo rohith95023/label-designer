@@ -6,7 +6,7 @@ import { useTheme } from '../../context/ThemeContext';
 const NAV_ITEMS = [
   { key: 'dashboard', to: '/', icon: 'grid_view', label: 'Dashboard', roles: ['ADMIN', 'REVIEWER', 'OPERATOR', 'EXTERNAL'], permission: 'dashboard' },
   { key: 'assets', to: '/assets', icon: 'auto_awesome_mosaic', label: 'Template Library', roles: ['ADMIN', 'REVIEWER', 'OPERATOR', 'EXTERNAL'], permission: 'templates' },
-  { key: 'saved-templates', to: '/saved-templates', icon: 'folder_open', label: 'Saved Templates', roles: ['ADMIN', 'REVIEWER', 'OPERATOR'], permission: 'saved-templates' },
+  { key: 'saved-templates', to: '/saved-templates', icon: 'folder_open', label: 'Saved Labels', roles: ['ADMIN', 'REVIEWER', 'OPERATOR'], permission: 'saved-templates' },
   { key: 'editor', to: '/editor', icon: 'edit_document', label: 'Label Editor', roles: ['ADMIN', 'OPERATOR'], permission: 'editor' },
   { key: 'translation', to: '/translation', icon: 'translate', label: 'Translation', roles: ['ADMIN', 'REVIEWER', 'OPERATOR', 'EXTERNAL'], permission: 'translation' },
   { key: 'history', to: '/history', icon: 'history', label: 'History', roles: ['ADMIN', 'REVIEWER', 'OPERATOR'], permission: 'history' },
@@ -58,9 +58,9 @@ export default function AppLayout({ children, activePage = '', searchBar = null 
               </div>
             </div>
             
-            <h2 className="text-2xl font-black text-gradient mb-2 tracking-tight">Securing Session</h2>
+            <h2 className="text-2xl font-black text-gradient mb-2 tracking-tight">Logging Out</h2>
             <p className="text-on-surface-variant font-medium tracking-wide flex items-center gap-1.5 opacity-80">
-              Terminating secure environment
+              Terminating session environment
               <span className="flex gap-1 ml-1">
                 <span className="w-1 h-1 rounded-full bg-primary animate-pulse"></span>
                 <span className="w-1 h-1 rounded-full bg-primary animate-pulse [animation-delay:200ms]"></span>
@@ -142,7 +142,7 @@ export default function AppLayout({ children, activePage = '', searchBar = null 
           <div className="relative">
             <button 
               onClick={() => setUserMenuOpen(!userMenuOpen)}
-              className="flex items-center gap-2 p-1 pl-3 rounded-full hover:bg-surface-container transition-all"
+              className="flex items-center gap-2 p-1 pl-3 rounded-full hover:bg-surface-container dark:hover:bg-white/10 transition-all"
             >
               <div className="flex flex-col items-end text-right hidden sm:flex">
                 <span className="text-[12px] font-bold leading-none">{user?.username}</span>
@@ -161,17 +161,17 @@ export default function AppLayout({ children, activePage = '', searchBar = null 
                 </div>
                 <button 
                   onClick={() => navigate('/settings')}
-                  className="w-full flex items-center gap-3 px-3 py-2 text-[13px] font-medium hover:bg-surface-container rounded-xl transition-colors"
+                  className="w-full flex items-center gap-3 px-3 py-2 text-[13px] font-medium hover:bg-surface-container dark:hover:bg-white/10 rounded-xl transition-colors"
                 >
                   <span className="material-symbols-outlined text-lg">account_circle</span>
                   Security Profile
                 </button>
                 <button 
                   onClick={logout}
-                  className="w-full flex items-center gap-3 px-3 py-2 text-[13px] font-medium text-error hover:bg-error/10 rounded-xl transition-colors"
+                  className="w-full flex items-center gap-3 px-3 py-2 text-[13px] font-medium text-error hover:bg-error/10 dark:hover:bg-error/20 rounded-xl transition-colors"
                 >
                   <span className="material-symbols-outlined text-lg">logout</span>
-                  Secure Terminate
+                  Logout
                 </button>
               </div>
             )}

@@ -50,7 +50,7 @@ public class AuthServiceImpl implements AuthService {
 
         // Check if account is locked
         if (user.getLockedUntil() != null && user.getLockedUntil().isAfter(OffsetDateTime.now())) {
-            throw new RuntimeException("Account is locked until " + user.getLockedUntil());
+            throw new RuntimeException("Account is locked, contact admin");
         }
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {

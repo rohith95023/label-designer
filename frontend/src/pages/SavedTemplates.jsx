@@ -17,7 +17,7 @@ export default function SavedTemplates() {
   const isAdmin = user?.role === 'ADMIN';
 
   const filteredFiles = useMemo(() => {
-    return userFiles.filter(f => 
+    return userFiles.filter(f =>
       f.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (isAdmin && f.owner?.username?.toLowerCase().includes(searchQuery.toLowerCase()))
     );
@@ -78,11 +78,7 @@ export default function SavedTemplates() {
       <div className="p-6 lg:p-10 pb-24">
         <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6 animate-slide-up">
           <div>
-            <p className="text-primary font-bold text-[11px] uppercase tracking-[0.2em] mb-2">{isAdmin ? 'Clinical System Administration' : 'Personal Records'}</p>
-            <h1 className="text-4xl font-extrabold tracking-tighter text-gradient mb-2">{isAdmin ? 'Central Repository' : 'Saved Templates'}</h1>
-            <p className="text-on-surface-variant text-sm max-w-lg">
-              {isAdmin ? 'System-wide view of all medically validated designs. You can oversee and manage all saved records below.' : 'Manage your medically validated label designs. All changes are tracked for 21 CFR Part 11 audit compliance.'}
-            </p>
+            <h1 className="text-4xl font-extrabold tracking-tighter text-gradient mb-2">Labels List</h1>
           </div>
         </div>
 
@@ -126,18 +122,18 @@ export default function SavedTemplates() {
               <table className="w-full text-left border-collapse">
                 <thead className="bg-surface-container-low/50 dark:bg-surface-container-high/20 border-b border-outline-variant/20">
                   <tr>
-                    <th className="px-6 py-4 text-[11px] font-bold text-outline dark:text-outline-variant/80 uppercase tracking-widest">Project Name</th>
+                    <th className="px-6 py-4 text-[11px] font-bold text-outline dark:text-outline-variant/80 uppercase tracking-widest">label name</th>
                     {isAdmin && <th className="px-6 py-4 text-[11px] font-bold text-outline dark:text-outline-variant/80 uppercase tracking-widest">Ownership</th>}
-                    <th className="px-6 py-4 text-[11px] font-bold text-outline dark:text-outline-variant/80 uppercase tracking-widest">Dimensions</th>
+                    <th className="px-6 py-4 text-[11px] font-bold text-outline dark:text-outline-variant/80 uppercase tracking-widest">Label Size</th>
                     <th className="px-6 py-4 text-[11px] font-bold text-outline dark:text-outline-variant/80 uppercase tracking-widest">Last Modified</th>
                     <th className="px-6 py-4 text-[11px] font-bold text-outline dark:text-outline-variant/80 uppercase tracking-widest text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredFiles.map((file, idx) => (
-                    <tr 
-                      key={file.id} 
-                      className={`group hover:bg-primary/5 transition-colors border-b border-outline-variant/10 last:border-0 animate-fade-in stagger-${Math.min(idx+1,10)}`}
+                    <tr
+                      key={file.id}
+                      className={`group hover:bg-primary/5 transition-colors border-b border-outline-variant/10 last:border-0 animate-fade-in stagger-${Math.min(idx + 1, 10)}`}
                     >
                       <td className="px-6 py-5">
                         <div className="flex items-center gap-3">
@@ -146,7 +142,7 @@ export default function SavedTemplates() {
                           </div>
                           <div>
                             <p className="text-sm font-bold text-on-surface mb-0.5">{file.name}</p>
-                            <p className="text-[10px] text-on-surface-variant uppercase font-medium tracking-tight">System Ref: {file.id.slice(0,8)}</p>
+                            <p className="text-[10px] text-on-surface-variant uppercase font-medium tracking-tight">System Ref: {file.id.slice(0, 8)}</p>
                           </div>
                         </div>
                       </td>
@@ -170,21 +166,21 @@ export default function SavedTemplates() {
                       </td>
                       <td className="px-6 py-5 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <button 
+                          <button
                             onClick={() => handlePreviewRequest(file)}
                             className="bg-secondary/10 hover:bg-secondary text-secondary hover:text-on-secondary p-2.5 rounded-xl transition-all active:scale-95 group"
                             title="Quick Preview"
                           >
                             <span className="material-symbols-outlined text-base">visibility</span>
                           </button>
-                          <button 
+                          <button
                             onClick={() => handleOpen(file.id)}
                             className="bg-primary/10 hover:bg-primary text-primary hover:text-on-primary p-2.5 rounded-xl transition-all active:scale-95 group"
                             title="Open in Designer"
                           >
                             <span className="material-symbols-outlined text-base">edit_document</span>
                           </button>
-                          <button 
+                          <button
                             onClick={() => handleDeleteRequest(file.id, file.name)}
                             className="p-2.5 rounded-xl text-on-surface-variant hover:bg-error/10 hover:text-error transition-all"
                             title="Delete Permanently"
@@ -214,19 +210,19 @@ export default function SavedTemplates() {
               <div>
                 <h3 className="text-xl font-bold text-on-surface mb-2">Confirm Destruction</h3>
                 <p className="text-sm text-on-surface-variant px-4">
-                  Are you absolutely sure you want to delete <span className="text-on-surface font-bold">"{deleteConfirm.name}"</span>? 
+                  Are you absolutely sure you want to delete <span className="text-on-surface font-bold">"{deleteConfirm.name}"</span>?
                   This will permanently remove the record and all its historical versions from the 21 CFR repository.
                 </p>
               </div>
               <div className="flex items-center gap-3 w-full mt-6">
-                <button 
+                <button
                   disabled={isDeleting}
                   onClick={() => setDeleteConfirm(null)}
                   className="flex-1 px-6 py-3 rounded-2xl bg-surface-container-high hover:bg-surface-container-highest text-on-surface-variant font-bold text-xs transition-all disabled:opacity-50"
                 >
                   Cancel
                 </button>
-                <button 
+                <button
                   disabled={isDeleting}
                   onClick={confirmDelete}
                   className="flex-1 px-6 py-3 rounded-2xl bg-error text-on-error font-bold text-xs transition-all shadow-lg shadow-error/20 active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
@@ -248,10 +244,10 @@ export default function SavedTemplates() {
 
       {/* Quick Preview Modal (Aligned with History) */}
       {previewFile && (
-        <PreviewModal 
-          isOpen={true} 
-          onClose={() => setPreviewFile(null)} 
-          elements={previewFile.elementsData} 
+        <PreviewModal
+          isOpen={true}
+          onClose={() => setPreviewFile(null)}
+          elements={previewFile.elementsData}
           meta={{ labelSize: previewFile.labelSize, bgColor: previewFile.bgColor, fileName: previewFile.name }}
           title={previewFile.name}
         />

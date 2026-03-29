@@ -35,7 +35,7 @@ function AppContent() {
           {/* Scientific Pulsing Logo */}
           <div className="relative">
             <div className="w-24 h-24 rounded-[32px] bg-gradient-to-br from-primary to-primary-container flex items-center justify-center shadow-glow-lg border border-primary/20 animate-bounce-subtle">
-              <span className="material-symbols-outlined text-on-primary text-5xl">precision_manufacturing</span>
+              <span className="material-symbols-outlined text-on-primary text-5xl">medication</span>
             </div>
             <div className="absolute inset-0 rounded-[32px] bg-primary/20 animate-ping opacity-20"></div>
           </div>
@@ -44,22 +44,12 @@ function AppContent() {
           <div className="text-center space-y-4 w-full">
             <div>
               <h2 className="text-2xl font-black text-on-surface tracking-tighter mb-1">Clinical Label Design</h2>
-              <p className="text-[10px] text-primary font-bold uppercase tracking-[0.3em] opacity-80">Secure Session Initialization</p>
+              <p className="text-[10px] text-primary font-bold uppercase tracking-[0.3em] opacity-80">Loading</p>
             </div>
             
             {/* Professional Loading Bar */}
             <div className="w-full h-1.5 bg-surface-container-high rounded-full overflow-hidden border border-outline-variant/10 shadow-inner p-[2px]">
               <div className="h-full bg-gradient-to-r from-primary via-tertiary to-primary rounded-full animate-loading-bar shadow-glow-sm"></div>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center justify-center gap-2 text-on-surface-variant/60 text-[11px] font-medium">
-                <span className="w-1 h-1 bg-emerald-500 rounded-full animate-pulse"></span>
-                Establishing 21 CFR Part 11 Tunnel
-              </div>
-              <div className="flex items-center justify-center gap-2 text-on-surface-variant/40 text-[9px] font-bold uppercase tracking-widest leading-none">
-                Medically Validated Environment v2.4.0
-              </div>
             </div>
           </div>
         </div>

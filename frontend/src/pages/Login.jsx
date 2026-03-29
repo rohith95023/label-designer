@@ -8,20 +8,39 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(null);
+  const [fieldErrors, setFieldErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  const validate = () => {
+    const errors = {};
+    if (!identity.trim()) errors.identity = 'User name or mail is required';
+    if (!password.trim()) errors.password = 'Password is required';
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
+    setFieldErrors({});
+
+    if (!validate()) return;
+
     setLoading(true);
     try {
-      // Mapping identity to backend expected field
       await login(identity, password);
       navigate('/');
     } catch (err) {
-      setError(err.message || 'Invalid email or password.');
+      if (err.message?.toLowerCase().includes('locked')) {
+        setError(err.message);
+      } else if (err.message?.toLowerCase().includes('password') || err.message?.toLowerCase().includes('invalid')) {
+        setError('Invalid user name or password');
+        setFieldErrors({ identity: true, password: true });
+      } else {
+        setError(err.message || 'An unexpected error occurred.');
+      }
     } finally {
       setLoading(false);
     }
@@ -40,13 +59,12 @@ const Login = () => {
         <source src="/login background.mp4" type="video/mp4" />
       </video>
 
-      {/* Glassmorphic Overlay for extra depth */}
+      {/* Glassmorphic Overlay */}
       <div className="absolute inset-0 z-[1] bg-black/40 backdrop-blur-[1px]"></div>
 
       {/* Premium Glass Login Card */}
       <div className="relative z-10 w-full max-w-lg glass-card rounded-[2.5rem] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-1000 bg-white/30 dark:bg-black/40 backdrop-blur-2xl border-white/20">
 
-        {/* Main Content Area */}
         <div className="p-8 lg:p-14 flex flex-col justify-center">
           {/* Logo */}
           <div className="flex items-center gap-4 mb-10 justify-center">
@@ -60,7 +78,7 @@ const Login = () => {
             <h1 className="text-4xl font-black text-slate-900 dark:text-white mb-3 tracking-tight">Access Portal</h1>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6" noValidate>
             {error && (
               <div className="p-4 bg-error/10 border border-error/20 text-error rounded-2xl text-sm font-bold animate-shake flex items-center gap-3">
                 <span className="material-symbols-outlined text-lg">warning</span>
@@ -71,16 +89,22 @@ const Login = () => {
             <div className="space-y-2">
               <label className="text-[13px] font-extrabold text-slate-700 dark:text-blue-200 ml-1 uppercase tracking-widest opacity-80">user name or mail</label>
               <div className="relative group">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">
+                <div className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${fieldErrors.identity ? 'text-error' : 'text-slate-400 group-focus-within:text-primary'}`}>
                   <Mail size={20} />
                 </div>
                 <input
                   type="text"
                   value={identity}
-                  onChange={(e) => setIdentity(e.target.value)}
+                  onChange={(e) => {
+                    setIdentity(e.target.value);
+                    if (fieldErrors.identity) setFieldErrors(prev => ({ ...prev, identity: null }));
+                  }}
                   placeholder="user name or mail"
-                  className="w-full pl-12 pr-12 py-4 bg-white/40 dark:bg-black/20 border border-white/40 dark:border-white/10 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all placeholder:text-slate-500/50 font-medium text-slate-900 dark:text-white backdrop-blur-sm shadow-inner"
-                  required
+                  className={`w-full pl-12 pr-12 py-4 bg-white/40 dark:bg-black/20 border rounded-2xl focus:outline-none focus:ring-2 transition-all placeholder:text-slate-500/50 font-medium text-slate-900 dark:text-white backdrop-blur-sm shadow-inner ${
+                    fieldErrors.identity 
+                    ? 'border-error/50 focus:ring-error/20 bg-error/5' 
+                    : 'border-white/40 dark:border-white/10 focus:ring-primary focus:border-transparent'
+                  }`}
                 />
                 {identity && (
                   <button
@@ -92,21 +116,33 @@ const Login = () => {
                   </button>
                 )}
               </div>
+              {fieldErrors.identity && (
+                <p className="text-[12px] text-error font-bold ml-1 animate-slide-up flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[14px]">error</span>
+                  {fieldErrors.identity}
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
               <label className="text-[13px] font-extrabold text-slate-700 dark:text-blue-200 ml-1 uppercase tracking-widest opacity-80">password</label>
               <div className="relative group">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">
+                <div className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${fieldErrors.password ? 'text-error' : 'text-slate-400 group-focus-within:text-primary'}`}>
                   <Lock size={20} />
                 </div>
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (fieldErrors.password) setFieldErrors(prev => ({ ...prev, password: null }));
+                  }}
                   placeholder="password"
-                  className="w-full pl-12 pr-12 py-4 bg-white/40 dark:bg-black/20 border border-white/40 dark:border-white/10 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all placeholder:text-slate-500/50 font-medium text-slate-900 dark:text-white backdrop-blur-sm shadow-inner"
-                  required
+                  className={`w-full pl-12 pr-12 py-4 bg-white/40 dark:bg-black/20 border rounded-2xl focus:outline-none focus:ring-2 transition-all placeholder:text-slate-500/50 font-medium text-slate-900 dark:text-white backdrop-blur-sm shadow-inner ${
+                    fieldErrors.password 
+                    ? 'border-error/50 focus:ring-error/20 bg-error/5' 
+                    : 'border-white/40 dark:border-white/10 focus:ring-primary focus:border-transparent'
+                  }`}
                 />
                 <button
                   type="button"
@@ -116,6 +152,12 @@ const Login = () => {
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
               </div>
+              {fieldErrors.password && (
+                <p className="text-[12px] text-error font-bold ml-1 animate-slide-up flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[14px]">error</span>
+                  {fieldErrors.password}
+                </p>
+              )}
             </div>
 
             <button
