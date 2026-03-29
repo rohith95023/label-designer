@@ -63,8 +63,7 @@ public class PermissionService {
     @Transactional
     public void saveUserPermissions(com.pharmalabel.api.models.User user, List<com.pharmalabel.api.dtos.user.PermissionRequestDto> permissions) {
         // Clear existing user-specific permissions
-        List<Permission> existing = permissionRepository.findByUser_Id(user.getId());
-        permissionRepository.deleteAll(existing);
+        deleteAllForUser(user.getId());
 
         // Save new permissions
         if (permissions != null) {
@@ -78,5 +77,10 @@ public class PermissionService {
                 permissionRepository.save(p);
             }
         }
+    }
+
+    @Transactional
+    public void deleteAllForUser(UUID userId) {
+        permissionRepository.deleteAll(permissionRepository.findByUser_Id(userId));
     }
 }

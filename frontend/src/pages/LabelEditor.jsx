@@ -299,8 +299,21 @@ export default function LabelEditor() {
   const captureArtboard = async () => {
     const prev = selectedElementId;
     setSelectedElementId(null);
+    
+    // Temporarily force overflow hidden to clip elements outside label area for export
+    const originalOverflow = artboardRef.current.style.overflow;
+    artboardRef.current.style.overflow = 'hidden';
+    
     await new Promise(r => setTimeout(r, 120));
-    const canvas = await html2canvas(artboardRef.current, { scale: 3, useCORS: true, backgroundColor: '#ffffff' });
+    const canvas = await html2canvas(artboardRef.current, { 
+      scale: 3, 
+      useCORS: true, 
+      backgroundColor: '#ffffff',
+      logging: false 
+    });
+    
+    // Restore state
+    artboardRef.current.style.overflow = originalOverflow;
     if (prev) setSelectedElementId(prev);
     return canvas;
   };
@@ -392,21 +405,9 @@ export default function LabelEditor() {
   // ── Artboard element clamp ───────────────────────────────────────────────────
   // Strictly enforce bounds based on rotated bounding box
   const clampPos = (x, y, elW, elH, rot = 0) => {
-    const rad = rot * Math.PI / 180;
-    const absCos = Math.abs(Math.cos(rad));
-    const absSin = Math.abs(Math.sin(rad));
-    const W = elW * absCos + elH * absSin;
-    const H = elW * absSin + elH * absCos;
-
-    const minX = W / 2 - elW / 2;
-    const maxX = AW - (W / 2 + elW / 2);
-    const minY = H / 2 - elH / 2;
-    const maxY = AH - (H / 2 + elH / 2);
-
-    return {
-      x: Math.min(Math.max(minX, x), Math.max(minX, maxX)),
-      y: Math.min(Math.max(minY, y), Math.max(minY, maxY)),
-    };
+    // Restriction removed per user request to allow movement across entire canvas.
+    // Coordinates are now unconstrained.
+    return { x, y };
   };
 
   const statusColor = savedStatus === 'saved' ? 'text-green-600' : savedStatus === 'saving' ? 'text-amber-500' : 'text-slate-400';
@@ -930,78 +931,91 @@ export default function LabelEditor() {
             )}
 
             {/* LAYERS TAB */}
-            {activeTab === 'layers' && (
-              <div className="animate-fade-in flex flex-col gap-1.5 h-full">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <input 
-                      type="checkbox" 
-                      checked={elements.length > 0 && selectedLayers.length === elements.length}
-                      onChange={(e) => {
-                        if (e.target.checked) setSelectedLayers(elements.map(el => el.id));
-                        else setSelectedLayers([]);
-                      }}
-                      className="w-3.5 h-3.5 rounded border-slate-300 text-primary focus:ring-primary/20 accent-primary cursor-pointer shrink-0"
-                    />
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Select All ({elements.length})</span>
-                  </div>
-                  {selectedLayers.length > 0 && (
-                    <button 
-                      onClick={() => setSelectedLayers([])}
-                      className="text-[10px] bg-slate-100 px-2 py-1 rounded-md text-slate-500 hover:text-red-500 transition-colors font-bold"
-                    >
-                      Clear Selection
-                    </button>
-                  )}
-                </div>
+            {activeTab === 'layers' && (() => {
+              const layersToDisplay = [...elements].filter(el => {
+                const elW = el.width || 120;
+                const elH = el.height || 40;
+                return (el.x + elW > 0 && el.x < AW && el.y + elH > 0 && el.y < AH);
+              }).sort((a, b) => (b.zIndex || 0) - (a.zIndex || 0));
 
-                <div className="flex flex-col gap-1 overflow-y-auto max-h-[600px] custom-scrollbar pr-1">
-                  {[...elements].sort((a, b) => (b.zIndex || 0) - (a.zIndex || 0)).map(el => {
-                    const isSelected = selectedElementId === el.id;
-                    const isBulkSelected = selectedLayers.includes(el.id);
-                    return (
-                      <div key={`layer-${el.id}`}
-                        onClick={() => setSelectedElementId(el.id)}
-                        className={`group flex items-center justify-between p-2 rounded-lg border text-[11px] cursor-pointer transition-all ${isSelected ? 'bg-blue-50/80 border-primary/50 text-primary font-bold shadow-sm' : 'bg-white border-slate-100 hover:border-slate-200 text-slate-600'}`}>
-                        <div className="flex items-center gap-2.5">
-                          <input 
-                            type="checkbox" 
-                            checked={isBulkSelected}
-                            onChange={(e) => {
-                              setSelectedLayers(prev => 
-                                prev.includes(el.id) ? prev.filter(id => id !== el.id) : [...prev, el.id]
-                              );
-                            }}
-                            onClick={(e) => e.stopPropagation()}
-                            className="w-3.5 h-3.5 rounded border-slate-300 text-primary focus:ring-primary/20 accent-primary cursor-pointer shrink-0"
-                          />
-                          <span className="material-symbols-outlined text-[13px] opacity-70 shrink-0">
-                            {el.type === 'image' ? 'image' : el.type === 'shape' ? 'category' : (el.type === 'icon' || el.type === 'IconsIcon') ? 'star' : el.type === 'barcode' ? 'barcode' : el.type === 'qrcode' ? 'qr_code_2' : 'match_case'}
-                          </span>
-                          <span className="font-bold leading-tight break-words pr-1">
-                            {el.name || el.heading || (el.text ? el.text.replace(/\n/g, ' ').slice(0, 30) + (el.text.length > 30 ? '...' : '') : el.type.toUpperCase())}
-                          </span>
+              return (
+                <div className="animate-fade-in flex flex-col gap-1.5 h-full">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <input 
+                        type="checkbox" 
+                        checked={layersToDisplay.length > 0 && layersToDisplay.every(l => selectedLayers.includes(l.id))}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            const newSelection = Array.from(new Set([...selectedLayers, ...layersToDisplay.map(l => l.id)]));
+                            setSelectedLayers(newSelection);
+                          } else {
+                            const idsToRemove = layersToDisplay.map(l => l.id);
+                            setSelectedLayers(selectedLayers.filter(id => !idsToRemove.includes(id)));
+                          }
+                        }}
+                        className="w-3.5 h-3.5 rounded border-slate-300 text-primary focus:ring-primary/20 accent-primary cursor-pointer shrink-0"
+                      />
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">On-Label Layers ({layersToDisplay.length})</span>
+                    </div>
+                    {selectedLayers.length > 0 && (
+                      <button 
+                        onClick={() => setSelectedLayers([])}
+                        className="text-[10px] bg-slate-100 px-2 py-1 rounded-md text-slate-500 hover:text-red-500 transition-colors font-bold"
+                      >
+                        Clear Selection
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col gap-1 overflow-y-auto max-h-[600px] custom-scrollbar pr-1">
+                    {layersToDisplay.map(el => {
+                      const isSelected = selectedElementId === el.id;
+                      const isBulkSelected = selectedLayers.includes(el.id);
+                      return (
+                        <div key={`layer-${el.id}`}
+                          onClick={() => setSelectedElementId(el.id)}
+                          className={`group flex items-center justify-between p-2 rounded-lg border text-[11px] cursor-pointer transition-all ${isSelected ? 'bg-blue-50/80 border-primary/50 text-primary font-bold shadow-sm' : 'bg-white border-slate-100 dark:bg-slate-800 dark:border-white/5 hover:border-slate-200 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300'}`}>
+                          <div className="flex items-center gap-2.5 overflow-hidden">
+                            <input 
+                              type="checkbox" 
+                              checked={isBulkSelected}
+                              onChange={(e) => {
+                                setSelectedLayers(prev => 
+                                  prev.includes(el.id) ? prev.filter(id => id !== el.id) : [...prev, el.id]
+                                );
+                              }}
+                              onClick={(e) => e.stopPropagation()}
+                              className="w-3.5 h-3.5 rounded border-slate-300 text-primary focus:ring-primary/20 accent-primary cursor-pointer shrink-0"
+                            />
+                            <span className="material-symbols-outlined text-[13px] opacity-70 shrink-0">
+                              {el.type === 'image' ? 'image' : el.type === 'shape' ? 'category' : (el.type === 'icon' || el.type === 'IconsIcon') ? 'star' : el.type === 'barcode' ? 'barcode' : el.type === 'qrcode' ? 'qr_code_2' : 'match_case'}
+                            </span>
+                            <span className="font-bold leading-tight truncate pr-1">
+                              {el.name || el.heading || (el.text ? el.text.replace(/\n/g, ' ').slice(0, 30) + (el.text.length > 30 ? '...' : '') : el.type.toUpperCase())}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button 
+                              onClick={(e) => { 
+                                e.stopPropagation(); 
+                                updateElement(el.id, { locked: !el.locked }); 
+                                commitUpdate();
+                              }}
+                              className={`p-1 rounded-md transition-all ${el.locked ? 'text-primary scale-110' : 'text-slate-300 hover:text-slate-600'}`}
+                              title={el.locked ? "Unlock Layer" : "Lock Layer"}
+                            >
+                              <span className="material-symbols-outlined text-[15px]">{el.locked ? 'lock' : 'lock_open'}</span>
+                            </button>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-1.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button 
-                            onClick={(e) => { 
-                              e.stopPropagation(); 
-                              updateElement(el.id, { locked: !el.locked }); 
-                              commitUpdate();
-                            }}
-                            className={`p-1 rounded-md transition-all ${el.locked ? 'text-primary scale-110' : 'text-slate-300 hover:text-slate-600'}`}
-                            title={el.locked ? "Unlock Layer" : "Lock Layer"}
-                          >
-                            <span className="material-symbols-outlined text-[15px]">{el.locked ? 'lock' : 'lock_open'}</span>
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
+                  {layersToDisplay.length === 0 && <p className="text-[10px] text-slate-400 text-center py-12 bg-slate-50/50 dark:bg-white/5 rounded-xl border border-dashed border-slate-200 dark:border-white/10">No elements on label.</p>}
                 </div>
-                {elements.length === 0 && <p className="text-[10px] text-slate-400 text-center py-12 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">Canvas is empty.</p>}
-              </div>
-            )}
+              );
+            })()}
           </div>
         </aside>
 
@@ -1129,6 +1143,7 @@ export default function LabelEditor() {
                 transform: `scale(${zoomLevel})`,
                 transformOrigin: 'center top',
                 marginBottom: `${(zoomLevel - 1) * AH}px`,
+                overflow: 'visible', // Allow elements to be seen outside label bounds during editing
               }}
               onClick={e => {
                 // If we click the artboard itself (not an element), deselect
@@ -1228,7 +1243,7 @@ export default function LabelEditor() {
                     key={el.id}
                     size={{ width: elW, height: elH }}
                     position={{ x: el.x, y: el.y }}
-                    bounds="parent"
+                    bounds={undefined}
                     disableDragging={el.locked}
                     enableResizing={el.locked ? false : {
                       top: isSelected, left: isSelected, bottom: isSelected, right: isSelected,
@@ -1240,6 +1255,12 @@ export default function LabelEditor() {
                     style={{
                       zIndex: isSelected ? 9999 : (el.zIndex || 10),
                       position: 'absolute'
+                    }}
+                    onDrag={(_, d) => {
+                      // Real-time feedback for dark mode visibility when dragging outside
+                      if (theme === 'dark' || (d.x < 0 || d.y < 0 || d.x + elW > AW || d.y + elH > AH)) {
+                        updateElement(el.id, { x: d.x, y: d.y });
+                      }
                     }}
                     onDragStop={(_, d) => {
                       const clamped = clampPos(d.x, d.y, elW, elH, el.rotation);
@@ -1378,7 +1399,14 @@ export default function LabelEditor() {
                         fontWeight: el.fontWeight || '400',
                         fontStyle: el.fontStyle || 'normal',
                         textDecoration: el.textDecoration || 'none',
-                        color: (editingElementId === el.id && (el.backgroundImage || el.WebkitBackgroundClip || el.color === 'transparent' || el.color === 'white' || el.WebkitTextFillColor === 'transparent')) ? '#2563eb' : (el.color || '#191c1e'),
+                        color: (() => {
+                          if (editingElementId === el.id) return '#2563eb';
+                          // Dark Mode visibility fix: Force white for dark elements outside the label area
+                          if (theme === 'dark' && (el.x < 0 || el.y < 0 || el.x + (el.width || 120) > AW || el.y + (el.height || 40) > AH)) {
+                            if (el.color === '#191c1e' || !el.color || el.color === '#191C1E') return '#ffffff';
+                          }
+                          return (el.color || '#191c1e');
+                        })(),
                         backgroundImage: editingElementId === el.id ? 'none' : (el.backgroundImage || undefined),
                         WebkitBackgroundClip: editingElementId === el.id ? 'initial' : (el.WebkitBackgroundClip || undefined),
                         WebkitTextFillColor: editingElementId === el.id ? 'initial' : (el.WebkitTextFillColor || undefined),
@@ -1398,7 +1426,14 @@ export default function LabelEditor() {
                       }}>
                         {el.type === 'path' && (
                           <svg className="w-full h-full" viewBox={`0 0 ${el.width} ${el.height}`} preserveAspectRatio="none">
-                            <path d={el.pathData} stroke={el.color || '#191C1E'} strokeWidth={el.penWidth || 3} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                            <path d={el.pathData} 
+                                  stroke={(() => {
+                                    if (theme === 'dark' && (el.x < 0 || el.y < 0 || el.x + (el.width || 120) > AW || el.y + (el.height || 40) > AH)) {
+                                      if (el.color === '#191c1e' || !el.color || el.color === '#191C1E') return '#ffffff';
+                                    }
+                                    return el.color || '#191c1e';
+                                  })()} 
+                                  strokeWidth={el.penWidth || 3} fill="none" strokeLinecap="round" strokeLinejoin="round" />
                           </svg>
                         )}
                         {(el.heading !== undefined || isSelected) && isSelected ? (
@@ -1436,39 +1471,64 @@ export default function LabelEditor() {
                         ) : null}
 
                         {el.type === 'barcode' ? (
-                          <div className="w-full h-full flex items-center justify-center pointer-events-none">
+                          <div className="w-full flex-1 min-h-0 flex items-center justify-center pointer-events-none">
                             <Barcode
                               value={el.text || '123456789012'}
                               format={el.barcodeFormat || 'CODE128'}
-                              lineColor={el.color || '#191c1e'}
+                              lineColor={(() => {
+                                if (theme === 'dark' && (el.x < 0 || el.y < 0 || el.x + (el.width || 120) > AW || el.y + (el.height || 40) > AH)) {
+                                  if (el.color === '#191c1e' || !el.color || el.color === '#191C1E') return '#ffffff';
+                                }
+                                return el.color || '#191c1e';
+                              })()}
                               background="transparent"
                               width={1.2}
-                              height={Math.max(20, elH - 32)}
+                              height={Math.max(20, elH - (el.heading ? 18 : 6))}
                               margin={0}
                               fontSize={12}
                               displayValue={true}
                             />
                           </div>
                         ) : el.type === 'qrcode' ? (
-                          <div className="w-full h-full">
+                          <div className="w-full flex-1 min-h-0">
                             <QRCodeSVG
                               value={el.text || 'https://pharma-precision.com/scan'}
-                              fgColor={el.color || '#191c1e'}
+                              fgColor={(() => {
+                                if (theme === 'dark' && (el.x < 0 || el.y < 0 || el.x + (el.width || 120) > AW || el.y + (el.height || 40) > AH)) {
+                                  if (el.color === '#191c1e' || !el.color || el.color === '#191C1E') return '#ffffff';
+                                }
+                                return el.color || '#191c1e';
+                              })()}
                               bgColor="transparent"
                               style={{ width: '100%', height: '100%', display: 'block' }}
                               level="M"
                             />
                           </div>
                         ) : el.type === 'image' ? (
-                          <img src={el.src} alt="Uploaded" className="w-full h-full pointer-events-none" style={{ objectFit: el.imageFit || 'contain' }} />
+                          <img src={el.src} alt="Uploaded" className="w-full flex-1 min-h-0 pointer-events-none" style={{ objectFit: el.imageFit || 'contain' }} />
                         ) : el.type === 'icon' ? (
-                          <div className="w-full h-full flex items-center justify-center overflow-hidden">
-                            <span className="material-symbols-outlined leading-[0]" style={{ fontSize: `${Math.min(elW, elH)}px`, color: el.color || '#191c1e' }}>{el.iconName}</span>
+                          <div className="w-full flex-1 min-h-0 flex items-center justify-center overflow-hidden">
+                            <span className="material-symbols-outlined leading-[0]" style={{ 
+                               fontSize: `${Math.min(elW, elH)}px`, 
+                               color: (() => {
+                                 if (theme === 'dark' && (el.x < 0 || el.y < 0 || el.x + (el.width || 120) > AW || el.y + (el.height || 40) > AH)) {
+                                   if (el.color === '#191c1e' || !el.color || el.color === '#191C1E') return '#ffffff';
+                                 }
+                                 return el.color || '#191c1e';
+                               })() 
+                            }}>{el.iconName}</span>
                           </div>
                         ) : el.type === 'IconsIcon' ? (
-                          <div className="w-full h-full p-1 flex items-center justify-center pointer-events-none" dangerouslySetInnerHTML={{ __html: el.svg }} />
+                          <div className="w-full flex-1 min-h-0 p-1 flex items-center justify-center pointer-events-none" style={{
+                            color: (() => {
+                              if (theme === 'dark' && (el.x < 0 || el.y < 0 || el.x + (el.width || 120) > AW || el.y + (el.height || 40) > AH)) {
+                                if (el.color === '#191c1e' || !el.color || el.color === '#191C1E') return '#ffffff';
+                              }
+                              return el.color || '#191c1e';
+                            })()
+                          }} dangerouslySetInnerHTML={{ __html: el.svg }} />
                         ) : el.type === 'table' ? (
-                          <table className="w-full h-full table-fixed" style={{ borderCollapse: 'collapse' }}>
+                          <table className="w-full flex-1 min-h-0 table-fixed" style={{ borderCollapse: 'collapse' }}>
                             <tbody>
                               {(el.text || '').split('\n').map((row, i) => (
                                 <tr key={i} style={{ backgroundColor: el.tableStriped && i > 0 && i % 2 === 0 ? 'rgba(0,0,0,0.04)' : undefined }}>
@@ -1482,7 +1542,12 @@ export default function LabelEditor() {
                                       }}
                                       className={`p-0 px-1 break-words relative transition-colors ${editingCell?.r === i && editingCell?.c === j ? 'p-0 ring-2 ring-blue-500 z-10' : 'hover:bg-blue-50/50'}`}
                                       style={{
-                                        borderColor: el.color || '#94a3b8',
+                                        borderColor: (() => {
+                                          if (theme === 'dark' && (el.x < 0 || el.y < 0 || el.x + (el.width || 120) > AW || el.y + (el.height || 40) > AH)) {
+                                            if (el.color === '#191c1e' || !el.color || el.color === '#191C1E') return '#ffffff';
+                                          }
+                                          return el.color || '#94a3b8';
+                                        })(),
                                         borderWidth: el.borderWidth ? `${el.borderWidth}px` : '1px',
                                         borderStyle: el.borderStyle || 'solid',
                                         verticalAlign: 'top',

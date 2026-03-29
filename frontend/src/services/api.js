@@ -86,4 +86,15 @@ export const api = {
   // Electronic Signatures
   createSignature: (data) =>
     authApi.post('/signatures', data).then(res => res.data),
+
+  // Audit Logs (Admin Only)
+  getAuditLogs: (page = 0, size = 50) =>
+    authApi.get(`/audit-logs?page=${page}&size=${size}`).then(res => res.data),
+
+  getUserAuditLogs: (userId, page = 0, size = 20) =>
+    authApi.get(`/audit-logs/user/${userId}?page=${page}&size=${size}`).then(res => res.data),
+
+  getModuleAuditLogs: (module, page = 0, size = 50) =>
+    authApi.get(`/audit-logs/module/${module}?page=${page}&size=${size}`).then(res => res.data),
 };
+

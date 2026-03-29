@@ -7,11 +7,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -27,7 +29,6 @@ public class GlobalExceptionHandler {
             body.put("message", ex.getMessage());
             return ResponseEntity.status(ex.getStatusCode()).body(body);
         }
-        
         logger.error("UNHANDLED APP ERROR", ex);
         return generateDefaultError(ex);
     }
@@ -56,6 +57,28 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
     }
 
+    // Business rule violations from service layer — return 400 (not 500)
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<Map<String, Object>> handleRuntimeException(RuntimeException ex) {
+        logger.warn("Business rule violation: {}", ex.getMessage());
+        Map<String, Object> body = new HashMap<>();
+        body.put("success", false);
+        body.put("message", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
+
+    // Bean validation errors — return 422 with field-level message
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, Object>> handleValidationErrors(MethodArgumentNotValidException ex) {
+        String message = ex.getBindingResult().getFieldErrors().stream()
+                .map(e -> e.getField() + ": " + e.getDefaultMessage())
+                .collect(Collectors.joining("; "));
+        Map<String, Object> body = new HashMap<>();
+        body.put("success", false);
+        body.put("message", message);
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(body);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleException(Exception ex) {
         logger.error("UNHANDLED ERROR", ex);
@@ -65,8 +88,7 @@ public class GlobalExceptionHandler {
     private ResponseEntity<Map<String, Object>> generateDefaultError(Exception ex) {
         Map<String, Object> body = new HashMap<>();
         body.put("success", false);
-        body.put("message", "Something went wrong: " + ex.getMessage());
-        body.put("type", ex.getClass().getName());
+        body.put("message", "Something went wrong. Please try again.");
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
     }
 }

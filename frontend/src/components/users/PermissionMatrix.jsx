@@ -51,14 +51,14 @@ const PermissionMatrix = ({ permissions, onChange }) => {
   };
 
   return (
-    <div className="permission-matrix-container mt-8 animate-fade-in">
-      <div className="flex items-center gap-4 mb-8">
-        <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-glow-sm">
-          <span className="material-symbols-outlined text-2xl">shield_person</span>
+    <div className="permission-matrix-container mt-4 animate-fade-in">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shadow-glow-sm">
+          <span className="material-symbols-outlined text-xl">shield_person</span>
         </div>
         <div>
-          <h3 className="text-xl font-bold text-on-surface tracking-tight">Access Control Matrix</h3>
-          <p className="text-xs text-on-surface-variant font-medium">Define granular module visibility and operational event permissions.</p>
+          <h3 className="text-lg font-bold text-on-surface tracking-tight">Access Control Matrix</h3>
+          <p className="text-[10px] text-on-surface-variant font-medium">Define modular operational permissions.</p>
         </div>
       </div>
 
@@ -72,7 +72,7 @@ const PermissionMatrix = ({ permissions, onChange }) => {
               className={`glass-card rounded-[24px] p-5 border transition-all duration-300 ${
                 hasPageAccess 
                   ? 'border-primary/20 bg-primary/5 ring-1 ring-primary/5 shadow-glow-sm' 
-                  : 'border-outline-variant/10 opacity-60 grayscale-[0.4]'
+                  : 'border-outline-variant/10 bg-surface-container-lowest'
               }`}
             >
               {/* Card Header: Module Identity + Main Toggle */}
@@ -91,6 +91,7 @@ const PermissionMatrix = ({ permissions, onChange }) => {
 
                 {/* Main Visibility Switch */}
                 <button 
+                  type="button"
                   onClick={() => handleToggle(config.id, 'VIEW')}
                   className={`relative w-11 h-6 rounded-full transition-colors duration-200 outline-none border-2 ${
                     hasPageAccess ? 'bg-primary border-primary' : 'bg-surface-container-highest border-transparent'
@@ -113,6 +114,7 @@ const PermissionMatrix = ({ permissions, onChange }) => {
                     return (
                       <button
                         key={event.id}
+                        type="button"
                         onClick={() => handleToggle(config.id, event.id)}
                         className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-[10px] font-bold transition-all ${
                           active 

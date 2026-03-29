@@ -58,4 +58,7 @@ public class User {
 
     @Column(name = "is_external")
     private Boolean isExternal = false;
+
+    @Column(name = "deleted_at")
+    private OffsetDateTime deletedAt;
 }
