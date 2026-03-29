@@ -34,8 +34,139 @@ export const DEFAULT_SETTINGS = {
 };
 
 // ─── Provider ─────────────────────────────────────────────────────────────────
+const PREDEFINED_TEMPLATES = [
+  {
+    id: 'tpl-tablet-std',
+    name: 'Standard Tablet Label',
+    brand: 'ASPIRIN USP',
+    category: 'Tablets',
+    size: '80x120mm',
+    imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBSiaeAayZfueBnsduY5QBuSpvvp1o52sXv9Gms4s8DDXzCg35p1PVI7fGnJBIe6o28S2BMbE0rSBc_dYfthr-9oQFj06PXseU9EmCO9cLMQSwx5kLmfxGNZqwwX8IE1n2samFtoMqoV4I2fsJCBOaKVNEqrjscyyG0Nf81gzIdfc8bxIzsuGBT-olgLyG0zkH_cO3MngPSb93gAsnzm78aZXRasjIPOhLxJkLmCWM4J_f7MDZ0T1v07GKtOZ_98PFPtnoLol5lP6DJ',
+    elementsData: [
+      // 🔝 Top Section
+      { id: "t1-rx", type: "text", text: "Rx", x: 20, y: 20, fontSize: 18, fontWeight: "bold", color: "#000000", zIndex: 10 },
+      { id: "t1-brand", type: "text", subtype: "brand", text: "ASPIRIN USP", x: 60, y: 20, fontSize: 22, fontWeight: "bold", color: "#cc0000", zIndex: 11 },
+      
+      // 🧾 Middle Section
+      { id: "t1-strength", type: "text", text: "Strength: 500 mg tablets", x: 60, y: 50, fontSize: 13, fontWeight: "bold", color: "#111111", zIndex: 12 },
+      { id: "t1-category", type: "text", text: "Category: Analgesic / Antipyretic", x: 60, y: 70, fontSize: 10, color: "#555555", zIndex: 13 },
+      
+      // 📄 Details Section
+      { id: "t1-active", type: "text", text: "Active Ingredient: Aspirin USP 500mg", x: 20, y: 105, fontSize: 9, color: "#333333", zIndex: 14 },
+      { id: "t1-dosage", type: "text", text: "Dosage: Adults (12+) 1 tablet every 4-6h", x: 20, y: 125, fontSize: 9, color: "#000000", fontWeight: "bold", zIndex: 15 },
+      
+      // ⚠️ Warning Section
+      { id: "t1-warning", type: "warnings", text: "KEEP OUT OF REACH OF CHILDREN", x: 20, y: 160, fontSize: 11, color: "#ff0000", fontWeight: "bold", zIndex: 16 },
+      { id: "t1-storage", type: "text", text: "Store below 25°C in a dry place.", x: 20, y: 185, fontSize: 9, color: "#444444", zIndex: 17 },
+      
+      // 📦 Bottom Section
+      { id: "t1-barcode", type: "barcode", text: "7192837465", x: 25, y: 215, width: 250, height: 50, zIndex: 18 },
+      
+      // 📊 Bottom Left
+      { id: "t1-batch", type: "text", text: "Batch: 2024-X91", x: 20, y: 290, fontSize: 9, color: "#333333", zIndex: 20 },
+      { id: "t1-exp", type: "text", text: "Exp: 02/2027", x: 20, y: 310, fontSize: 10, color: "#333333", fontWeight: "bold", zIndex: 21 },
+      { id: "t1-mfg", type: "text", text: "Mfd by: PharmaCore Labs, USA", x: 20, y: 330, fontSize: 9, fontWeight: "bold", color: "#002244", zIndex: 22 },
+      
+      // 🔳 Bottom Right
+      { id: "t1-qr", type: "qrcode", text: "ASP-REF-001928", x: 210, y: 280, width: 75, height: 75, zIndex: 23 }
+    ]
+  },
+  {
+    id: 'tpl-syrup-std',
+    name: 'Standard Syrup Label',
+    brand: 'TUSSI-PRO PLUS',
+    category: 'Syrups',
+    size: '80x120mm',
+    imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB7niTIAhjNqf3IBSGE2I66N6Ji5S7LEyTbd9BSCJD9EI2yimwYPZFlWKP4JEA8JvNqTUoFyGAvP0wZ_-wT3DHsox-iiLYYsKXKmtkOVFGZQEOFXGsxL53GBNeruas6-RcDlRPo96x366pBpnIRjzw40JjI6-l-GcZGqZ0wS9YXY3YqWN-Kja_S6SZvCyrsiYGQ_Tl0g2apTZT-47xXLwoj_U-Bg6xf19Z0tHgGPVllfP867i-ltTw9bWiUUvyqJGTyu4MlQt4_MBHC',
+    elementsData: [
+      { id: "t2-rx", type: "text", text: "Rx", x: 20, y: 20, fontSize: 18, fontWeight: "bold", zIndex: 10 },
+      { id: "t2-brand", type: "text", subtype: "brand", text: "TUSSI-PRO PLUS", x: 55, y: 20, fontSize: 20, fontWeight: "bold", color: "#0055aa", zIndex: 11 },
+      { id: "t2-strength", type: "text", text: "Strength: 100mL Content", x: 55, y: 45, fontSize: 12, fontWeight: "bold", color: "#000000", zIndex: 12 },
+      { id: "t2-category", type: "text", text: "Category: Cough & Cold Suspension", x: 55, y: 65, fontSize: 10, color: "#555555", zIndex: 13 },
+      { id: "t2-active", type: "text", text: "Active: 5mg per 10ml liquid base", x: 20, y: 100, fontSize: 9, color: "#444444", zIndex: 14 },
+      { id: "t2-dosage", type: "text", text: "Dosage: Adults 10ml thrice daily.", x: 20, y: 120, fontSize: 10, color: "#000000", fontWeight: "bold", zIndex: 15 },
+      { id: "t2-warning", type: "warnings", text: "SHAKE WELL BEFORE USE", x: 20, y: 155, fontSize: 13, color: "#ff3300", fontWeight: "bold", zIndex: 16 },
+      { id: "t2-storage", type: "text", text: "Store in a cool dry place below 30°C.", x: 20, y: 180, fontSize: 9, color: "#555555", zIndex: 17 },
+      { id: "t2-barcode", type: "barcode", text: "TP-992-1", x: 25, y: 215, width: 250, height: 50, zIndex: 18 },
+      { id: "t2-batch", type: "text", text: "Lot No: TP-101X", x: 20, y: 290, fontSize: 9, color: "#333333", zIndex: 19 },
+      { id: "t2-exp", type: "text", text: "Exp: 11/2026", x: 20, y: 310, fontSize: 10, color: "#333333", fontWeight: "bold", zIndex: 20 },
+      { id: "t2-mfg", type: "text", text: "Mfd by: Tussi Labs, Chicago", x: 20, y: 330, fontSize: 9, fontWeight: "bold", color: "#002244", zIndex: 21 },
+      { id: "t2-qr", type: "qrcode", text: "https://t-pro-info.com", x: 210, y: 280, width: 75, height: 75, zIndex: 22 }
+    ]
+  },
+  {
+    id: 'tpl-injection-std',
+    name: 'Standard Injection Label',
+    brand: 'HUMAN INSULIN',
+    category: 'Injections',
+    size: '80x120mm',
+    imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCeDBuiu1BpLkVlOariuZKZGmdjIydU_BaagNhWmo9DmkBkAN3T0E8Hdh2RXhhiGWMRS_tDYjAvQWZ8Ifty0YhOaClraQKl59f5CSeKbl2GjMY35WT6gI1OWseEYymne0pmCwGGGWfF6LXzc20pcWjTVdDjt8fe4dAttzmQKhvPM_HpwWN4qEqIynwnILoQiOSXcAUnLOqkTeKbfKAgqgnHfALtmh_r6_mWsjY1gto8DKvTxDUjpJ8Q0M8zTvn-NYWAyHvaMcXLjgIT',
+    elementsData: [
+      { id: "t3-rx", type: "text", text: "Rx Only", x: 20, y: 20, fontSize: 14, fontWeight: "bold", color: "#ff0000", zIndex: 10 },
+      { id: "t3-brand", type: "text", subtype: "brand", text: "HUMAN INSULIN", x: 85, y: 20, fontSize: 18, fontWeight: "bold", color: "#008000", zIndex: 11 },
+      { id: "t3-strength", type: "text", text: "Strength: 100 Units per mL (U-100)", x: 85, y: 45, fontSize: 13, fontWeight: "bold", zIndex: 12 },
+      { id: "t3-category", type: "text", text: "Vial: 10 mL Multi-dose vial", x: 85, y: 65, fontSize: 10, color: "#555555", zIndex: 13 },
+      { id: "t3-active", type: "text", text: "Active: Intermediate-acting Insulin", x: 20, y: 100, fontSize: 9, color: "#444444", zIndex: 14 },
+      { id: "t3-dosage", type: "text", text: "Route: For Subcutaneous Use Only", x: 20, y: 120, fontSize: 10, color: "#cc0000", fontWeight: "bold", zIndex: 15 },
+      { id: "t3-warning", type: "warnings", text: "REFRIGERATE: 2°C TO 8°C", x: 20, y: 155, fontSize: 13, fontWeight: "bold", color: "#003366", zIndex: 16 },
+      { id: "t3-storage", type: "text", text: "Do not freeze. Protect from direct heat.", x: 20, y: 180, fontSize: 9, color: "#444444", zIndex: 17 },
+      { id: "t3-barcode", type: "barcode", text: "HI100ML99", x: 25, y: 215, width: 250, height: 50, zIndex: 18 },
+      { id: "t3-batch", type: "text", text: "Lot No: INS-Q9", x: 20, y: 290, fontSize: 9, color: "#333333", zIndex: 19 },
+      { id: "t3-exp", type: "text", text: "Exp: 08/2025", x: 20, y: 310, fontSize: 10, color: "#333333", fontWeight: "bold", zIndex: 20 },
+      { id: "t3-mfg", type: "text", text: "Mfd by: Biogen Pharma Co.", x: 20, y: 330, fontSize: 9, fontWeight: "bold", zIndex: 21 },
+      { id: "t3-qr", type: "qrcode", text: "HI-99812-7B", x: 210, y: 280, width: 75, height: 75, zIndex: 22 }
+    ]
+  },
+  {
+    id: 'tpl-ointment-std',
+    name: 'Standard Ointment Label',
+    brand: 'DERMACARE HC',
+    category: 'Ointments',
+    size: '80x120mm',
+    imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCGjtinBEWI-g2GwomdCjmEYpnRA3ym4GS_NZHl1bq9wT6spPZhVgpjMHAV91jduHsQDJszDvAoMyeSVYr5zYbzpoFprKtX9yls5xrdWVJD55wvgjS84ojO3oan9anGJSAG2PtKQMSbh16o04vaQduwP-TfRpHRB7lA85jrY4pELGQnmCJKLWnauFzVTXC_5KdOxodthtwCQh-Yz4qVmo6sYN9S9GCzrTRrUqemI5SY0vbGJu8GCfqhM9oB_QWn6yIstWYTfsccC6A7',
+    elementsData: [
+      { id: "t4-rx", type: "text", text: "Rx", x: 20, y: 20, fontSize: 18, fontWeight: "bold", zIndex: 10 },
+      { id: "t4-brand", type: "text", subtype: "brand", text: "DERMACARE HC", x: 55, y: 20, fontSize: 20, fontWeight: "bold", color: "#800080", zIndex: 11 },
+      { id: "t4-strength", type: "text", text: "Strength: 10mg HA per 1g (1%)", x: 55, y: 45, fontSize: 12, fontWeight: "bold", color: "#000000", zIndex: 12 },
+      { id: "t4-category", type: "text", text: "Net Weight: 30g Tube", x: 55, y: 65, fontSize: 10, color: "#555555", zIndex: 13 },
+      { id: "t4-active", type: "text", text: "Active: Hydrocortisone USP", x: 20, y: 100, fontSize: 9, color: "#444444", zIndex: 14 },
+      { id: "t4-dosage", type: "text", text: "Use: Apply to affected area thin layer", x: 20, y: 120, fontSize: 10, color: "#000000", fontWeight: "bold", zIndex: 15 },
+      { id: "t4-warning", type: "warnings", text: "FOR EXTERNAL USE ONLY", x: 20, y: 155, fontSize: 13, color: "#ff0000", fontWeight: "bold", zIndex: 16 },
+      { id: "t4-storage", type: "text", text: "Store below 30°C. Keep from reach.", x: 20, y: 180, fontSize: 9, color: "#555555", zIndex: 17 },
+      { id: "t4-barcode", type: "barcode", text: "7766554433", x: 25, y: 215, width: 250, height: 50, zIndex: 18 },
+      { id: "t4-batch", type: "text", text: "Lot: HC-O012", x: 20, y: 290, fontSize: 9, color: "#333333", zIndex: 19 },
+      { id: "t4-exp", type: "text", text: "Exp: 12/2026", x: 20, y: 310, fontSize: 10, color: "#333333", fontWeight: "bold", zIndex: 20 },
+      { id: "t4-mfg", type: "text", text: "Mfd by: SkinCare Labs, Berlin", x: 20, y: 330, fontSize: 9, fontWeight: "bold", color: "#002244", zIndex: 21 },
+      { id: "t4-qr", type: "qrcode", text: "HC-OINT-30", x: 210, y: 280, width: 75, height: 75, zIndex: 22 }
+    ]
+  },
+  {
+    id: 'tpl-generic-std',
+    name: 'Standard Generic Label',
+    brand: 'VITA-C FORTE',
+    category: 'Generic Labels',
+    size: '80x120mm',
+    imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAxHcv-jzXgoRhjFZTF5oBUqLwbXU0mZq0SBkb6LlxiMHwVlS3fZQbaw3B88pSXukdltThAANfKB2AFOs1B8Kb3-qmYIBIBLgMSDRXczHJ7PmJBP4S5ZUWmmg7OI8T6aaSBgNT92E-WbUe68HELI1Zh1p7pUW9McaE3JbYZ3Nhl2jX0Nz5Lbn0QX5Ltch13GcER0OOK2nW9yhppB60-ORoTj2QOrZ0gPa5--Sw-THgvIAeb2GaKWSActPVFqeo0AvPa4djax0H-0VDW',
+    elementsData: [
+      { id: "t5-rx", type: "text", text: "OTC", x: 20, y: 20, fontSize: 18, fontWeight: "bold", zIndex: 10 },
+      { id: "t5-brand", type: "text", subtype: "brand", text: "VITA-C FORTE", x: 65, y: 20, fontSize: 20, fontWeight: "bold", color: "#ff6600", zIndex: 11 },
+      { id: "t5-strength", type: "text", text: "Strength: 1000 mg tablet", x: 65, y: 45, fontSize: 12, fontWeight: "bold", color: "#000000", zIndex: 12 },
+      { id: "t5-category", type: "text", text: "Source: High potency Ascorbic Acid", x: 65, y: 65, fontSize: 10, color: "#555555", zIndex: 13 },
+      { id: "t5-active", type: "text", text: "Each tablet contains: 1000mg Vit C", x: 20, y: 100, fontSize: 9, color: "#444444", zIndex: 14 },
+      { id: "t5-dosage", type: "text", text: "Take 1 tablet daily with water.", x: 20, y: 120, fontSize: 10, color: "#000000", fontWeight: "bold", zIndex: 15 },
+      { id: "t5-warning", type: "warnings", text: "Do not exceed stated daily dose.", x: 20, y: 155, fontSize: 12, color: "#880000", fontWeight: "bold", zIndex: 16 },
+      { id: "t5-storage", type: "text", text: "FSSAI LIC: 100293884766", x: 20, y: 180, fontSize: 9, color: "#444444", zIndex: 17 },
+      { id: "t5-barcode", type: "barcode", text: "VITA-C-1000", x: 25, y: 215, width: 250, height: 50, zIndex: 18 },
+      { id: "t5-batch", type: "text", text: "Batch: VC-2024", x: 20, y: 290, fontSize: 9, color: "#333333", zIndex: 19 },
+      { id: "t5-exp", type: "text", text: "Exp: 09/2026", x: 20, y: 310, fontSize: 10, color: "#333333", fontWeight: "bold", zIndex: 20 },
+      { id: "t5-mfg", type: "text", text: "Mfd by: VitaNutri BioLabs", x: 20, y: 330, fontSize: 9, fontWeight: "bold", color: "#002244", zIndex: 21 },
+      { id: "t5-qr", type: "qrcode", text: "VITA-INFO-QR", x: 210, y: 280, width: 75, height: 75, zIndex: 22 }
+    ]
+  }
+];
+
 export const LabelProvider = ({ children }) => {
-  const [templates, setTemplates]      = useState([]);
+  const [templates, setTemplates]      = useState(PREDEFINED_TEMPLATES);
   const [activeTemplate, setActiveTemplate] = useState(null);
   const [meta,     setMeta]    = useState(DEFAULT_META);
   const [elements, setElements] = useState([]);
@@ -72,7 +203,15 @@ export const LabelProvider = ({ children }) => {
           // Not authenticated — load public templates but skip user-specific data
           try {
             const systemTemplates = await api.getTemplates();
-            setTemplates(systemTemplates);
+            if (systemTemplates && systemTemplates.length > 0) {
+              const combined = [...PREDEFINED_TEMPLATES];
+              systemTemplates.forEach(st => {
+                if (!combined.some(p => p.id === st.id || p.name === st.name)) {
+                  combined.push(st);
+                }
+              });
+              setTemplates(combined);
+            }
           } catch (tempErr) {
             console.error('Failed to fetch templates', tempErr);
           }
@@ -96,7 +235,15 @@ export const LabelProvider = ({ children }) => {
         // 2. Fetch Templates (System)
         try {
           const systemTemplates = await api.getTemplates();
-          setTemplates(systemTemplates);
+          if (systemTemplates && systemTemplates.length > 0) {
+            const combined = [...PREDEFINED_TEMPLATES];
+            systemTemplates.forEach(st => {
+              if (!combined.some(p => p.id === st.id || p.name === st.name)) {
+                combined.push(st);
+              }
+            });
+            setTemplates(combined);
+          }
         } catch (tempErr) {
           console.error('Failed to fetch templates', tempErr);
           showToast('Failed to load templates', 'error');
@@ -405,25 +552,61 @@ export const LabelProvider = ({ children }) => {
 
   // ── Template Loader ──
   const loadTemplate = (template) => {
-    const enriched = (template.elementsData || []).map((el, i) => ({ ...el, zIndex: el.zIndex || (i + 10) }));
-
+    console.log('[LabelContext] Loading Template:', template.name, template);
+    
+    // Normalize elements data
+    const rawElements = template.elementsData || template.elements_data || [];
+    
     const MM_TO_PX = 3.7795275591;
-    let w = 600, h = 400;
+    let targetW = 600, targetH = 400;
+    let designW = 600, designH = 400; // Default design basis if not specified
 
-    if (template.labelSize) {
-        w = template.labelSize.w;
-        h = template.labelSize.h;
-    } else if (template.size && template.size.toLowerCase().includes('x')) {
+    // Determine Design Size (what it was built for in DB)
+    if (template.size && template.size.toLowerCase().includes('x')) {
       const parts = template.size.toLowerCase().split('x');
       const val1 = parseFloat(parts[0]);
       const val2 = parseFloat(parts[1]);
       if (!isNaN(val1) && !isNaN(val2)) {
-        w = Math.round(val1 * MM_TO_PX);
-        h = Math.round(val2 * MM_TO_PX);
+        designW = Math.round(val1 * MM_TO_PX);
+        designH = Math.round(val2 * MM_TO_PX);
       }
     }
 
-    setMeta({ fileId: null, fileName: null, labelSize: { w, h }, bgColor: template.bgColor || '#FFFFFF' });
+    // Determine Target Size (what we will set the canvas to)
+    if (template.labelSize) {
+      targetW = template.labelSize.w;
+      targetH = template.labelSize.h;
+    } else {
+      targetW = designW;
+      targetH = designH;
+    }
+
+    // Calculate scale factors to ensure everything fits the new proportions
+    const scaleX = targetW / designW;
+    const scaleY = targetH / designH;
+    const minScale = Math.min(scaleX, scaleY); // Used for font sizes/dimensions to prevent stretching
+
+    const enriched = rawElements.map((el, i) => {
+      return {
+        ...el,
+        id: el.id || uuidv4(),
+        x: Math.round((el.x || 0) * scaleX),
+        y: Math.round((el.y || 0) * scaleY),
+        width: el.width ? Math.round(el.width * minScale) : el.width,
+        height: el.height ? Math.round(el.height * minScale) : el.height,
+        fontSize: el.fontSize ? Math.round(el.fontSize * minScale) : el.fontSize,
+        zIndex: el.zIndex || (i + 10)
+      };
+    });
+
+    console.log(`[LabelContext] Auto-scaling complete (Ratio ${scaleX.toFixed(2)}x${scaleY.toFixed(2)}). Elements:`, enriched.length);
+
+    setMeta({ 
+      fileId: null, 
+      fileName: null, 
+      labelSize: { w: targetW, h: targetH }, 
+      bgColor: template.bgColor || '#FFFFFF' 
+    });
     setActiveTemplate(template);
     setElements(enriched);
     setHistory([enriched]);
