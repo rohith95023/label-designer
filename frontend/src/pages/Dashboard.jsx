@@ -113,7 +113,7 @@ export default function Dashboard() {
   };
 
   const statCards = STAT_CARDS(allFiles.length, totalExports, lastEdited, navigate,
-    () => allFiles[0] && handleOpenFile(allFiles[0].fileId));
+    () => allFiles[0] && handleOpenFile(allFiles[0].id));
   const quickActions = QUICK_ACTIONS(handleNewFile, navigate, handleNoopUpload);
 
   return (

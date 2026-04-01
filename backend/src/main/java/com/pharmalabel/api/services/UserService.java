@@ -8,8 +8,6 @@ public interface UserService {
     User getCurrentUser();
     User getUserById(UUID id);
     User getUserByUsername(String username);
-    String initiateClaim(String guestId);
-    void executeClaim(String claimToken);
 
     // User Management (Admin Only)
     List<com.pharmalabel.api.dtos.user.UserDto> getAllUsers();

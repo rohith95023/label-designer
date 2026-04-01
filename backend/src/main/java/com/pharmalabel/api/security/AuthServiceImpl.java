@@ -64,11 +64,11 @@ public class AuthServiceImpl implements AuthService {
         userRepository.save(user);
 
         // Audit: Log successful login
-        auditLogService.logEvent(user, "LOGIN", "AUTH", "USER_LOGIN", null,
+        auditLogService.logEvent(user, "LOGIN", "AUTH", user.getId(), null,
                 "User '" + user.getUsername() + "' logged in successfully");
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(user.getUsername());
-        String accessToken = jwtService.generateToken(userDetails, user.getTokenVersion());
+        String accessToken = jwtService.generateToken(userDetails);
         
         // Generate Refresh Token with Family ID
         String refreshToken = UUID.randomUUID().toString();
@@ -101,7 +101,7 @@ public class AuthServiceImpl implements AuthService {
         userRepository.save(user);
 
         // Audit: Log failed login attempt
-        auditLogService.logEvent(user, "FAILED_LOGIN", "AUTH", "LOGIN_FAILED", null,
+        auditLogService.logEvent(user, "FAILED_LOGIN", "AUTH", user.getId(), null,
                 "Failed login attempt for '" + user.getUsername() + "' (attempt " + user.getFailedLoginAttempts() + ")"
                 + (user.getFailedLoginAttempts() >= 5 ? " - Account locked" : ""));
     }
@@ -161,7 +161,7 @@ public class AuthServiceImpl implements AuthService {
 
         User user = matchedToken.getUser();
         UserDetails userDetails = userDetailsService.loadUserByUsername(user.getUsername());
-        String newAccessToken = jwtService.generateToken(userDetails, user.getTokenVersion());
+        String newAccessToken = jwtService.generateToken(userDetails);
         
         String newRefreshToken = UUID.randomUUID().toString();
         saveRefreshToken(user, newRefreshToken, matchedToken.getFamilyId());
@@ -189,8 +189,6 @@ public class AuthServiceImpl implements AuthService {
             List<UserAuthToken> tokens = authTokenRepository.findByUser(user);
             tokens.forEach(t -> t.setRevoked(true));
             authTokenRepository.saveAll(tokens);
-            // Also bump token version to invalidate active access tokens
-            user.setTokenVersion(user.getTokenVersion() + 1);
             userRepository.save(user);
         }
     }
@@ -215,7 +213,7 @@ public class AuthServiceImpl implements AuthService {
 
         // Audit: Log logout event
         if (currentUser != null) {
-            auditLogService.logEvent(currentUser, "LOGOUT", "AUTH", "USER_LOGOUT", null,
+            auditLogService.logEvent(currentUser, "LOGOUT", "AUTH", currentUser.getId(), null,
                     "User '" + currentUser.getUsername() + "' logged out");
         }
         

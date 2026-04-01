@@ -32,12 +32,10 @@ public class SignatureService {
 
         ElectronicSignature esig = ElectronicSignature.builder()
                 .user(currentUser)
-                .targetId(request.getTargetId())
-                .versionId(request.getVersionId())
-                .meaning(request.getMeaning())
-                .reason(request.getReason())
+                .entityType(request.getEntityType())
+                .entityId(request.getEntityId())
+                .meaning(request.getMeaning().name())
                 .signedAt(OffsetDateTime.now())
-                .ipAddress(ipAddress)
                 .build();
 
         ElectronicSignature savedEsig = repository.save(esig);
@@ -47,9 +45,9 @@ public class SignatureService {
                 currentUser,
                 "SIGN",
                 "ELECTRONIC_SIGNATURE",
-                request.getMeaning().name(),
+                savedEsig.getId(),
                 null,
-                savedEsig.getId().toString()
+                savedEsig.getMeaning()
         );
 
         return savedEsig;

@@ -200,20 +200,14 @@ export const LabelProvider = ({ children }) => {
         setLoading(true);
 
         if (!user) {
-          // Not authenticated — load public templates but skip user-specific data
+          // Not authenticated — load predefined labels
           try {
-            const systemTemplates = await api.getTemplates();
-            if (systemTemplates && systemTemplates.length > 0) {
-              const combined = [...PREDEFINED_TEMPLATES];
-              systemTemplates.forEach(st => {
-                if (!combined.some(p => p.id === st.id || p.name === st.name)) {
-                  combined.push(st);
-                }
-              });
-              setTemplates(combined);
+            const systemLabels = await api.getLabels('PREDEFINED');
+            if (systemLabels && systemLabels.length > 0) {
+              setTemplates(systemLabels);
             }
           } catch (tempErr) {
-            console.error('Failed to fetch templates', tempErr);
+            console.error('Failed to fetch labels', tempErr);
           }
           setHydrated(true);
           return;
@@ -232,42 +226,36 @@ export const LabelProvider = ({ children }) => {
           console.error('Failed to fetch dashboard data', dashErr);
         }
 
-        // 2. Fetch Templates (System)
+        // 2. Fetch Labels
         try {
-          const systemTemplates = await api.getTemplates();
-          if (systemTemplates && systemTemplates.length > 0) {
-            const combined = [...PREDEFINED_TEMPLATES];
-            systemTemplates.forEach(st => {
-              if (!combined.some(p => p.id === st.id || p.name === st.name)) {
-                combined.push(st);
-              }
-            });
-            setTemplates(combined);
-          }
+          const systemLabels = await api.getLabels('PREDEFINED');
+          setTemplates(systemLabels);
         } catch (tempErr) {
-          console.error('Failed to fetch templates', tempErr);
-          showToast('Failed to load templates', 'error');
+          console.error('Failed to fetch labels', tempErr);
+          showToast('Failed to load libraries', 'error');
         }
 
-        // 3. Fetch User Files
+        // 3. Fetch User Labels
         try {
-          const files = await api.getUserTemplates(effectiveId);
-          setUserFiles(files);
+          const labels = await api.getLabels('ACTIVE');
+          setUserFiles(labels);
 
-          // 4. Last session restore (optional)
-          if (files.length > 0) {
-            const last = files.sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0))[0];
+          // 4. Last session restore
+          if (labels.length > 0) {
+            const last = labels.sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0))[0];
+            const latestVersion = await api.getLatestLabelVersion(last.id);
+            
             setMeta(prev => ({ 
               ...prev,
               fileId: last.id, 
               fileName: last.name, 
-              labelSize: last.labelSize || { w: 600, h: 400 },
-              bgColor: last.bgColor || '#FFFFFF'
+              labelSize: latestVersion.designJson?.labelSize || { w: 600, h: 400 },
+              bgColor: latestVersion.designJson?.bgColor || '#FFFFFF'
             }));
-            setElements(last.elementsData || []);
+            setElements(latestVersion.designJson?.elementsData || []);
           }
         } catch (fileErr) {
-          console.error('Failed to fetch user files', fileErr);
+          console.error('Failed to fetch user labels', fileErr);
         }
 
         setHydrated(true);
@@ -313,13 +301,11 @@ export const LabelProvider = ({ children }) => {
     debounceRef.current = setTimeout(async () => {
       try {
         setSavedStatus('saving');
-        const updated = await api.updateUserTemplate(meta.fileId, {
-          name: meta.fileName,
+        await api.saveLabelVersion(meta.fileId, {
           elementsData: elements,
           labelSize: meta.labelSize,
           bgColor: meta.bgColor
         });
-        setUserFiles(prev => prev.map(f => f.id === updated.id ? updated : f));
         setSavedStatus('saved');
       } catch (err) {
         console.error('Auto-save failed', err);
@@ -371,21 +357,24 @@ export const LabelProvider = ({ children }) => {
   const setFileName = async (name) => {
     const trimmed = name.trim();
     if (!meta.fileId) {
-      // Create new template entry in backend
       try {
         setSavedStatus('saving');
-        const newTemplate = await api.createUserTemplate(guestId, {
+        const newLabel = await api.createLabel({
           name: trimmed,
-          elementsData: elements,
-          labelSize: meta.labelSize,
-          bgColor: meta.bgColor
+          labelStockId: '00000000-0000-0000-0000-000000000001', // Default stock for now
+          status: 'ACTIVE',
+          designJson: {
+            elementsData: elements,
+            labelSize: meta.labelSize,
+            bgColor: meta.bgColor
+          }
         });
-        setMeta(m => ({ ...m, fileName: trimmed, fileId: newTemplate.id }));
-        setUserFiles(prev => [...prev, newTemplate]);
+        setMeta(m => ({ ...m, fileName: trimmed, fileId: newLabel.id }));
+        setUserFiles(prev => [...prev, newLabel]);
         setSavedStatus('saved');
-        addActivityLog(activeTemplate ? 'Started from template' : 'Created new label', newTemplate.id, trimmed);
+        addActivityLog(activeTemplate ? 'Started from template' : 'Created new label', newLabel.id, trimmed);
       } catch (err) {
-        showToast('Failed to initialize file in backend', 'error');
+        showToast('Failed to initialize label in backend', 'error');
       }
     } else {
       setMeta(m => ({ ...m, fileName: trimmed }));
@@ -401,15 +390,13 @@ export const LabelProvider = ({ children }) => {
     }
     try {
         setSavedStatus('saving');
-        const updated = await api.updateUserTemplate(meta.fileId, {
-            name: meta.fileName,
+        await api.saveLabelVersion(meta.fileId, {
             elementsData: elements,
             labelSize: meta.labelSize,
             bgColor: meta.bgColor
         });
-        setUserFiles(prev => prev.map(f => f.id === updated.id ? updated : f));
         setSavedStatus('saved');
-        showToast('File saved ✓', 'success');
+        showToast('New version saved ✓', 'success');
     } catch (err) {
         console.error('Manual save failed', err);
         showToast('Manual save failed', 'error');
@@ -419,22 +406,26 @@ export const LabelProvider = ({ children }) => {
   const saveFileAs = async (newName) => {
     try {
       setSavedStatus('saving');
-      const newTemplate = await api.createUserTemplate(guestId, {
+      const newLabel = await api.createLabel({
         name: newName,
-        elementsData: elements,
-        labelSize: meta.labelSize,
-        bgColor: meta.bgColor
+        labelStockId: '00000000-0000-0000-0000-000000000001',
+        status: 'ACTIVE',
+        designJson: {
+          elementsData: elements,
+          labelSize: meta.labelSize,
+          bgColor: meta.bgColor
+        }
       });
       setMeta({ 
-        fileId: newTemplate.id, 
+        fileId: newLabel.id, 
         fileName: newName, 
         labelSize: meta.labelSize,
         bgColor: meta.bgColor 
       });
-      setUserFiles(prev => [...prev, newTemplate]);
+      setUserFiles(prev => [...prev, newLabel]);
       setSavedStatus('saved');
-      showToast('File copy saved ✓', 'success');
-      addActivityLog('Saved as new file', newTemplate.id, newName);
+      showToast('Label copy saved ✓', 'success');
+      addActivityLog('Saved as new label', newLabel.id, newName);
     } catch (err) {
       console.error('Save as failed', err);
       showToast('Save as failed', 'error');
@@ -444,21 +435,25 @@ export const LabelProvider = ({ children }) => {
   const openFileById = async (id) => {
     try {
       setLoading(true);
-      const data = await api.getUserTemplate(id);
+      const label = await api.getLabel(id);
+      const version = await api.getLatestLabelVersion(id);
+      
+      const design = version.designJson || {};
+      
       setMeta({ 
-        fileId: data.id, 
-        fileName: data.name, 
-        labelSize: data.labelSize || { w: 600, h: 400 },
-        bgColor: data.bgColor || '#FFFFFF'
+        fileId: label.id, 
+        fileName: label.name, 
+        labelSize: design.labelSize || { w: 600, h: 400 },
+        bgColor: design.bgColor || '#FFFFFF'
       });
-      setElements(data.elementsData || []);
-      setHistory([data.elementsData || []]);
+      setElements(design.elementsData || []);
+      setHistory([design.elementsData || []]);
       setHistoryIndex(0);
       setSelectedElementId(null);
       setSavedStatus('saved');
-      addActivityLog('Opened file', id, data.name);
+      addActivityLog('Opened label', id, label.name);
     } catch (err) {
-      showToast('Could not open file from backend', 'error');
+      showToast('Could not open label from backend', 'error');
     } finally {
       setLoading(false);
     }
@@ -466,16 +461,16 @@ export const LabelProvider = ({ children }) => {
 
   const deleteUserTemplate = async (id) => {
     try {
-      const success = await api.deleteUserTemplate(id);
+      const success = await api.deleteLabel(id);
       if (success) {
         setUserFiles(prev => prev.filter(f => f.id !== id));
-        showToast('Template deleted permanently', 'success');
-        addActivityLog('Deleted template', id, 'Removed from repository');
+        showToast('Label deleted permanently', 'success');
+        addActivityLog('Deleted label', id, 'Removed from repository');
         return true;
       }
       return false;
     } catch (err) {
-      showToast('Failed to delete template', 'error');
+      showToast('Failed to delete label', 'error');
       return false;
     }
   };
@@ -520,15 +515,7 @@ export const LabelProvider = ({ children }) => {
 
   const getTemplateHistory = async (id) => {
     try {
-      // First try to fetch from user templates history
-      let history = [];
-      try {
-        history = await api.getUserHistory(id);
-      } catch (err) {
-        // Fallback to system template history if user history fails
-        history = await api.getHistory(id);
-      }
-      return history;
+      return await api.getLabelHistory(id);
     } catch (err) {
       showToast('Failed to fetch version history', 'error');
       return [];
@@ -537,15 +524,16 @@ export const LabelProvider = ({ children }) => {
 
   const getTemplateById = async (id) => {
     try {
-      // First check user templates
-      try {
-        return await api.getUserTemplate(id);
-      } catch (err) {
-        // Fallback to system templates
-        return await api.getTemplate(id);
-      }
+      const label = await api.getLabel(id);
+      const version = await api.getLatestLabelVersion(id);
+      return { 
+        ...label, 
+        elementsData: version.designJson?.elementsData,
+        labelSize: version.designJson?.labelSize,
+        bgColor: version.designJson?.bgColor
+      };
     } catch (err) {
-      showToast('Failed to fetch template details', 'error');
+      showToast('Failed to fetch label details', 'error');
       return null;
     }
   };

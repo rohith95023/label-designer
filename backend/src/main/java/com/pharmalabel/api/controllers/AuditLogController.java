@@ -26,7 +26,7 @@ public class AuditLogController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
         return ResponseEntity.ok(
-            auditLogRepository.findAllByOrderByTimestampDesc(PageRequest.of(page, size))
+            auditLogRepository.findAllByOrderByCreatedAtDesc(PageRequest.of(page, size))
         );
     }
 
@@ -36,7 +36,7 @@ public class AuditLogController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
         return ResponseEntity.ok(
-            auditLogRepository.findByModuleOrderByTimestampDesc(module, PageRequest.of(page, size))
+            auditLogRepository.findByModuleOrderByCreatedAtDesc(module, PageRequest.of(page, size))
         );
     }
 
@@ -46,7 +46,7 @@ public class AuditLogController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
         return ResponseEntity.ok(
-            auditLogRepository.findByUserIdOrderByTimestampDesc(userId, PageRequest.of(page, size))
+            auditLogRepository.findByUserIdOrderByCreatedAtDesc(userId, PageRequest.of(page, size))
         );
     }
 
@@ -57,7 +57,7 @@ public class AuditLogController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
         return ResponseEntity.ok(
-            auditLogRepository.findByTimestampBetweenOrderByTimestampDesc(start, end, PageRequest.of(page, size))
+            auditLogRepository.findByCreatedAtBetweenOrderByCreatedAtDesc(start, end, PageRequest.of(page, size))
         );
     }
 }

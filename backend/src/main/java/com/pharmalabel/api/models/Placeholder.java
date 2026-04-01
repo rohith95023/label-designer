@@ -8,28 +8,27 @@ import lombok.NoArgsConstructor;
 import java.util.UUID;
 
 @Entity
-@Table(name = "permissions")
+@Table(name = "placeholders")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Permission {
+public class Placeholder {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "role_id")
-    private Role role;
+    @Column(nullable = false)
+    private String name;
 
     @Column(nullable = false)
-    private String module;
+    private String type; // DATA, FREE_TEXT, RUNTIME, VISIT
 
-    @Column(nullable = false)
-    private String event;
+    @Column(name = "mapping_key")
+    private String mappingKey;
 
-    @Builder.Default
-    @Column(nullable = false)
-    private Boolean allowed = true;
+    @Column(name = "format_rules", columnDefinition = "jsonb")
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
+    private Object formatRules;
 }

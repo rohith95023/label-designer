@@ -34,9 +34,6 @@ public class SystemConfigService {
         });
         
         config.setConfigValue(value);
-        if (description != null) {
-            config.setDescription(description);
-        }
         
         return repository.save(config);
     }

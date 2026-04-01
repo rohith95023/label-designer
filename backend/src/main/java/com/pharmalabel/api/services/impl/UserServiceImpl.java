@@ -2,9 +2,7 @@ package com.pharmalabel.api.services.impl;
 
 import com.pharmalabel.api.models.User;
 import com.pharmalabel.api.models.Role;
-import com.pharmalabel.api.models.SavedTemplate;
 import com.pharmalabel.api.repositories.UserRepository;
-import com.pharmalabel.api.repositories.SavedTemplateRepository;
 import com.pharmalabel.api.repositories.RoleRepository;
 import com.pharmalabel.api.services.UserService;
 import com.pharmalabel.api.dtos.user.UserDto;
@@ -31,7 +29,6 @@ public class UserServiceImpl implements UserService {
     private static final Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
 
     private final UserRepository userRepository;
-    private final SavedTemplateRepository savedTemplateRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final PermissionService permissionService;
@@ -52,7 +49,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public User getUserById(UUID id) {
         return userRepository.findById(id)
-                .filter(u -> u.getDeletedAt() == null)
+                .filter(u -> !"DELETED".equals(u.getStatus()))
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
@@ -62,34 +59,6 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
-    @Override
-    @Transactional
-    public String initiateClaim(String guestId) {
-        long expiry = System.currentTimeMillis() + (10 * 60 * 1000);
-        return guestId + ":" + expiry;
-    }
-
-    @Override
-    @Transactional
-    public void executeClaim(String claimToken) {
-        String[] parts = claimToken.split(":");
-        if (parts.length != 2) throw new RuntimeException("Invalid claim token");
-
-        String guestId = parts[0];
-        long expiry = Long.parseLong(parts[1]);
-
-        if (System.currentTimeMillis() > expiry) {
-            throw new RuntimeException("Claim token expired (10m TTL exceeded)");
-        }
-
-        User currentUser = getCurrentUser();
-
-        List<SavedTemplate> templates = savedTemplateRepository.findByUserId(guestId);
-        for (SavedTemplate t : templates) {
-            t.setOwner(currentUser);
-            savedTemplateRepository.save(t);
-        }
-    }
 
     @Override
     public List<UserDto> getAllUsers() {
@@ -107,7 +76,6 @@ public class UserServiceImpl implements UserService {
                         dto.setRole(user.getRole() != null ? user.getRole().getName() : "UNKNOWN");
                         dto.setStatus(user.getStatus() != null ? user.getStatus() : "UNKNOWN");
                         dto.setFailedLoginAttempts(user.getFailedLoginAttempts() != null ? user.getFailedLoginAttempts() : 0);
-                        dto.setIsExternal(user.getIsExternal() != null ? user.getIsExternal() : false);
                         dto.setPermissions(List.of());
                         return dto;
                     }
@@ -134,17 +102,11 @@ public class UserServiceImpl implements UserService {
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .role(role)
                 .status("ACTIVE")
-                .tokenVersion(0)
                 .failedLoginAttempts(0)
                 .mustChangePassword(true)
-                .isExternal(request.getIsExternal() != null ? request.getIsExternal() : false)
                 .build();
 
         User saved = userRepository.save(user);
-
-        if (request.getPermissions() != null && !request.getPermissions().isEmpty()) {
-            permissionService.saveUserPermissions(saved, request.getPermissions());
-        }
 
         return mapToDto(saved);
     }
@@ -153,7 +115,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserDto updateUser(UUID id, UpdateUserRequest request) {
         User user = userRepository.findById(id)
-                .filter(u -> u.getDeletedAt() == null)
+                .filter(u -> !"DELETED".equals(u.getStatus()))
                 .orElseThrow(() -> new RuntimeException("User not found: " + id));
 
         if (request.getEmail() != null && !request.getEmail().equals(user.getEmail())) {
@@ -175,15 +137,7 @@ public class UserServiceImpl implements UserService {
             user.setRole(role);
         }
 
-        if (request.getIsExternal() != null) {
-            user.setIsExternal(request.getIsExternal());
-        }
-
         User saved = userRepository.save(user);
-
-        if (request.getPermissions() != null) {
-            permissionService.saveUserPermissions(saved, request.getPermissions());
-        }
 
         return mapToDto(saved);
     }
@@ -192,7 +146,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void deleteUser(UUID id) {
         User user = userRepository.findById(id)
-                .filter(u -> u.getDeletedAt() == null)
+                .filter(u -> !"DELETED".equals(u.getStatus()))
                 .orElseThrow(() -> new RuntimeException("User not found: " + id));
 
         // Guard: cannot delete yourself
@@ -209,9 +163,7 @@ public class UserServiceImpl implements UserService {
             }
         }
 
-        // Soft-delete: stamp deleted_at, don't physically remove
-        // Permissions are cleaned up via CASCADE (from DB migration)
-        user.setDeletedAt(OffsetDateTime.now());
+        // Soft-delete: set status=DELETED
         user.setStatus("DELETED");
         userRepository.save(user);
     }
@@ -220,7 +172,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void lockUser(UUID id) {
         User user = userRepository.findById(id)
-                .filter(u -> u.getDeletedAt() == null)
+                .filter(u -> !"DELETED".equals(u.getStatus()))
                 .orElseThrow(() -> new RuntimeException("User not found: " + id));
 
         // Guard: cannot lock yourself
@@ -238,7 +190,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void unlockUser(UUID id) {
         User user = userRepository.findById(id)
-                .filter(u -> u.getDeletedAt() == null)
+                .filter(u -> !"DELETED".equals(u.getStatus()))
                 .orElseThrow(() -> new RuntimeException("User not found: " + id));
 
         user.setStatus("ACTIVE");
@@ -266,7 +218,6 @@ public class UserServiceImpl implements UserService {
         dto.setPasswordChangedAt(user.getPasswordChangedAt());
         dto.setFailedLoginAttempts(user.getFailedLoginAttempts() != null ? user.getFailedLoginAttempts() : 0);
         dto.setLockedUntil(user.getLockedUntil());
-        dto.setIsExternal(user.getIsExternal() != null ? user.getIsExternal() : false);
         dto.setPermissions(permissionService.getMergedPermissions(user));
         return dto;
     }

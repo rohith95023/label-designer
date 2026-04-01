@@ -35,7 +35,7 @@ public class SystemConfigController {
     public ResponseEntity<SystemConfig> updateConfig(@RequestBody ConfigUpdateRequest request) {
         User currentUser = userService.getCurrentUser();
         SystemConfig systemConfig = systemConfigService.saveConfig(request.getKey(), request.getValue(), null);
-        auditLogService.logEvent(currentUser, "UPDATE", "SYSTEM_CONFIG", "CONFIG_CHANGED", null,
+        auditLogService.logEvent(currentUser, "UPDATE", "SYSTEM_CONFIG", systemConfig.getId(), null,
                 "Config '" + request.getKey() + "' set to '" + request.getValue() + "'");
         return ResponseEntity.ok(systemConfig);
     }

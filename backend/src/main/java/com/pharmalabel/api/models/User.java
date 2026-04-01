@@ -34,12 +34,11 @@ public class User {
     @JoinColumn(name = "role_id")
     private Role role;
 
+    @Builder.Default
     @Column(nullable = false)
     private String status = "ACTIVE"; // ACTIVE, LOCKED
 
-    @Column(name = "token_version")
-    private Integer tokenVersion = 0;
-
+    @Builder.Default
     @Column(name = "failed_login_attempts")
     private Integer failedLoginAttempts = 0;
 
@@ -49,16 +48,11 @@ public class User {
     @Column(name = "password_changed_at")
     private OffsetDateTime passwordChangedAt;
 
+    @Builder.Default
     @Column(name = "must_change_password")
     private Boolean mustChangePassword = true;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private OffsetDateTime createdAt;
-
-    @Column(name = "is_external")
-    private Boolean isExternal = false;
-
-    @Column(name = "deleted_at")
-    private OffsetDateTime deletedAt;
 }

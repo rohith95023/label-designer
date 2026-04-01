@@ -8,28 +8,26 @@ import lombok.NoArgsConstructor;
 import java.util.UUID;
 
 @Entity
-@Table(name = "permissions")
+@Table(name = "objects")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Permission {
+public class ObjectEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "role_id")
-    private Role role;
-
     @Column(nullable = false)
-    private String module;
+    private String name;
 
-    @Column(nullable = false)
-    private String event;
+    private String type;
+
+    @Column(name = "file_url")
+    private String fileUrl;
 
     @Builder.Default
     @Column(nullable = false)
-    private Boolean allowed = true;
+    private String status = "ACTIVE";
 }

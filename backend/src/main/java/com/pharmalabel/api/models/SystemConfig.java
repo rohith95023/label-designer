@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -24,12 +25,10 @@ public class SystemConfig {
     @Column(name = "config_key", unique = true, nullable = false)
     private String configKey;
 
-    @Column(name = "config_value", nullable = false)
+    @Column(name = "config_value")
     private String configValue;
 
-    private String description;
-
-    @CreationTimestamp
+    @UpdateTimestamp
     @Column(name = "updated_at")
     private OffsetDateTime updatedAt;
 }

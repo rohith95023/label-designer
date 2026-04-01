@@ -28,7 +28,5 @@ public class CreateUserRequest {
     @NotBlank(message = "Role is required")
     private String role;
 
-    private Boolean isExternal = false;
-
     private List<PermissionRequestDto> permissions;
 }

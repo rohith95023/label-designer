@@ -9,22 +9,17 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface UserRepository extends JpaRepository<User, UUID> {
-    Optional<User> findByUsernameAndDeletedAtIsNull(String username);
-    Optional<User> findByEmailAndDeletedAtIsNull(String email);
+    @Query("SELECT u FROM User u WHERE u.username = :username AND u.status != 'DELETED'")
+    Optional<User> findByUsername(@Param("username") String username);
 
-    // Backwards-compat wrappers used by auth flow
-    default Optional<User> findByUsername(String username) {
-        return findByUsernameAndDeletedAtIsNull(username);
-    }
-    default Optional<User> findByEmail(String email) {
-        return findByEmailAndDeletedAtIsNull(email);
-    }
+    @Query("SELECT u FROM User u WHERE u.email = :email AND u.status != 'DELETED'")
+    Optional<User> findByEmail(@Param("email") String email);
 
     // Return only non-deleted users for the management list
-    @Query("SELECT u FROM User u WHERE u.deletedAt IS NULL")
+    @Query("SELECT u FROM User u WHERE u.status != 'DELETED'")
     List<User> findAllActive();
 
     // Count active admins (used for last-admin guard)
-    @Query("SELECT COUNT(u) FROM User u WHERE u.role.name = :roleName AND u.deletedAt IS NULL")
+    @Query("SELECT COUNT(u) FROM User u WHERE u.role.name = :roleName AND u.status != 'DELETED'")
     long countActiveByRoleName(@Param("roleName") String roleName);
 }

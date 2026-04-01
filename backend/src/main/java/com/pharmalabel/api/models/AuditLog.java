@@ -31,8 +31,8 @@ public class AuditLog {
     @Column(nullable = false)
     private String module;
 
-    @Column(nullable = false)
-    private String event;
+    @Column(name = "entity_id")
+    private UUID entityId;
 
     @Column(name = "old_data", columnDefinition = "jsonb")
     @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
@@ -43,6 +43,6 @@ public class AuditLog {
     private Object newData;
 
     @CreationTimestamp
-    @Column(nullable = false, updatable = false)
-    private OffsetDateTime timestamp;
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private OffsetDateTime createdAt;
 }

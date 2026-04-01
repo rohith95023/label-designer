@@ -33,8 +33,8 @@ public class PermissionController {
     public ResponseEntity<Void> updatePermission(@PathVariable UUID permissionId, @RequestBody Boolean allowed) {
         User currentUser = userService.getCurrentUser();
         permissionService.updatePermission(permissionId, allowed);
-        auditLogService.logEvent(currentUser, "UPDATE", "PERMISSIONS", "PERMISSION_CHANGED", null,
-                "Permission " + permissionId + " set to allowed=" + allowed);
+        auditLogService.logEvent(currentUser, "UPDATE", "PERMISSIONS", permissionId, null,
+                "Permission set to allowed=" + allowed);
         return ResponseEntity.ok().build();
     }
 }

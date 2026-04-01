@@ -14,12 +14,12 @@ public class AuditLogService {
     private final AuditLogRepository auditLogRepository;
 
     @Transactional
-    public void logEvent(User user, String action, String module, String event, Object oldData, Object newData) {
+    public void logEvent(User user, String action, String module, java.util.UUID entityId, Object oldData, Object newData) {
         AuditLog log = AuditLog.builder()
                 .user(user)
                 .action(action)
                 .module(module)
-                .event(event)
+                .entityId(entityId)
                 .oldData(oldData)
                 .newData(newData)
                 .build();

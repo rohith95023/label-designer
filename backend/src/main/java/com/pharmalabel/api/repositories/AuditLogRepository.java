@@ -8,9 +8,10 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 public interface AuditLogRepository extends JpaRepository<AuditLog, UUID> {
-    Page<AuditLog> findAllByOrderByTimestampDesc(Pageable pageable);
-    Page<AuditLog> findByModuleOrderByTimestampDesc(String module, Pageable pageable);
-    Page<AuditLog> findByUserIdOrderByTimestampDesc(UUID userId, Pageable pageable);
-    Page<AuditLog> findByTimestampBetweenOrderByTimestampDesc(OffsetDateTime start, OffsetDateTime end, Pageable pageable);
-    Page<AuditLog> findByModuleAndTimestampBetweenOrderByTimestampDesc(String module, OffsetDateTime start, OffsetDateTime end, Pageable pageable);
+    Page<AuditLog> findAllByOrderByCreatedAtDesc(Pageable pageable);
+    Page<AuditLog> findByModuleOrderByCreatedAtDesc(String module, Pageable pageable);
+    Page<AuditLog> findByUserIdOrderByCreatedAtDesc(UUID userId, Pageable pageable);
+    Page<AuditLog> findByEntityIdOrderByCreatedAtDesc(UUID entityId, Pageable pageable);
+    Page<AuditLog> findByCreatedAtBetweenOrderByCreatedAtDesc(OffsetDateTime start, OffsetDateTime end, Pageable pageable);
+    Page<AuditLog> findByModuleAndCreatedAtBetweenOrderByCreatedAtDesc(String module, OffsetDateTime start, OffsetDateTime end, Pageable pageable);
 }

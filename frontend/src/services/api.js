@@ -8,44 +8,34 @@ export const api = {
   saveDashboard: (userId, data) => 
     authApi.post(`/dashboard/${userId}`, data).then(res => res.data),
 
-  // Templates (System)
-  getTemplates: () => 
-    authApi.get('/templates').then(res => res.data),
+  // Labels (Unified System)
+  getLabels: (status) => 
+    authApi.get(`/labels${status ? `?status=${status}` : ''}`).then(res => res.data),
 
-  getTemplate: (id) => 
-    authApi.get(`/templates/${id}`).then(res => res.data),
+  getLabel: (id) => 
+    authApi.get(`/labels/${id}`).then(res => res.data),
 
-  createTemplate: (data) => 
-    authApi.post('/templates', data).then(res => res.data),
+  createLabel: (data) => 
+    authApi.post('/labels', data).then(res => res.data),
 
-  updateTemplate: (id, data) => 
-    authApi.put(`/templates/${id}`, data).then(res => res.data),
+  updateLabel: (id, data) => 
+    authApi.put(`/labels/${id}`, data).then(res => res.data),
 
-  deleteTemplate: (id) => 
-    authApi.delete(`/templates/${id}`).then(res => res.status === 200),
+  deleteLabel: (id) => 
+    authApi.delete(`/labels/${id}`).then(res => res.status === 204),
 
-  // User Templates (Saved templates)
-  getUserTemplates: (userId) => 
-    authApi.get(`/user-templates/user/${userId}`).then(res => res.data),
+  // Versioning
+  getLabelHistory: (id) => 
+    authApi.get(`/labels/${id}/versions`).then(res => res.data),
 
-  getUserTemplate: (id) => 
-    authApi.get(`/user-templates/${id}`).then(res => res.data),
+  getLabelVersion: (id, versionNo) => 
+    authApi.get(`/labels/${id}/versions/${versionNo}`).then(res => res.data),
 
-  createUserTemplate: (userId, data) => 
-    authApi.post(`/user-templates/user/${userId}`, data).then(res => res.data),
+  getLatestLabelVersion: (id) => 
+    authApi.get(`/labels/${id}/versions/latest`).then(res => res.data),
 
-  updateUserTemplate: (id, data) => 
-    authApi.put(`/user-templates/${id}`, data).then(res => res.data),
-
-  deleteUserTemplate: (id) => 
-    authApi.delete(`/user-templates/${id}`).then(res => res.status === 200),
-
-  // Versions (History)
-  getHistory: (templateId) => 
-    authApi.get(`/templates/${templateId}/history`).then(res => res.data),
-
-  getUserHistory: (templateId) => 
-    authApi.get(`/user-templates/${templateId}/history`).then(res => res.data),
+  saveLabelVersion: (id, designJson) => 
+    authApi.post(`/labels/${id}/versions`, designJson).then(res => res.data),
 
   // Users (Admin Only)
   getUsers: () => 

@@ -5,31 +5,27 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @Entity
-@Table(name = "permissions")
+@Table(name = "label_stocks")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Permission {
+public class LabelStock {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "role_id")
-    private Role role;
-
     @Column(nullable = false)
-    private String module;
+    private String name;
 
-    @Column(nullable = false)
-    private String event;
+    private BigDecimal length;
+    private BigDecimal width;
+    private BigDecimal height;
 
-    @Builder.Default
-    @Column(nullable = false)
-    private Boolean allowed = true;
+    private String description;
 }

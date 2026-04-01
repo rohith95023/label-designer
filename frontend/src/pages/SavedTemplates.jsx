@@ -19,7 +19,7 @@ export default function SavedTemplates() {
   const filteredFiles = useMemo(() => {
     return userFiles.filter(f =>
       f.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (isAdmin && f.owner?.username?.toLowerCase().includes(searchQuery.toLowerCase()))
+      (isAdmin && f.createdByUsername?.toLowerCase().includes(searchQuery.toLowerCase()))
     );
   }, [userFiles, searchQuery, isAdmin]);
 
@@ -151,14 +151,14 @@ export default function SavedTemplates() {
                           <div className="flex items-center gap-2">
                             <span className="material-symbols-outlined text-sm text-primary/60 dark:text-primary-variant">person</span>
                             <span className="text-xs font-medium text-on-surface dark:text-on-surface-variant">
-                              {file.owner?.username || 'Guest/Anonymous'}
+                              {file.createdByUsername || 'Guest/Anonymous'}
                             </span>
                           </div>
                         </td>
                       )}
                       <td className="px-6 py-5">
                         <span className="px-3 py-1 bg-surface-container-high dark:bg-surface-container-highest/30 text-on-surface-variant dark:text-on-secondary-container rounded-full text-[11px] font-bold">
-                          {file.labelSize ? `${file.labelSize.w} x ${file.labelSize.h} px` : 'Custom'}
+                          {file.latestVersionDesign?.labelSize ? `${file.latestVersionDesign.labelSize.w} x ${file.latestVersionDesign.labelSize.h} px` : 'Custom'}
                         </span>
                       </td>
                       <td className="px-6 py-5">
@@ -247,8 +247,8 @@ export default function SavedTemplates() {
         <PreviewModal
           isOpen={true}
           onClose={() => setPreviewFile(null)}
-          elements={previewFile.elementsData}
-          meta={{ labelSize: previewFile.labelSize, bgColor: previewFile.bgColor, fileName: previewFile.name }}
+          elements={previewFile.latestVersionDesign?.elementsData}
+          meta={{ labelSize: previewFile.latestVersionDesign?.labelSize, bgColor: previewFile.latestVersionDesign?.bgColor, fileName: previewFile.name }}
           title={previewFile.name}
         />
       )}

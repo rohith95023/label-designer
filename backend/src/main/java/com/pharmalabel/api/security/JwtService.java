@@ -28,7 +28,7 @@ public class JwtService {
     }
 
     public Integer extractTokenVersion(String token) {
-        return extractClaim(token, claims -> claims.get("version", Integer.class));
+        return null;
     }
 
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
@@ -36,9 +36,8 @@ public class JwtService {
         return claimsResolver.apply(claims);
     }
 
-    public String generateToken(UserDetails userDetails, Integer tokenVersion) {
+    public String generateToken(UserDetails userDetails) {
         Map<String, Object> extraClaims = new HashMap<>();
-        extraClaims.put("version", tokenVersion);
         return buildToken(extraClaims, userDetails, jwtExpiration);
     }
 

@@ -23,7 +23,5 @@ public class UpdateUserRequest {
 
     private String role;
 
-    private Boolean isExternal;
-
     private List<PermissionRequestDto> permissions;
 }

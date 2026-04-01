@@ -34,7 +34,7 @@ public class UserController {
         try {
             UserDto created = userService.createUser(request);
             User currentUser = userService.getCurrentUser();
-            auditLogService.logEvent(currentUser, "CREATE", "USERS", "USER_CREATED", null,
+            auditLogService.logEvent(currentUser, "CREATE", "USERS", created.getId(), null,
                     "Created user: " + created.getUsername() + " (role: " + created.getRole() + ")");
             return ResponseEntity.ok(created);
         } catch (RuntimeException e) {
@@ -52,8 +52,8 @@ public class UserController {
         try {
             UserDto updated = userService.updateUser(id, request);
             User currentUser = userService.getCurrentUser();
-            auditLogService.logEvent(currentUser, "UPDATE", "USERS", "USER_UPDATED", null,
-                    "Updated user: " + updated.getUsername() + " (id: " + id + ")");
+            auditLogService.logEvent(currentUser, "UPDATE", "USERS", id, null,
+                    "Updated user: " + updated.getUsername());
             return ResponseEntity.ok(updated);
         } catch (RuntimeException e) {
             java.util.Map<String, Object> body = new java.util.HashMap<>();
@@ -69,7 +69,7 @@ public class UserController {
     public ResponseEntity<Void> deleteUser(@PathVariable UUID id) {
         User currentUser = userService.getCurrentUser();
         userService.deleteUser(id);
-        auditLogService.logEvent(currentUser, "DELETE", "USERS", "USER_DELETED", null,
+        auditLogService.logEvent(currentUser, "DELETE", "USERS", id, null,
                 "Deleted user id: " + id);
         return ResponseEntity.ok().build();
     }
@@ -79,7 +79,7 @@ public class UserController {
     public ResponseEntity<Void> lockUser(@PathVariable UUID id) {
         User currentUser = userService.getCurrentUser();
         userService.lockUser(id);
-        auditLogService.logEvent(currentUser, "LOCK", "USERS", "USER_LOCKED", null,
+        auditLogService.logEvent(currentUser, "LOCK", "USERS", id, null,
                 "Locked user id: " + id);
         return ResponseEntity.ok().build();
     }
@@ -89,7 +89,7 @@ public class UserController {
     public ResponseEntity<Void> unlockUser(@PathVariable UUID id) {
         User currentUser = userService.getCurrentUser();
         userService.unlockUser(id);
-        auditLogService.logEvent(currentUser, "UNLOCK", "USERS", "USER_UNLOCKED", null,
+        auditLogService.logEvent(currentUser, "UNLOCK", "USERS", id, null,
                 "Unlocked user id: " + id);
         return ResponseEntity.ok().build();
     }

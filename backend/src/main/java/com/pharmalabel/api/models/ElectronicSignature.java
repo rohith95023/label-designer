@@ -26,22 +26,16 @@ public class ElectronicSignature {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @Column(name = "target_id", nullable = false)
-    private UUID targetId;
+    @Column(name = "entity_type", nullable = false)
+    private String entityType;
 
-    @Column(name = "version_id")
-    private UUID versionId;
+    @Column(name = "entity_id", nullable = false)
+    private UUID entityId;
 
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private SignatureMeaning meaning;
-
-    private String reason;
+    private String meaning;
 
     @CreationTimestamp
     @Column(name = "signed_at", nullable = false, updatable = false)
     private OffsetDateTime signedAt;
-
-    @Column(name = "ip_address")
-    private String ipAddress;
 }

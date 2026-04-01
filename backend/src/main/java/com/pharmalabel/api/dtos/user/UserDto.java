@@ -16,6 +16,5 @@ public class UserDto {
     private OffsetDateTime passwordChangedAt;
     private Integer failedLoginAttempts;
     private OffsetDateTime lockedUntil;
-    private Boolean isExternal;
     private List<PermissionRequestDto> permissions;
 }
