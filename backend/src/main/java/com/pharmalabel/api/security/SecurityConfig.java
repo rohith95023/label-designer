@@ -17,6 +17,8 @@ import org.springframework.beans.factory.annotation.Value;
 import java.util.Arrays;
 import java.util.Collections;
 import lombok.RequiredArgsConstructor;
+import jakarta.servlet.http.HttpServletResponse;
+
 
 @Configuration
 @EnableWebSecurity
@@ -38,9 +40,12 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/v1/auth/**").permitAll()
                 .requestMatchers("/api/v1/dev/reset-password").permitAll()
-                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/templates", "/api/v1/templates/**").permitAll()
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/templates/**", "/api/v1/placeholders", "/api/v1/placeholders/**", "/api/v1/label-stocks", "/api/v1/label-stocks/**").permitAll()
                 .anyRequest().authenticated()
             )
+            .exceptionHandling(ex -> ex.authenticationEntryPoint((request, response, authException) -> {
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized: Please log in to access this resource.");
+            }))
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

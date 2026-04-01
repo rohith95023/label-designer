@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../services/api';
 import { Link, useNavigate } from 'react-router-dom';
 import { useLabel } from '../context/LabelContext';
@@ -16,6 +17,16 @@ import { IconsIcons } from '../data/premiumIcons';
 import { WORDART_CATEGORIES, WORDART_STYLES } from '../data/wordArtPresets';
 import PreviewModal from '../components/modals/PreviewModal';
 import { calcAutoFitFontSize } from '../utils/autoFitFont';
+
+function resolvePlaceholders(text, placeholderValues) {
+  if (!text) return '';
+  let result = text;
+  Object.keys(placeholderValues).forEach(key => {
+    const regex = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
+    result = result.replace(regex, placeholderValues[key]);
+  });
+  return result;
+}
 
 function TableSetupModal({ onConfirm, onCancel }) {
   const [rows, setRows] = useState(3);
@@ -214,6 +225,7 @@ export default function LabelEditor() {
   const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [bulkSuffix, setBulkSuffix] = useState('');
+  const [previewMode, setPreviewMode] = useState(false);
   const originalTexts = useRef({}); // Tracks base text during bulk suffix editing
 
   // --- Placeholder Logic ---
@@ -238,9 +250,9 @@ export default function LabelEditor() {
   const addPlaceholder = (ph) => {
     addElement({
       type: 'text',
-      text: `{{${ph.key}}}`,
+      text: `{{${ph.mappingKey}}}`,
       name: ph.name,
-      placeholderKey: ph.key,
+      placeholderKey: ph.mappingKey,
       fontSize: 14,
       fontFamily: 'Inter, sans-serif',
       fontWeight: '600',
@@ -492,7 +504,7 @@ export default function LabelEditor() {
   const statusLabel = savedStatus === 'saved' ? 'Saved' : savedStatus === 'saving' ? 'Saving…' : 'Unsaved';
 
   return (
-    <div className="font-body text-on-surface h-screen flex flex-col overflow-hidden bg-slate-50 dark:bg-slate-950 dark:bg-slate-950 transition-colors">
+    <div className="font-body text-on-surface h-screen flex flex-col overflow-hidden bg-background transition-colors">
 
       {/* ── Modals ──────────────────────────────────────────────────────────── */}
       {modalStep === 'filename' && createPortal(
@@ -676,12 +688,17 @@ export default function LabelEditor() {
         </div>
       )}
 
-      {/* ── Top Nav ─────────────────────────────────────────────────────────── */}
-      <header className="h-14 glass border-b border-white/20 dark:border-white/10 flex items-center justify-between px-6 shrink-0 z-40">
+      {/* ── Premium Top Nav ──────────────────────────────────────────────────── */}
+      <motion.header 
+        className="h-16 glass-header flex items-center justify-between px-6 shrink-0 z-40"
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      >
         {/* Left: File Menu + Title */}
-        <div className="flex items-center gap-3">
-          <Link to="/" className="text-lg font-extrabold tracking-tighter text-blue-900 dark:text-blue-200 shrink-0">Pharma Label Design</Link>
-          <div className="w-[1px] h-5 bg-outline-variant/30 mx-1"></div>
+        <div className="flex items-center gap-4">
+          <Link to="/" className="text-xl font-extrabold tracking-tighter text-gradient shrink-0">Pharma Label Design</Link>
+          <div className="w-[1px] h-6 bg-outline-variant/30 mx-1"></div>
 
           {/* File Dropdown */}
           <div className="relative" onClick={e => e.stopPropagation()}>
@@ -779,17 +796,36 @@ export default function LabelEditor() {
             )}
           </div>
         </div>
-      </header>
+      </motion.header>
 
-      {/* ── Secondary Toolbar (Undo/Redo/Zoom) ──────────────────────────────── */}
-      <div className="h-10 glass border-b border-white/20 dark:border-white/10 flex items-center justify-between px-4 shrink-0 z-30">
+      {/* ── Premium Secondary Toolbar ────────────────────────────────────────── */}
+      <motion.div 
+        className="h-12 glass border-b border-white/20 dark:border-white/10 flex items-center justify-between px-4 shrink-0 z-30"
+        initial={{ y: -10, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.1, type: "spring", stiffness: 300, damping: 30 }}
+      >
         <div className="flex items-center gap-2">
-          <button onClick={undo} disabled={historyIndex <= 0} title="Undo (Ctrl+Z)" className="p-1 rounded hover:bg-slate-100 disabled:opacity-30 text-slate-600 transition-colors">
-            <span className="material-symbols-outlined text-[16px]">undo</span>
-          </button>
-          <button onClick={redo} disabled={historyIndex >= historyLength - 1} title="Redo (Ctrl+Y)" className="p-1 rounded hover:bg-slate-100 disabled:opacity-30 text-slate-600 transition-colors">
-            <span className="material-symbols-outlined text-[16px]">redo</span>
-          </button>
+          <motion.button 
+            onClick={undo} 
+            disabled={historyIndex <= 0} 
+            title="Undo (Ctrl+Z)" 
+            className="p-2 rounded-xl hover:bg-slate-100 disabled:opacity-30 text-slate-600 transition-all"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <span className="material-symbols-outlined text-[18px]">undo</span>
+          </motion.button>
+          <motion.button 
+            onClick={redo} 
+            disabled={historyIndex >= historyLength - 1} 
+            title="Redo (Ctrl+Y)" 
+            className="p-2 rounded-xl hover:bg-slate-100 disabled:opacity-30 text-slate-600 transition-all"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <span className="material-symbols-outlined text-[18px]">redo</span>
+          </motion.button>
 
           <div className="w-[1px] h-4 bg-outline-variant/20 mx-1"></div>
 
@@ -839,22 +875,54 @@ export default function LabelEditor() {
           >
             <span className="material-symbols-outlined text-[16px]">visibility</span> Preview
           </button>
+
+          <button 
+            onClick={() => setPreviewMode(!previewMode)}
+            className={`flex items-center gap-1.5 px-3 py-1 border rounded-full shadow-sm hover:shadow-md transition-all font-bold text-[10px] uppercase tracking-widest ${previewMode ? 'bg-indigo-600 text-white border-indigo-600 shadow-indigo-200' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:border-indigo-400'}`}
+          >
+            <span className="material-symbols-outlined text-[16px]">{previewMode ? 'data_object' : 'toll'}</span>
+            {previewMode ? 'Live Preview ON' : 'Show Tokens'}
+          </button>
         </div>
 
         <div className="flex-1" />
-      </div>
+      </motion.div>
 
-      {/* ── Main 3-Column Area ─────────────────────────────────────────────── */}
-      <main className="flex flex-1 overflow-hidden">
+      {/* ── Premium Main 3-Column Area ──────────────────────────────────────────── */}
+      <motion.main 
+        className="flex flex-1 overflow-hidden"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.3 }}
+      >
 
-        {/* LEFT SIDEBAR */}
-        <aside className="w-64 glass border-r border-white/20 dark:border-white/10 flex flex-col overflow-hidden shrink-0">
-          {/* Tab Headers */}
+        {/* ── Premium Left Sidebar ──────────────────────────────────────────────── */}
+        <motion.aside 
+          className="w-72 glass border-r border-white/20 dark:border-white/10 flex flex-col overflow-hidden shrink-0"
+          initial={{ x: -20, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ delay: 0.2, type: "spring", stiffness: 300, damping: 30 }}
+        >
+          {/* Premium Tab Headers */}
           <div className="flex border-b border-white/20 dark:border-white/10 text-[10px] font-bold uppercase tracking-wider text-slate-500 shrink-0">
             {['elements', 'Variables', 'shapes', 'Icons', 'layers'].map(t => (
-              <button key={t} onClick={() => setActiveTab(t)}
-                className={`flex-1 py-3 transition-colors ${activeTab === t ? 'text-primary border-b-2 border-primary bg-blue-50/50' : 'text-slate-500 hover:bg-slate-100/50 hover:text-slate-700'}`}
-              >{t}</button>
+              <motion.button 
+                key={t} 
+                onClick={() => setActiveTab(t)}
+                className={`flex-1 py-3 transition-all relative ${activeTab === t ? 'text-primary' : 'text-slate-500 hover:text-slate-700'}`}
+                whileHover={{ y: -1 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                {t}
+                {activeTab === t && (
+                  <motion.div
+                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-primary to-secondary"
+                    layoutId="sidebarTab"
+                    initial={false}
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  />
+                )}
+              </motion.button>
             ))}
           </div>
 
@@ -878,21 +946,41 @@ export default function LabelEditor() {
                   </div>
                 ) : (
                   <div className="flex flex-col gap-2">
-                    {placeholders.map(ph => (
-                      <button
-                        key={ph.id}
-                        onClick={() => addPlaceholder(ph)}
-                        className="flex items-center gap-3 p-3 bg-white border border-slate-200 rounded-xl hover:border-blue-500 hover:shadow-md transition-all group text-left"
-                      >
-                        <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                          <span className="material-symbols-outlined text-sm">database</span>
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-xs font-bold text-slate-700">{ph.name}</span>
-                          <code className="text-[9px] text-blue-500 font-mono">{`{{${ph.key}}}`}</code>
-                        </div>
-                      </button>
-                    ))}
+                    {placeholders.map(ph => {
+                      const payload = {
+                        type: 'text',
+                        text: `{{${ph.mappingKey}}}`,
+                        name: ph.name,
+                        placeholderKey: ph.mappingKey,
+                        fontSize: 14,
+                        fontFamily: 'Inter, sans-serif',
+                        fontWeight: '600',
+                        color: '#2563eb',
+                        width: 140,
+                        height: 24,
+                        isPlaceholder: true
+                      };
+                      return (
+                        <button
+                          key={ph.id}
+                          onClick={() => addPlaceholder(ph)}
+                          draggable
+                          onDragStart={e => {
+                            e.dataTransfer.setData('application/json', JSON.stringify(payload));
+                            e.dataTransfer.effectAllowed = 'copy';
+                          }}
+                          className="flex items-center gap-2 p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-lg hover:border-blue-500 hover:shadow-sm hover:translate-x-1 transition-all group text-left cursor-grab active:cursor-grabbing shadow-sm"
+                        >
+                          <div className="w-7 h-7 rounded bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-400 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                            <span className="material-symbols-outlined text-[14px]">database</span>
+                          </div>
+                          <div className="flex flex-col gap-0.5 overflow-hidden">
+                            <span className="text-[10px] font-extrabold text-slate-700 dark:text-slate-300 truncate tracking-tight">{ph.name}</span>
+                            <code className="text-[8px] text-blue-500 font-mono font-bold">{`{{${ph.mappingKey}}}`}</code>
+                          </div>
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -909,7 +997,9 @@ export default function LabelEditor() {
                     { label: 'QR Code', icon: 'qr_code_2', action: addQR, payload: { type: 'qrcode', name: 'QR Code', text: 'https://example.com', color: '#191c1e', width: 80, height: 80 } },
                     { label: 'Upload Logo', icon: 'imagesmode', action: () => fileInputRef.current?.click() },
                   ].map(item => (
-                    <button key={item.label} onClick={item.action}
+                    <motion.button 
+                      key={item.label} 
+                      onClick={item.action}
                       draggable={!!item.payload}
                       onDragStart={e => {
                         if (item.payload) {
@@ -917,10 +1007,14 @@ export default function LabelEditor() {
                           e.dataTransfer.effectAllowed = 'copy';
                         }
                       }}
-                      className="flex flex-col items-center p-3 glass-card group hover:-translate-y-1 transition-all duration-300 hover:border-primary/50 hover:bg-blue-50/60 hover:shadow-md transition-all group lg:active:cursor-grabbing">
-                      <span className="material-symbols-outlined text-slate-500 group-hover:text-primary mb-1 text-xl">{item.icon}</span>
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600 group-hover:text-primary">{item.label}</span>
-                    </button>
+                      className="flex flex-col items-center p-4 glass-card group cursor-grab active:cursor-grabbing"
+                      whileHover={{ y: -4, scale: 1.02 }}
+                      whileTap={{ scale: 0.95 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                    >
+                      <span className="material-symbols-outlined text-slate-500 group-hover:text-primary mb-2 text-2xl transition-colors">{item.icon}</span>
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600 group-hover:text-primary transition-colors">{item.label}</span>
+                    </motion.button>
                   ))}
                   <input ref={fileInputRef} type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
                   <input ref={jsonInputRef} type="file" className="hidden" accept=".json" onChange={handleJSONOpen} />
@@ -950,17 +1044,22 @@ export default function LabelEditor() {
                       { label: 'Dosage Instructions', icon: 'medication', payload: { type: 'text', name: 'Dosage', heading: 'Dosage', text: 'As directed by the Physician.', fontSize: 10, fontFamily: 'Inter, sans-serif', fontWeight: '500', color: '#191C1E', width: 220, height: 36 } },
                       { label: 'Net Contents', icon: 'inventory', payload: { type: 'text', name: 'Net Contents', heading: 'Net Content', text: '100 mL / 10 Tablets', fontSize: 12, fontFamily: 'Inter, sans-serif', fontWeight: '600', color: '#191C1E', width: 180, height: 32 } },
                     ].map(item => (
-                      <div key={item.label}
+                      <motion.div 
+                        key={item.label}
                         onClick={() => addElement(item.payload)}
                         draggable
                         onDragStart={e => {
                           e.dataTransfer.setData('application/json', JSON.stringify(item.payload));
                           e.dataTransfer.effectAllowed = 'copy';
                         }}
-                        className="flex items-center gap-2.5 px-3 py-2 bg-white dark:bg-slate-800 rounded-lg text-[11px] font-bold text-slate-700 dark:text-slate-300 cursor-pointer border border-slate-200 dark:border-white/10 hover:border-primary/40 hover:text-primary hover:bg-blue-50/50 shadow-sm transition-all group lg:active:cursor-grabbing">
-                        <span className="material-symbols-outlined text-[14px] text-slate-400 group-hover:text-primary shrink-0">{item.icon}</span>
+                        className="flex items-center gap-3 px-4 py-3 bg-white dark:bg-slate-800 rounded-xl text-[11px] font-bold text-slate-700 dark:text-slate-300 cursor-pointer border border-slate-200 dark:border-white/10 shadow-sm transition-all group lg:active:cursor-grabbing"
+                        whileHover={{ x: 4, scale: 1.01 }}
+                        whileTap={{ scale: 0.98 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                      >
+                        <span className="material-symbols-outlined text-[16px] text-slate-400 group-hover:text-primary shrink-0 transition-colors">{item.icon}</span>
                         {item.label}
-                      </div>
+                      </motion.div>
                     ))}
                   </div>
                 </div>
@@ -977,16 +1076,22 @@ export default function LabelEditor() {
                   </div>
                   <div className="grid gap-2 grid-cols-2">
                     {basicShapes.map(s => (
-                      <button key={s.id} onClick={() => addElement(s.payload)}
+                      <motion.button 
+                        key={s.id} 
+                        onClick={() => addElement(s.payload)}
                         draggable
                         onDragStart={e => {
                           e.dataTransfer.setData('application/json', JSON.stringify(s.payload));
                           e.dataTransfer.effectAllowed = 'copy';
                         }}
-                        className="flex flex-col items-center p-3 glass-card group hover:-translate-y-1 transition-all duration-300 hover:border-primary/50 hover:bg-blue-50/60 hover:shadow-md transition-all group lg:active:cursor-grabbing">
-                        <span className="material-symbols-outlined text-slate-500 group-hover:text-primary mb-1 text-xl">{s.render}</span>
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600 group-hover:text-primary">{s.name}</span>
-                      </button>
+                        className="flex flex-col items-center p-4 glass-card group cursor-grab active:cursor-grabbing"
+                        whileHover={{ y: -4, scale: 1.02 }}
+                        whileTap={{ scale: 0.95 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                      >
+                        <span className="material-symbols-outlined text-slate-500 group-hover:text-primary mb-2 text-2xl transition-colors">{s.render}</span>
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600 group-hover:text-primary transition-colors">{s.name}</span>
+                      </motion.button>
                     ))}
                   </div>
                 </div>
@@ -998,15 +1103,22 @@ export default function LabelEditor() {
                   </div>
                   <div className="grid gap-1 grid-cols-5">
                     {allIcons.map((icon, i) => (
-                      <button key={i} onClick={() => addIcon(icon)} title={icon}
+                      <motion.button 
+                        key={i} 
+                        onClick={() => addIcon(icon)} 
+                        title={icon}
                         draggable
                         onDragStart={e => {
                           e.dataTransfer.setData('application/json', JSON.stringify({ type: 'icon', iconName: icon, width: 48, height: 48, color: '#191C1E' }));
                           e.dataTransfer.effectAllowed = 'copy';
                         }}
-                        className="flex items-center justify-center p-2 rounded-lg bg-slate-50 hover:bg-blue-50 hover:text-primary text-slate-400 transition-all aspect-square lg:active:cursor-grabbing">
-                        <span className="material-symbols-outlined text-lg">{icon}</span>
-                      </button>
+                        className="flex items-center justify-center p-2.5 rounded-xl bg-slate-50 hover:bg-blue-50 hover:text-primary text-slate-400 transition-all aspect-square cursor-grab active:cursor-grabbing"
+                        whileHover={{ scale: 1.1, rotate: 5 }}
+                        whileTap={{ scale: 0.9 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                      >
+                        <span className="material-symbols-outlined text-xl">{icon}</span>
+                      </motion.button>
                     ))}
                   </div>
                 </div>
@@ -1088,9 +1200,14 @@ export default function LabelEditor() {
                       const isSelected = selectedElementId === el.id;
                       const isBulkSelected = selectedLayers.includes(el.id);
                       return (
-                        <div key={`layer-${el.id}`}
+                        <motion.div 
+                          key={`layer-${el.id}`}
                           onClick={() => setSelectedElementId(el.id)}
-                          className={`group flex items-center justify-between p-2 rounded-lg border text-[11px] cursor-pointer transition-all ${isSelected ? 'bg-blue-50/80 border-primary/50 text-primary font-bold shadow-sm' : 'bg-white border-slate-100 dark:bg-slate-800 dark:border-white/5 hover:border-slate-200 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300'}`}>
+                          className={`group flex items-center justify-between p-3 rounded-xl border text-[11px] cursor-pointer transition-all ${isSelected ? 'bg-blue-50/80 border-primary/50 text-primary font-bold shadow-sm' : 'bg-white border-slate-100 dark:bg-slate-800 dark:border-white/5 hover:border-slate-200 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300'}`}
+                          whileHover={{ x: 4 }}
+                          whileTap={{ scale: 0.98 }}
+                          transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                        >
                           <div className="flex items-center gap-2.5 overflow-hidden">
                             <input 
                               type="checkbox" 
@@ -1123,7 +1240,7 @@ export default function LabelEditor() {
                               <span className="material-symbols-outlined text-[15px]">{el.locked ? 'lock' : 'lock_open'}</span>
                             </button>
                           </div>
-                        </div>
+                        </motion.div>
                       );
                     })}
                   </div>
@@ -1132,12 +1249,11 @@ export default function LabelEditor() {
               );
             })()}
           </div>
-        </aside>
+        </motion.aside>
 
-        {/* CENTER CANVAS */}
-        <section
-          className="flex-1 overflow-auto bg-slate-100 dark:bg-slate-900 relative custom-scrollbar"
-          style={{ backgroundImage: 'radial-gradient(circle, #b0b8c8 1px, transparent 1px)', backgroundSize: '20px 20px' }}
+        {/* ── Premium Center Canvas ────────────────────────────────────────────── */}
+        <motion.section
+          className="flex-1 overflow-auto editor-canvas relative custom-scrollbar"
           onClick={() => {
             setSelectedElementId(null);
             if (editingElementId) {
@@ -1145,6 +1261,9 @@ export default function LabelEditor() {
               commitUpdate();
             }
           }}
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.3, type: "spring", stiffness: 300, damping: 30 }}
           onDragOver={e => {
             e.preventDefault();
             e.dataTransfer.dropEffect = 'copy';
@@ -1245,12 +1364,12 @@ export default function LabelEditor() {
               </div>
             </div>
           )}
-          {/* Artboard container — centered, scrollable */}
+          {/* ── Premium Artboard Container ──────────────────────────────────────── */}
           <div className="flex items-center justify-center min-h-full p-12">
-            <div
+            <motion.div
               ref={artboardRef}
               id="pharma-artboard"
-              className="shadow-2xl shadow-slate-300/50 dark:shadow-black/50 ring-1 ring-white/50 dark:ring-white/10 relative pharma-artboard border border-black/15 dark:border-white/10"
+              className="label-shadow relative pharma-artboard border border-outline-variant/30 rounded-lg"
               style={{
                 width: `${AW}px`,
                 height: `${AH}px`,
@@ -1258,8 +1377,11 @@ export default function LabelEditor() {
                 transform: `scale(${zoomLevel})`,
                 transformOrigin: 'center top',
                 marginBottom: `${(zoomLevel - 1) * AH}px`,
-                overflow: 'visible', // Allow elements to be seen outside label bounds during editing
+                overflow: 'visible',
               }}
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.5, type: "spring", stiffness: 300, damping: 30 }}
               onClick={e => {
                 // If we click the artboard itself (not an element), deselect
                 if (e.target.id === 'pharma-artboard') {
@@ -1744,7 +1866,18 @@ export default function LabelEditor() {
                           <span className="block w-full" style={{
                             wordBreak: 'break-word',
                             textAlign: el.align || (el.type === 'shape' ? 'center' : 'left'),
-                          }}>{el.text}</span>
+                          }}>
+                            {(() => {
+                              if (previewMode && el.text) {
+                                const previewData = placeholders.reduce((acc, ph) => {
+                                  acc[ph.mappingKey] = ph.defaultValue || `[${ph.name}]`;
+                                  return acc;
+                                }, {});
+                                return resolvePlaceholders(el.text, previewData);
+                              }
+                              return el.text;
+                            })()}
+                          </span>
                         )}
                       </div>
                        {isSelected && !el.locked && (
@@ -1794,12 +1927,17 @@ export default function LabelEditor() {
                    </Rnd>
                 );
               })}
-            </div>
+            </motion.div>
           </div>
-        </section>
+        </motion.section>
 
-        {/* RIGHT PROPERTIES PANEL */}
-        <aside className="w-80 glass border-l border-white/20 dark:border-white/10 flex flex-col overflow-y-auto shrink-0 custom-scrollbar">
+        {/* ── Premium Right Properties Panel ────────────────────────────────────── */}
+        <motion.aside 
+          className="w-80 glass border-l border-white/20 dark:border-white/10 flex flex-col overflow-y-auto shrink-0 custom-scrollbar"
+          initial={{ x: 20, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ delay: 0.4, type: "spring", stiffness: 300, damping: 30 }}
+        >
           {selectedLayers.length > 1 ? (
             <div className="animate-fade-in p-4 space-y-6">
               <div className="flex items-center justify-between bg-blue-50 dark:bg-blue-900/20 px-3 py-3 rounded-xl mb-4 border border-blue-500/10">
@@ -1961,14 +2099,24 @@ export default function LabelEditor() {
               {/* Protected Property Sections */}
               <div className={selectedElement.locked ? 'pointer-events-none opacity-50 grayscale-[50%]' : ''}>
 
-              {/* Position Block */}
-              <div className="p-4 border-b border-white/20 dark:border-white/10 bg-slate-50/50">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-[9px] font-bold uppercase tracking-widest text-blue-600">Position & Size</span>
-                  <button onClick={() => deleteElement(selectedElement.id)} className="h-6 px-2 bg-red-50 hover:bg-red-100 text-red-600 text-[9px] font-bold uppercase rounded border border-red-200 transition-all flex items-center gap-1">
+              {/* ── Premium Position Block ────────────────────────────────────────── */}
+              <motion.div 
+                className="p-5 border-b border-white/20 dark:border-white/10 bg-slate-50/50"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Position & Size</span>
+                  <motion.button 
+                    onClick={() => deleteElement(selectedElement.id)} 
+                    className="h-7 px-3 bg-red-50 hover:bg-red-100 text-red-600 text-[10px] font-bold uppercase rounded-lg border border-red-200 transition-all flex items-center gap-1.5"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
                     <span className="material-symbols-outlined text-[14px]">delete</span>
                     <span className="uppercase">Delete</span>
-                  </button>
+                  </motion.button>
                 </div>
                 <div className="grid grid-cols-2 gap-2 mb-2">
                   {['x', 'y'].map(axis => (
@@ -1988,7 +2136,7 @@ export default function LabelEditor() {
                     </div>
                   ))}
                 </div>
-              </div>
+              </motion.div>
 
               {/* Data / Content Block — for all text-bearing types */}
               {['text', 'warnings', 'barcode', 'qrcode', 'manufacturing', 'dosage', 'storage', 'subtext', 'table'].includes(selectedElement.type) && (
@@ -2078,10 +2226,15 @@ export default function LabelEditor() {
                 </div>
               )}
 
-              {/* Typography — only for non-media types */}
+              {/* ── Premium Typography Section ──────────────────────────────────────── */}
               {!['image', 'barcode', 'qrcode', 'icon', 'IconsIcon'].includes(selectedElement.type) && (
-                <div className="p-4 border-b border-white/20 dark:border-white/10">
-                  <span className="text-[11px] font-bold uppercase tracking-widest text-slate-500 block mb-3">Typography</span>
+                <motion.div 
+                  className="p-5 border-b border-white/20 dark:border-white/10"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                >
+                  <span className="text-[11px] font-bold uppercase tracking-widest text-slate-500 block mb-4">Typography</span>
                   <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-2">
                       <div>
@@ -2186,12 +2339,17 @@ export default function LabelEditor() {
                       ))}
                     </div>
                   </div>
-                </div>
+                </motion.div>
               )}
 
-              {/* Appearance — Fill, Color, Stroke */}
+              {/* ── Premium Appearance Section ──────────────────────────────────────── */}
               {selectedElement.type !== 'image' && (
-                <div className="p-4 border-b border-white/20 dark:border-white/10 space-y-4">
+                <motion.div 
+                  className="p-5 border-b border-white/20 dark:border-white/10 space-y-5"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                >
                   <span className="text-[11px] font-bold uppercase tracking-widest text-slate-500 block">Appearance</span>
 
                   {/* Icon size slider */}
@@ -2409,16 +2567,25 @@ export default function LabelEditor() {
                       <button onClick={() => { updateElement(selectedElement.id, { rotation: 0 }); commitUpdate(); }} className="p-1 px-2 bg-slate-100 rounded text-[9px] font-bold text-slate-500">Reset</button>
                     </div>
                   </div>
-                </div>
+                </motion.div>
               )}
             </div>
           </div>
         ) : (
-            <div className="p-6 animate-fade-in space-y-8">
+            <motion.div 
+              className="p-6 animate-fade-in space-y-8"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
               <div className="flex flex-col items-center text-center px-4">
-                <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center mb-4 shadow-sm">
+                <motion.div 
+                  className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center mb-4 shadow-sm"
+                  whileHover={{ scale: 1.05, rotate: 5 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                >
                   <span className="material-symbols-outlined text-[32px] text-blue-600 dark:text-blue-400">settings_overscan</span>
-                </div>
+                </motion.div>
                 <h3 className="text-[13px] font-black text-slate-800 dark:text-slate-100 uppercase tracking-widest">Label Settings</h3>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1.5 leading-tight">Configure global properties for the entire label surface</p>
               </div>
@@ -2465,10 +2632,10 @@ export default function LabelEditor() {
                    <p className="text-[10px] text-slate-500 dark:text-slate-500">to edit specific properties</p>
                 </div>
               </div>
-            </div>
+            </motion.div>
           )}
-        </aside>
-      </main>
+        </motion.aside>
+      </motion.main>
     </div>
   );
 }
