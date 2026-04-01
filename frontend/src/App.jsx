@@ -9,6 +9,11 @@ import Translation from './pages/Translation';
 import History from './pages/History';
 import Settings from './pages/Settings';
 import UserManagement from './pages/UserManagement';
+import LabelStocks from './pages/masters/LabelStocks';
+import Placeholders from './pages/masters/Placeholders';
+import Objects from './pages/masters/Objects';
+import Languages from './pages/masters/Languages';
+import PhrasesTranslations from './pages/masters/PhrasesTranslations';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './components/common/ToastContext';
@@ -119,6 +124,33 @@ function AppContent() {
       <Route path="/admin/users" element={
         <ProtectedRoute requiredRole="ADMIN">
           <UserManagement />
+        </ProtectedRoute>
+      } />
+
+      {/* Setup Masters */}
+      <Route path="/masters/label-stocks" element={
+        <ProtectedRoute requiredRole="ADMIN">
+          <LabelStocks />
+        </ProtectedRoute>
+      } />
+      <Route path="/masters/placeholders" element={
+        <ProtectedRoute requiredRole="ADMIN">
+          <Placeholders />
+        </ProtectedRoute>
+      } />
+      <Route path="/masters/assets" element={
+        <ProtectedRoute requiredRole="ADMIN">
+          <Objects />
+        </ProtectedRoute>
+      } />
+      <Route path="/masters/languages" element={
+        <ProtectedRoute requiredRole="ADMIN">
+          <Languages />
+        </ProtectedRoute>
+      } />
+      <Route path="/masters/phrases" element={
+        <ProtectedRoute requiredRole="ADMIN">
+          <PhrasesTranslations />
         </ProtectedRoute>
       } />
     </Routes>

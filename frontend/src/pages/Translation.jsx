@@ -19,7 +19,7 @@ const TYPE_COLORS = {
 
 export default function Translation() {
   const { activeTemplate, elements, updateElement, commitUpdate, meta } = useLabel();
-  const { showToast } = useToast();
+  const { success, error } = useToast();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
 
@@ -63,7 +63,7 @@ export default function Translation() {
 
   const handleTranslate = useCallback(async () => {
     if (!selectedLang) {
-      showToast('Please complete all 3 dropdown selections first.', 'error');
+      error('Please complete all 3 dropdown selections first.');
       return;
     }
     const toTranslate = translatableElements
@@ -71,7 +71,7 @@ export default function Translation() {
       .map(el => ({ id: el.id, text: el.text || '' }));
 
     if (toTranslate.length === 0) {
-      showToast('No elements selected for translation.', 'error');
+      error('No elements selected for translation.');
       return;
     }
 
@@ -84,9 +84,9 @@ export default function Translation() {
         (done, total) => setProgress({ done, total })
       );
       setDraftTranslations(prev => ({ ...prev, ...results }));
-      showToast(`Translated ${toTranslate.length} elements to ${selectedLang.name}!`, 'success');
+      success(`Translated ${toTranslate.length} elements to ${selectedLang.name}!`);
     } catch (e) {
-      showToast('Translation failed. Please try again.', 'error');
+      error('Translation failed. Please try again.');
     } finally {
       setTranslating(false);
       setProgress({ done: 0, total: 0 });
@@ -98,7 +98,7 @@ export default function Translation() {
       el => checkedIds.has(el.id) && draftTranslations[el.id] !== undefined
     );
     if (checkedWithDraft.length === 0) {
-      showToast('Nothing to apply. Please translate first.', 'error');
+      error('Nothing to apply. Please translate first.');
       return;
     }
     checkedWithDraft.forEach(el => {
@@ -114,7 +114,7 @@ export default function Translation() {
     });
     commitUpdate();
     setIsApplied(true);
-    showToast(`${checkedWithDraft.length} translation(s) applied to canvas!`, 'success');
+    success(`${checkedWithDraft.length} translation(s) applied to canvas!`);
   };
 
   const allChecked = translatableElements.length > 0 && translatableElements.every(el => checkedIds.has(el.id));

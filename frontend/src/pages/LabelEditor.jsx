@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
+import { api } from '../services/api';
 import { Link, useNavigate } from 'react-router-dom';
 import { useLabel } from '../context/LabelContext';
 import { useTheme } from '../context/ThemeContext';
@@ -44,64 +45,102 @@ function TableSetupModal({ onConfirm, onCancel }) {
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm animate-fade-in">
-      <div className="glass-card bg-white dark:bg-slate-800 rounded-2xl shadow-float w-[500px] max-h-[90vh] flex flex-col">
-        <div className="p-5 border-b border-slate-100 dark:border-white/5 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-blue-600">table_chart</span>
-            <h3 className="font-bold text-slate-800 dark:text-white">Insert Data Table</h3>
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-900/60 backdrop-blur-md animate-fade-in p-4">
+      <div className="bg-white dark:bg-slate-900 w-full max-w-[540px] max-h-[90vh] flex flex-col rounded-[24px] shadow-3xl shadow-blue-900/10 relative overflow-hidden border border-white/50 dark:border-white/10">
+        
+        {/* Subtle Accent Bar */}
+        <div className="absolute top-0 left-0 w-full h-[4px] bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-600"></div>
+
+        <div className="px-7 py-5 border-b border-slate-100 dark:border-slate-800/50 flex items-center justify-between bg-white dark:bg-slate-900">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-[16px] bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/40 dark:to-indigo-900/40 shadow-inner flex items-center justify-center text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800/50">
+              <span className="material-symbols-outlined text-[24px]">table_view</span>
+            </div>
+            <div>
+              <h3 className="font-extrabold text-[18px] text-slate-800 dark:text-white leading-tight">Insert Data Table</h3>
+              <p className="text-[12px] font-medium text-slate-500 dark:text-slate-400 mt-0.5">Choose a preset or customize grid dimensions</p>
+            </div>
           </div>
-          <button onClick={onCancel} className="text-slate-400 hover:text-slate-600"><span className="material-symbols-outlined text-xl">close</span></button>
+          <button onClick={onCancel} className="w-8 h-8 rounded-full flex items-center justify-center bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 transition-colors">
+            <span className="material-symbols-outlined text-[18px]">close</span>
+          </button>
         </div>
 
-        <div className="p-6 flex flex-col gap-6 overflow-y-auto">
-          <div>
-            <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2 block">Table Template</label>
-            <div className="grid grid-cols-2 gap-2">
+        <div className="p-7 flex flex-col gap-8 overflow-y-auto custom-scrollbar">
+          
+          <section>
+            <label className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-4">
+              <span className="material-symbols-outlined text-[14px] text-indigo-500">grid_guides</span> Table Template
+            </label>
+            <div className="grid grid-cols-2 gap-3">
               {[
-                { id: 'blank', label: 'Blank Grid', icon: 'grid_on' },
-                { id: 'composition', label: 'Ingredients', icon: 'science' },
-                { id: 'usage', label: 'Dosage Guide', icon: 'medication' },
-                { id: 'nutrition', label: 'Nutrition Facts', icon: 'restaurant' },
+                { id: 'blank', label: 'Blank Grid', desc: 'Custom layout', icon: 'grid_on' },
+                { id: 'composition', label: 'Ingredients', desc: 'Qty & Names', icon: 'science' },
+                { id: 'usage', label: 'Dosage Guide', desc: 'Ages & Amounts', icon: 'medication' },
+                { id: 'nutrition', label: 'Nutrition Facts', desc: 'Standard facts', icon: 'restaurant' },
               ].map(t => (
-                <button key={t.id} onClick={() => setTemplate(t.id)} className={`flex items-center gap-2 p-2.5 rounded-xl border text-left transition-all ${template === t.id ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-slate-200 hover:border-slate-300 dark:border-white/10 text-slate-600 dark:text-slate-300'}`}>
-                  <span className="material-symbols-outlined text-lg opacity-70">{t.icon}</span>
-                  <span className="text-xs font-bold">{t.label}</span>
+                <button 
+                  key={t.id} 
+                  onClick={() => setTemplate(t.id)} 
+                  className={`relative flex items-center gap-3 p-3.5 rounded-2xl border-2 text-left transition-all overflow-hidden group ${
+                    template === t.id 
+                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 focus:outline-none' 
+                    : 'border-slate-100 hover:border-slate-300 dark:border-white/5 dark:hover:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                  }`}
+                >
+                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-colors ${template === t.id ? 'bg-blue-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 group-hover:bg-white group-hover:text-blue-500 group-hover:shadow-sm'}`}>
+                    <span className="material-symbols-outlined text-[20px]">{t.icon}</span>
+                  </div>
+                  <div>
+                    <div className={`text-[13px] font-extrabold leading-none mb-1.5 ${template === t.id ? 'text-blue-800 dark:text-blue-300' : 'text-slate-700 dark:text-slate-200'}`}>{t.label}</div>
+                    <div className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">{t.desc}</div>
+                  </div>
                 </button>
               ))}
             </div>
-          </div>
+          </section>
 
-          <div className="flex gap-4">
+          <section className="bg-slate-50/70 dark:bg-slate-800/30 rounded-[20px] p-5 border border-slate-100 dark:border-slate-800/50 flex gap-6">
             <div className="flex-1">
-              <label className="text-[10px] font-bold uppercase tracking-widest flex justify-between text-slate-500 mb-2"><span>Data Rows</span><span className="text-blue-600 font-mono">{rows}</span></label>
-              <div className="flex items-center gap-2">
+              <label className="text-[10px] font-bold uppercase tracking-widest flex justify-between items-center text-slate-500 dark:text-slate-400 mb-3">
+                <span className="flex items-center gap-1.5"><span className="material-symbols-outlined text-[14px]">table_rows</span> Rows</span>
+                <span className="text-blue-600 dark:text-blue-400 font-mono text-[11px] bg-blue-100 dark:bg-blue-900/40 px-2 py-0.5 rounded-md leading-none">{rows}</span>
+              </label>
+              <div className="flex items-center gap-3">
                 <input type="range" min="1" max="50" className="flex-1 accent-blue-600" value={rows} onChange={e => setRows(Number(e.target.value))} />
-                <input type="number" min="1" max="100" className="w-12 bg-white border border-slate-200 rounded px-1 py-0.5 text-[11px] font-mono outline-none focus:border-blue-400" value={rows} onChange={e => setRows(Math.max(1, Number(e.target.value)))} />
+                <input type="number" min="1" max="100" className="w-14 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-2 py-1 text-sm font-mono font-bold outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-center dark:text-white" value={rows} onChange={e => setRows(Math.max(1, Number(e.target.value)))} />
               </div>
             </div>
-            <div className={`flex-1 transition-opacity ${template !== 'blank' ? 'opacity-30 pointer-events-none' : ''}`}>
-              <label className="text-[10px] font-bold uppercase tracking-widest flex justify-between text-slate-500 mb-2"><span>Columns</span><span className="text-blue-600 font-mono">{cols}</span></label>
-              <div className="flex items-center gap-2">
-                <input type="range" min="1" max="12" className="flex-1 accent-blue-600" value={cols} onChange={e => updateColCount(Number(e.target.value))} />
-                <input type="number" min="1" max="20" className="w-12 bg-white border border-slate-200 rounded px-1 py-0.5 text-[11px] font-mono outline-none focus:border-blue-400" value={cols} onChange={e => updateColCount(Math.max(1, Number(e.target.value)))} />
-              </div>
-            </div>
-          </div>
+            
+            {/* Divider */}
+            <div className="w-[1px] bg-slate-200 dark:bg-slate-700 h-10 self-end mb-2"></div>
 
-          {/* Manual Column Header Names — only for blank template */}
+            <div className={`flex-1 transition-opacity duration-300 ${template !== 'blank' ? 'opacity-30 pointer-events-none grayscale' : ''}`}>
+              <label className="text-[10px] font-bold uppercase tracking-widest flex justify-between items-center text-slate-500 dark:text-slate-400 mb-3">
+                <span className="flex items-center gap-1.5"><span className="material-symbols-outlined text-[14px]">view_column</span> Columns</span>
+                <span className="text-blue-600 dark:text-blue-400 font-mono text-[11px] bg-blue-100 dark:bg-blue-900/40 px-2 py-0.5 rounded-md leading-none">{cols}</span>
+              </label>
+              <div className="flex items-center gap-3">
+                <input type="range" min="1" max="12" className="flex-1 accent-blue-600" value={cols} onChange={e => updateColCount(Number(e.target.value))} />
+                <input type="number" min="1" max="20" className="w-14 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-2 py-1 text-sm font-mono font-bold outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-center dark:text-white" value={cols} onChange={e => updateColCount(Math.max(1, Number(e.target.value)))} />
+              </div>
+            </div>
+          </section>
+
           {template === 'blank' && (
-            <div>
-              <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-3 block">Column Names</label>
-              <div className="flex flex-col gap-2">
+            <section className="animate-fade-in pb-2">
+              <label className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-4">
+                <span className="material-symbols-outlined text-[14px]">title</span> Column Headers
+              </label>
+              <div className="grid grid-cols-2 gap-4">
                 {Array.from({ length: cols }).map((_, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold text-slate-400 bg-slate-100 dark:bg-slate-700 rounded-lg px-2 py-1.5 shrink-0 w-14 text-center">Col {i + 1}</span>
+                  <div key={i} className="flex flex-col gap-1.5 relative">
+                    <span className="text-[10px] font-extrabold uppercase text-slate-400 dark:text-slate-500 absolute left-3.5 top-2.5 pointer-events-none">Col {i + 1}</span>
                     <input
                       type="text"
-                      className="flex-1 bg-slate-50 border border-slate-200 dark:bg-slate-700 dark:border-white/10 text-[12px] px-3 py-1.5 rounded-lg outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200 transition-all"
+                      className="w-full bg-slate-50 hover:bg-white border-2 border-slate-100 dark:bg-slate-800/50 dark:border-slate-700 text-sm font-semibold text-slate-800 dark:text-white px-3.5 pt-7 pb-2.5 rounded-xl outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 transition-all placeholder-slate-300 dark:placeholder-slate-600"
                       value={colHeaders[i] || ''}
-                      placeholder={`Column ${i + 1} name…`}
+                      placeholder={`Enter name...`}
                       onChange={e => {
                         const next = [...colHeaders];
                         next[i] = e.target.value;
@@ -111,13 +150,16 @@ function TableSetupModal({ onConfirm, onCancel }) {
                   </div>
                 ))}
               </div>
-            </div>
+            </section>
           )}
+
         </div>
 
-        <div className="p-5 border-t border-slate-100 dark:border-white/5 flex justify-end gap-3 bg-slate-50 dark:bg-slate-800/50">
-          <button onClick={onCancel} className="px-5 py-2 text-xs font-bold text-slate-500 dark:text-slate-300 hover:bg-slate-200/50 dark:hover:bg-slate-700 rounded-xl transition-colors">Cancel</button>
-          <button onClick={handleConfirm} className="px-6 py-2 text-xs font-bold text-white btn-gradient rounded-xl shadow-sm hover:shadow active:scale-95 transition-all">Insert Table</button>
+        <div className="px-7 py-5 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3 bg-slate-50/30 dark:bg-slate-900/50">
+          <button onClick={onCancel} className="px-6 py-2.5 text-[13px] font-bold text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 hover:bg-slate-50 hover:border-slate-300 dark:hover:bg-slate-700 rounded-xl transition-all shadow-sm">Cancel</button>
+          <button onClick={handleConfirm} className="px-7 py-2.5 text-[13px] font-bold text-white btn-gradient rounded-xl shadow-md hover:shadow-lg hover:-translate-y-0.5 active:scale-95 transition-all flex items-center gap-2">
+            <span className="material-symbols-outlined text-[18px]">add</span> Insert Table
+          </button>
         </div>
       </div>
     </div>,
@@ -173,6 +215,41 @@ export default function LabelEditor() {
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [bulkSuffix, setBulkSuffix] = useState('');
   const originalTexts = useRef({}); // Tracks base text during bulk suffix editing
+
+  // --- Placeholder Logic ---
+  const [placeholders, setPlaceholders] = useState([]);
+  const [placeholdersLoading, setPlaceholdersLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchPlaceholders = async () => {
+      setPlaceholdersLoading(true);
+      try {
+        const data = await api.getPlaceholders();
+        setPlaceholders(data);
+      } catch (err) {
+        console.error("Failed to fetch placeholders:", err);
+      } finally {
+        setPlaceholdersLoading(false);
+      }
+    };
+    fetchPlaceholders();
+  }, []);
+
+  const addPlaceholder = (ph) => {
+    addElement({
+      type: 'text',
+      text: `{{${ph.key}}}`,
+      name: ph.name,
+      placeholderKey: ph.key,
+      fontSize: 14,
+      fontFamily: 'Inter, sans-serif',
+      fontWeight: '600',
+      color: '#2563eb', // Blue for placeholders by default
+      width: 140,
+      height: 24,
+      isPlaceholder: true
+    });
+  };
 
   // Show FileNameModal only AFTER hydration is complete and no saved file exists
   useEffect(() => {
@@ -773,8 +850,8 @@ export default function LabelEditor() {
         {/* LEFT SIDEBAR */}
         <aside className="w-64 glass border-r border-white/20 dark:border-white/10 flex flex-col overflow-hidden shrink-0">
           {/* Tab Headers */}
-          <div className="flex border-b border-white/20 dark:border-white/10 text-[11px] font-bold uppercase tracking-wider text-slate-500 shrink-0">
-            {['elements', 'shapes', 'Icons', 'layers'].map(t => (
+          <div className="flex border-b border-white/20 dark:border-white/10 text-[10px] font-bold uppercase tracking-wider text-slate-500 shrink-0">
+            {['elements', 'Variables', 'shapes', 'Icons', 'layers'].map(t => (
               <button key={t} onClick={() => setActiveTab(t)}
                 className={`flex-1 py-3 transition-colors ${activeTab === t ? 'text-primary border-b-2 border-primary bg-blue-50/50' : 'text-slate-500 hover:bg-slate-100/50 hover:text-slate-700'}`}
               >{t}</button>
@@ -782,6 +859,44 @@ export default function LabelEditor() {
           </div>
 
           <div className="p-4 flex-1 overflow-y-auto custom-scrollbar">
+
+            {/* VARIABLES / PLACEHOLDERS TAB */}
+            {activeTab === 'Variables' && (
+              <div className="animate-fade-in flex flex-col gap-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Available Variables</h4>
+                  <button onClick={() => navigate('/masters/placeholders')} className="text-[9px] font-bold text-blue-600 hover:underline">Manage</button>
+                </div>
+                {placeholdersLoading ? (
+                  <div className="py-10 flex flex-col items-center opacity-30">
+                    <div className="um-spinner w-4 h-4 mb-2" />
+                    <span className="text-[10px]">Loading...</span>
+                  </div>
+                ) : placeholders.length === 0 ? (
+                  <div className="p-4 bg-slate-100 rounded-xl text-center">
+                    <p className="text-[10px] text-slate-500">No placeholders found.</p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-2">
+                    {placeholders.map(ph => (
+                      <button
+                        key={ph.id}
+                        onClick={() => addPlaceholder(ph)}
+                        className="flex items-center gap-3 p-3 bg-white border border-slate-200 rounded-xl hover:border-blue-500 hover:shadow-md transition-all group text-left"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                          <span className="material-symbols-outlined text-sm">database</span>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-xs font-bold text-slate-700">{ph.name}</span>
+                          <code className="text-[9px] text-blue-500 font-mono">{`{{${ph.key}}}`}</code>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* ELEMENTS TAB */}
             {activeTab === 'elements' && (

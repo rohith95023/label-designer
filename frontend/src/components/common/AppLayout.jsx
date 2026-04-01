@@ -209,7 +209,7 @@ export default function AppLayout({ children, activePage = '', searchBar = null 
                 Main Menu
               </p>
             )}
-            {filteredNavItems.map(item => {
+            {filteredNavItems.filter(n => !['editor', 'translation'].includes(n.key)).map(item => {
               const isActive = activePage === item.key;
               if (collapsed) {
                 return (

@@ -20,7 +20,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/labels")
+@RequestMapping("/api/v1/labels")
 @RequiredArgsConstructor
 public class LabelController {
 

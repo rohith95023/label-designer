@@ -181,6 +181,8 @@ export const LabelProvider = ({ children }) => {
   const [activityLogs, setActivityLogs] = useState([]);
   const [loading, setLoading]           = useState(true);
   const [userFiles, setUserFiles]       = useState([]);
+  const [labelStocks, setLabelStocks]   = useState([]);
+  const defaultStockIdRef = useRef(null);
 
   const { user } = useAuth();
   const guestId = getGuestId();
@@ -200,15 +202,7 @@ export const LabelProvider = ({ children }) => {
         setLoading(true);
 
         if (!user) {
-          // Not authenticated — load predefined labels
-          try {
-            const systemLabels = await api.getLabels('PREDEFINED');
-            if (systemLabels && systemLabels.length > 0) {
-              setTemplates(systemLabels);
-            }
-          } catch (tempErr) {
-            console.error('Failed to fetch labels', tempErr);
-          }
+          // Not authenticated — use local predefined labels, do not fetch from backend
           setHydrated(true);
           return;
         }
@@ -226,16 +220,31 @@ export const LabelProvider = ({ children }) => {
           console.error('Failed to fetch dashboard data', dashErr);
         }
 
-        // 2. Fetch Labels
+        // 2. Fetch Label Stocks (needed for label creation)
         try {
-          const systemLabels = await api.getLabels('PREDEFINED');
-          setTemplates(systemLabels);
-        } catch (tempErr) {
-          console.error('Failed to fetch labels', tempErr);
-          showToast('Failed to load libraries', 'error');
+          const stocks = await api.getLabelStocks();
+          if (Array.isArray(stocks) && stocks.length > 0) {
+            setLabelStocks(stocks);
+            defaultStockIdRef.current = stocks[0].id;
+          }
+        } catch (stockErr) {
+          console.error('Failed to fetch label stocks', stockErr);
         }
 
-        // 3. Fetch User Labels
+        // 3. Fetch Predefined Templates — merge with built-in PREDEFINED_TEMPLATES
+        try {
+          const systemLabels = await api.getLabels('PREDEFINED');
+          // Only replace built-ins if the backend actually has predefined templates
+          if (Array.isArray(systemLabels) && systemLabels.length > 0) {
+            setTemplates(systemLabels);
+          }
+          // else: keep PREDEFINED_TEMPLATES as the default (already in state)
+        } catch (tempErr) {
+          console.error('Failed to fetch predefined labels, using built-in defaults', tempErr);
+          // Keep PREDEFINED_TEMPLATES (already in state) — no toast needed
+        }
+
+        // 4. Fetch User Labels
         try {
           const labels = await api.getLabels('ACTIVE');
           setUserFiles(labels);
@@ -357,11 +366,16 @@ export const LabelProvider = ({ children }) => {
   const setFileName = async (name) => {
     const trimmed = name.trim();
     if (!meta.fileId) {
+      const stockId = defaultStockIdRef.current;
+      if (!stockId) {
+        showToast('No label stock available. Please contact admin.', 'error');
+        return;
+      }
       try {
         setSavedStatus('saving');
         const newLabel = await api.createLabel({
           name: trimmed,
-          labelStockId: '00000000-0000-0000-0000-000000000001', // Default stock for now
+          labelStockId: stockId,
           status: 'ACTIVE',
           designJson: {
             elementsData: elements,
@@ -374,6 +388,7 @@ export const LabelProvider = ({ children }) => {
         setSavedStatus('saved');
         addActivityLog(activeTemplate ? 'Started from template' : 'Created new label', newLabel.id, trimmed);
       } catch (err) {
+        console.error('Failed to create label:', err);
         showToast('Failed to initialize label in backend', 'error');
       }
     } else {
@@ -404,11 +419,16 @@ export const LabelProvider = ({ children }) => {
   };
 
   const saveFileAs = async (newName) => {
+    const stockId = defaultStockIdRef.current;
+    if (!stockId) {
+      showToast('No label stock available. Please contact admin.', 'error');
+      return;
+    }
     try {
       setSavedStatus('saving');
       const newLabel = await api.createLabel({
         name: newName,
-        labelStockId: '00000000-0000-0000-0000-000000000001',
+        labelStockId: stockId,
         status: 'ACTIVE',
         designJson: {
           elementsData: elements,
@@ -667,7 +687,7 @@ export const LabelProvider = ({ children }) => {
   };
 
   const value = {
-    templates, userFiles,
+    templates, userFiles, labelStocks,
     activeTemplate, setActiveTemplate,
     meta, setMeta,
     elements, setElements,

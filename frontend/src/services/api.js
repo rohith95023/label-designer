@@ -96,5 +96,60 @@ export const api = {
 
   getModuleAuditLogs: (module, page = 0, size = 50) =>
     authApi.get(`/audit-logs/module/${module}?page=${page}&size=${size}`).then(res => res.data),
+
+  // Label Stocks
+  getLabelStocks: () => authApi.get('/label-stocks').then(res => res.data),
+  getLabelStock: (id) => authApi.get(`/label-stocks/${id}`).then(res => res.data),
+  createLabelStock: (data) => authApi.post('/label-stocks', data).then(res => res.data),
+  updateLabelStock: (id, data) => authApi.put(`/label-stocks/${id}`, data).then(res => res.data),
+  deleteLabelStock: (id) => authApi.delete(`/label-stocks/${id}`).then(res => res.status === 204),
+
+  // Placeholders
+  getPlaceholders: () => authApi.get('/placeholders').then(res => res.data),
+  getPlaceholder: (id) => authApi.get(`/placeholders/${id}`).then(res => res.data),
+  createPlaceholder: (data) => authApi.post('/placeholders', data).then(res => res.data),
+  updatePlaceholder: (id, data) => authApi.put(`/placeholders/${id}`, data).then(res => res.data),
+  deletePlaceholder: (id) => authApi.delete(`/placeholders/${id}`).then(res => res.status === 204),
+
+  // Objects (Assets)
+  getObjects: () => authApi.get('/objects').then(res => res.data),
+  getObject: (id) => authApi.get(`/objects/${id}`).then(res => res.data),
+  uploadObject: (formData) => authApi.post('/objects/upload', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }).then(res => res.data),
+  updateObject: (id, data) => authApi.put(`/objects/${id}`, data).then(res => res.data),
+  deleteObject: (id) => authApi.delete(`/objects/${id}`).then(res => res.status === 204),
+
+  // Languages
+  getLanguages: () => authApi.get('/languages').then(res => res.data),
+  getLanguage: (id) => authApi.get(`/languages/${id}`).then(res => res.data),
+  createLanguage: (data) => authApi.post('/languages', data).then(res => res.data),
+  updateLanguage: (id, data) => authApi.put(`/languages/${id}`, data).then(res => res.data),
+  deleteLanguage: (id) => authApi.delete(`/languages/${id}`).then(res => res.status === 204),
+
+  // Phrases
+  getPhrases: () => authApi.get('/phrases').then(res => res.data),
+  getPhrase: (id) => authApi.get(`/phrases/${id}`).then(res => res.data),
+  createPhrase: (data) => authApi.post('/phrases', data).then(res => res.data),
+  updatePhrase: (id, data) => authApi.put(`/phrases/${id}`, data).then(res => res.data),
+  deletePhrase: (id) => authApi.delete(`/phrases/${id}`).then(res => res.status === 204),
+
+  // Translations
+  getTranslations: () => authApi.get('/translations').then(res => res.data),
+  getTranslationsByPhrase: (phraseId) => authApi.get(`/translations/phrase/${phraseId}`).then(res => res.data),
+  getTranslationsByLanguage: (languageId) => authApi.get(`/translations/language/${languageId}`).then(res => res.data),
+  createTranslation: (data) => authApi.post('/translations', data).then(res => res.data),
+  updateTranslation: (id, data) => authApi.put(`/translations/${id}`, data).then(res => res.data),
+  deleteTranslation: (id) => authApi.delete(`/translations/${id}`).then(res => res.status === 204),
+
+  // Approvals
+  getApprovals: () => authApi.get('/approvals').then(res => res.data),
+  getApprovalsByLabel: (labelId) => authApi.get(`/approvals/label/${labelId}`).then(res => res.data),
+  submitForApproval: (labelId, versionNo, comments) => 
+    authApi.post(`/approvals/submit?labelId=${labelId}&versionNo=${versionNo}${comments ? `&comments=${encodeURIComponent(comments)}` : ''}`).then(res => res.data),
+  approveLabel: (id, comments) => 
+    authApi.post(`/approvals/${id}/approve${comments ? `?comments=${encodeURIComponent(comments)}` : ''}`).then(res => res.data),
+  rejectLabel: (id, comments) => 
+    authApi.post(`/approvals/${id}/reject${comments ? `?comments=${encodeURIComponent(comments)}` : ''}`).then(res => res.data),
 };
 

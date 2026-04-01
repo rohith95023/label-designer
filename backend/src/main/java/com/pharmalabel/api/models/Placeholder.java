@@ -25,8 +25,16 @@ public class Placeholder {
     @Column(nullable = false)
     private String type; // DATA, FREE_TEXT, RUNTIME, VISIT
 
-    @Column(name = "mapping_key")
+    @Column(name = "mapping_key", unique = true)
     private String mappingKey;
+
+    @Column(name = "default_value")
+    private String defaultValue;
+
+    private String description;
+
+    @Builder.Default
+    private String status = "ACTIVE";
 
     @Column(name = "format_rules", columnDefinition = "jsonb")
     @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)

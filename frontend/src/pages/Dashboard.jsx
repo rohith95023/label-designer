@@ -1,6 +1,8 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLabel } from '../context/LabelContext';
+import { useAuth } from '../context/AuthContext';
+import { api } from '../services/api';
 import AppLayout from '../components/common/AppLayout';
 
 /* Animated number counter */
@@ -89,10 +91,33 @@ const QUICK_ACTIONS = (handleNew, navigate, handleUpload) => [
 ];
 
 export default function Dashboard() {
-  const { newFile, openFileById, getAllFiles, openFileFromJSON, activityLogs, loading } = useLabel();
+  const { user: currentUser } = useAuth();
+  const { newFile, openFileById, getAllFiles, openFileFromJSON, activityLogs, loading: labelLoading } = useLabel();
   const navigate = useNavigate();
   const allFiles = useMemo(() => getAllFiles().sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)), [getAllFiles]);
   const fileInputRef = useRef(null);
+
+  const [approvals, setApprovals] = useState([]);
+  const [approvalsLoading, setApprovalsLoading] = useState(false);
+
+  const canApprove = currentUser?.role?.name === 'ADMIN' || currentUser?.role?.name === 'APPROVER';
+
+  useEffect(() => {
+    if (canApprove) {
+      const fetchApprovals = async () => {
+        setApprovalsLoading(true);
+        try {
+          const data = await api.getApprovals();
+          setApprovals(data.filter(a => a.status === 'PENDING'));
+        } catch (err) {
+          console.error("Failed to fetch approvals:", err);
+        } finally {
+          setApprovalsLoading(false);
+        }
+      };
+      fetchApprovals();
+    }
+  }, [canApprove]);
 
   const totalExports = useMemo(() => 
     (activityLogs || []).filter(log => log?.action === 'Exported JSON').length
@@ -131,12 +156,60 @@ export default function Dashboard() {
           </p>
         </div>
 
-        {loading ? (
+        {labelLoading ? (
           <div className="flex items-center justify-center p-20">
             <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
           </div>
         ) : (
           <>
+            {/* ── Approvals Section (Conditional) ────────────────────────── */}
+            {canApprove && (
+              <section className="mb-10 animate-slide-up">
+                <div className="flex items-center justify-between mb-5">
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-lg font-bold text-on-surface tracking-tight">Pending Approvals</h2>
+                    {approvals.length > 0 && (
+                      <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full ring-4 ring-red-500/10">
+                        {approvals.length}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                
+                {approvalsLoading ? (
+                  <div className="p-10 flex justify-center opacity-30"><div className="um-spinner w-6 h-6" /></div>
+                ) : approvals.length === 0 ? (
+                  <div className="p-8 glass-card rounded-2xl border border-dashed border-outline-variant/30 flex flex-col items-center justify-center text-center">
+                    <span className="material-symbols-outlined text-outline/30 text-3xl mb-2">fact_check</span>
+                    <p className="text-xs text-on-surface-variant font-medium">All caught up! No labels waiting for approval.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {approvals.map(app => (
+                      <div key={app.id} className="glass-card rounded-2xl p-4 flex items-center justify-between group hover:border-primary/30 transition-all">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-primary">
+                            <span className="material-symbols-outlined">assignment_late</span>
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-on-surface">{app.label.name}</p>
+                            <p className="text-[10px] text-on-surface-variant uppercase tracking-wider font-bold">
+                              Version {app.versionNo} • Requested by {app.requestedBy.username}
+                            </p>
+                          </div>
+                        </div>
+                        <button 
+                          onClick={() => handleOpenFile(app.label.id)}
+                          className="px-4 py-2 bg-primary text-on-primary rounded-xl text-xs font-bold hover:shadow-glow-sm transition-all"
+                        >
+                          Review
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </section>
+            )}
             {/* ── Stat Cards ─────────────────────────────────────────────── */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10">
               {statCards.map((card, i) => (

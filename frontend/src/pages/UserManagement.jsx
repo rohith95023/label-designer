@@ -210,7 +210,7 @@ const UserManagement = () => {
     } catch (err) {
       console.error("Submission error:", err);
       const rawMsg = err.response?.data?.message || err.message || 'Action failed.';
-      const genericError = `Failed to ${isEditing ? 'update' : 'create'} user: ${rawMsg}`;
+      let genericError = `Failed to ${isEditing ? 'update' : 'create'} user: ${rawMsg}`;
       setFormError(genericError);
       toastError(genericError);
       
