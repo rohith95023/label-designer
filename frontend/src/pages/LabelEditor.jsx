@@ -17,6 +17,7 @@ import { IconsIcons } from '../data/premiumIcons';
 import { WORDART_CATEGORIES, WORDART_STYLES } from '../data/wordArtPresets';
 import PreviewModal from '../components/modals/PreviewModal';
 import { calcAutoFitFontSize } from '../utils/autoFitFont';
+import Ruler from '../components/ui/Ruler';
 
 function resolvePlaceholders(text, placeholderValues) {
   if (!text) return '';
@@ -227,6 +228,7 @@ export default function LabelEditor() {
   const [bulkSuffix, setBulkSuffix] = useState('');
   const [previewMode, setPreviewMode] = useState(false);
   const originalTexts = useRef({}); // Tracks base text during bulk suffix editing
+  const [artboardCursor, setArtboardCursor] = useState({ x: null, y: null });
 
   // --- Placeholder Logic ---
   const [placeholders, setPlaceholders] = useState([]);
@@ -840,49 +842,69 @@ export default function LabelEditor() {
           </button>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setModalStep('labelsize')}
-            className="flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-medium text-slate-500 hover:bg-slate-100 hover:text-primary transition-colors"
-            title="Edit label size"
-          >
-            <span className="material-symbols-outlined text-[14px]">aspect_ratio</span>
-            <span className="font-mono">{AW}×{AH}px</span>
-            <span className="material-symbols-outlined text-[12px]">edit</span>
-          </button>
-        </div>
-
-        <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
+        {/* Center: Tools & Modes */}
+        <div className="flex-1 flex items-center justify-center gap-2">
           <button 
             onClick={() => setShowWordArtModal(true)}
-            className="flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-slate-700 border border-blue-200 dark:border-white/10 rounded-full shadow-sm hover:shadow-md hover:border-blue-400 transition-all text-blue-700 dark:text-blue-300 font-bold text-[10px] uppercase tracking-widest"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-white/50 dark:bg-slate-800/50 border border-slate-200 dark:border-white/10 rounded-full shadow-sm hover:shadow-md hover:border-primary/40 transition-all text-primary font-bold text-[9px] uppercase tracking-widest"
           >
-            <span className="material-symbols-outlined text-[16px]">abc</span> WordArt
+            <span className="material-symbols-outlined text-[14px]">abc</span> WordArt
           </button>
-          <div className="w-[1px] h-3 bg-slate-200 mx-1"></div>
+          
+          <div className="w-[1px] h-3 bg-slate-200 dark:bg-slate-700/50 mx-0.5"></div>
+          
           <button 
-            onClick={() => setIsDrawingMode(true)}
-            className={`flex items-center gap-1.5 px-3 py-1 border rounded-full shadow-sm hover:shadow-md transition-all font-bold text-[10px] uppercase tracking-widest ${isDrawingMode ? 'btn-gradient shadow-glow' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:border-blue-400'}`}
+            onClick={() => setIsDrawingMode(!isDrawingMode)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 border rounded-full shadow-sm hover:shadow-md transition-all font-bold text-[9px] uppercase tracking-widest ${isDrawingMode ? 'btn-gradient shadow-glow' : 'bg-white/50 dark:bg-slate-800/50 border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:border-primary/40'}`}
           >
-            <span className="material-symbols-outlined text-[16px]">edit_note</span> Writing
+            <span className="material-symbols-outlined text-[14px]">edit_note</span> Writing
           </button>
 
-          <div className="w-[1px] h-3 bg-slate-200 mx-1"></div>
+          <div className="w-[1px] h-3 bg-slate-200 dark:bg-slate-700/50 mx-0.5"></div>
 
           <button 
             onClick={() => setShowPreviewModal(true)}
-            className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-500/20 rounded-full shadow-sm hover:shadow-md hover:border-emerald-400 transition-all text-emerald-700 dark:text-emerald-300 font-bold text-[10px] uppercase tracking-widest"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50/50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-500/20 rounded-full shadow-sm hover:shadow-md hover:border-emerald-400 transition-all text-emerald-700 dark:text-emerald-300 font-bold text-[9px] uppercase tracking-widest"
           >
-            <span className="material-symbols-outlined text-[16px]">visibility</span> Preview
+            <span className="material-symbols-outlined text-[14px]">visibility</span> Preview
           </button>
 
           <button 
             onClick={() => setPreviewMode(!previewMode)}
-            className={`flex items-center gap-1.5 px-3 py-1 border rounded-full shadow-sm hover:shadow-md transition-all font-bold text-[10px] uppercase tracking-widest ${previewMode ? 'bg-indigo-600 text-white border-indigo-600 shadow-indigo-200' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:border-indigo-400'}`}
+            className={`flex items-center gap-1.5 px-3 py-1.5 border rounded-full shadow-sm hover:shadow-md transition-all font-bold text-[9px] uppercase tracking-widest ${previewMode ? 'bg-indigo-600 text-white border-indigo-600 shadow-indigo-200' : 'bg-white/50 dark:bg-slate-800/50 border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:border-indigo-400'}`}
           >
-            <span className="material-symbols-outlined text-[16px]">{previewMode ? 'data_object' : 'toll'}</span>
-            {previewMode ? 'Live Preview ON' : 'Show Tokens'}
+            <span className="material-symbols-outlined text-[14px]">{previewMode ? 'data_object' : 'toll'}</span>
+            {previewMode ? 'Live Mode' : 'Tokens'}
           </button>
+        </div>
+
+        {/* Right: Info & Coordinates */}
+        <div className="flex items-center gap-3">
+          {/* Label Size Info */}
+          <button
+            onClick={() => setModalStep('labelsize')}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100/50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-[9px] font-bold text-slate-500 dark:text-slate-400 hover:text-primary transition-all"
+            title="Edit label size"
+          >
+            <span className="material-symbols-outlined text-[12px] opacity-60">aspect_ratio</span>
+            <span className="font-mono tracking-tighter text-[9px]">
+              {Math.round(AW / 3.7795275591)}×{Math.round(AH / 3.7795275591)}mm
+            </span>
+          </button>
+
+          {/* POS Display - Compact */}
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-500/10 text-[9px] font-bold">
+             <div className="flex items-center gap-2 text-blue-800 dark:text-blue-300 font-mono">
+                <span className="w-[50px] bg-white/40 dark:bg-blue-900/20 px-1 rounded flex justify-between">
+                   <span className="opacity-40 mr-1">X</span>
+                   <span>{artboardCursor.x !== null ? (artboardCursor.x / 3.7795275591).toFixed(1) : '—'}</span>
+                </span>
+                <span className="w-[50px] bg-white/40 dark:bg-blue-900/20 px-1 rounded flex justify-between">
+                   <span className="opacity-40 mr-1">Y</span>
+                   <span>{artboardCursor.y !== null ? (artboardCursor.y / 3.7795275591).toFixed(1) : '—'}</span>
+                </span>
+             </div>
+          </div>
         </div>
 
         <div className="flex-1" />
@@ -1369,7 +1391,15 @@ export default function LabelEditor() {
             <motion.div
               ref={artboardRef}
               id="pharma-artboard"
-              className="label-shadow relative pharma-artboard border border-outline-variant/30 rounded-lg"
+              className="label-shadow relative pharma-artboard border border-outline-variant/30 rounded-lg cursor-crosshair"
+              onMouseMove={e => {
+                const rect = artboardRef.current.getBoundingClientRect();
+                setArtboardCursor({
+                  x: (e.clientX - rect.left) / zoomLevel,
+                  y: (e.clientY - rect.top) / zoomLevel
+                });
+              }}
+              onMouseLeave={() => setArtboardCursor({ x: null, y: null })}
               style={{
                 width: `${AW}px`,
                 height: `${AH}px`,
@@ -1460,6 +1490,42 @@ export default function LabelEditor() {
                     )}
                   </svg>
                 </div>
+              )}
+
+              {/* Rulers */}
+              {!isDrawingMode && (
+                <>
+                  <Ruler 
+                    orientation="horizontal" 
+                    length={AW} 
+                    zoomLevel={zoomLevel} 
+                    cursorPos={artboardCursor.x} 
+                    selection={selectedElement ? { start: selectedElement.x, end: selectedElement.x + (selectedElement.width || 0) } : null}
+                    isDark={theme === 'dark'}
+                  />
+                  <Ruler 
+                    orientation="vertical" 
+                    length={AH} 
+                    zoomLevel={zoomLevel} 
+                    cursorPos={artboardCursor.y} 
+                    selection={selectedElement ? { start: selectedElement.y, end: selectedElement.y + (selectedElement.height || 0) } : null}
+                    isDark={theme === 'dark'}
+                  />
+                  {/* Corner Box where rulers meet */}
+                  <div 
+                    className="absolute top-[-32px] left-[-32px] w-8 h-8 z-10"
+                    style={{ 
+                      backgroundColor: theme === 'dark' ? 'rgba(30, 41, 59, 1)' : 'rgba(241, 245, 249, 1)',
+                      borderRight: `1px solid ${theme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.15)'}`,
+                      borderBottom: `1px solid ${theme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.15)'}`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
+                  >
+                    <span className="material-symbols-outlined text-[10px] text-primary/50">straighten</span>
+                  </div>
+                </>
               )}
 
               {/* Label Name watermark */}
