@@ -1,18 +1,30 @@
-import React, { useState } from 'react';
-import { LABEL_PRESETS } from '../../context/LabelContext';
+import React, { useState, useEffect } from 'react';
+import { LABEL_PRESETS, useLabel } from '../../context/LabelContext';
 
 export default function LabelSizeModal({ onConfirm, onCancel, onSkip, currentSize, isEditMode = false }) {
-  const MM_TO_PX = 3.7795275591;
+  const { meta, fromPx, toPx, UNITS } = useLabel();
+  const unit = meta.unit || UNITS.MM;
+
   const initialPreset = LABEL_PRESETS.find(p => p.w === currentSize?.w && p.h === currentSize?.h)?.id || 'custom';
 
   const [selected, setSelected] = useState(initialPreset);
-  const [customW, setCustomW] = useState(currentSize ? Math.round(currentSize.w) : 600);
-  const [customH, setCustomH] = useState(currentSize ? Math.round(currentSize.h) : 400);
+  
+  // State for inputs should be in the current user-facing unit
+  const [inputW, setInputW] = useState(currentSize ? Number(fromPx(currentSize.w, unit).toFixed(2)) : 100);
+  const [inputH, setInputH] = useState(currentSize ? Number(fromPx(currentSize.h, unit).toFixed(2)) : 100);
 
+  // Sync inputs if unit changes or currentSize changes
+  useEffect(() => {
+    if (currentSize) {
+      setInputW(Number(fromPx(currentSize.w, unit).toFixed(2)));
+      setInputH(Number(fromPx(currentSize.h, unit).toFixed(2)));
+    }
+  }, [unit, currentSize]);
 
   const handleConfirm = () => {
     if (selected === 'custom') {
-      onConfirm(customW, customH);
+      // Convert back to pixels for the context
+      onConfirm(toPx(inputW, unit), toPx(inputH, unit));
     } else {
       const preset = LABEL_PRESETS.find(p => p.id === selected);
       onConfirm(preset.w, preset.h);
@@ -47,9 +59,9 @@ export default function LabelSizeModal({ onConfirm, onCancel, onSkip, currentSiz
             >
               <p className="text-[11px] font-bold">{p.name}</p>
               {p.id === 'custom' ? (
-                <p className="text-[9px] text-slate-400 mt-0.5">{customW}×{customH}px</p>
+                <p className="text-[9px] text-slate-400 mt-0.5">{inputW}×{inputH}{unit}</p>
               ) : (
-                <p className="text-[9px] text-slate-400 mt-0.5">{p.w}×{p.h}px</p>
+                <p className="text-[9px] text-slate-400 mt-0.5">{fromPx(p.w, unit).toFixed(1)}×{fromPx(p.h, unit).toFixed(1)}{unit}</p>
               )}
             </button>
           ))}
@@ -58,21 +70,21 @@ export default function LabelSizeModal({ onConfirm, onCancel, onSkip, currentSiz
         {selected === 'custom' && (
           <div className="flex items-center gap-3 p-4 bg-surface-container-low rounded-xl border border-outline-variant/20">
             <div className="flex-1">
-              <label className="block text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-1">Width (px)</label>
+              <label className="block text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-1">Width ({unit})</label>
               <input
-                type="number" min="50" max="2500"
-                value={customW}
-                onChange={e => setCustomW(parseInt(e.target.value))}
+                type="number" step="0.1"
+                value={inputW}
+                onChange={e => setInputW(parseFloat(e.target.value) || 0)}
                 className="w-full border border-outline-variant/40 rounded-lg px-3 py-2 text-sm text-slate-800 focus:border-primary outline-none"
               />
             </div>
             <span className="text-slate-400 font-bold mt-4">×</span>
             <div className="flex-1">
-              <label className="block text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-1">Height (px)</label>
+              <label className="block text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-1">Height ({unit})</label>
               <input
-                type="number" min="50" max="2500"
-                value={customH}
-                onChange={e => setCustomH(parseInt(e.target.value))}
+                type="number" step="0.1"
+                value={inputH}
+                onChange={e => setInputH(parseFloat(e.target.value) || 0)}
                 className="w-full border border-outline-variant/40 rounded-lg px-3 py-2 text-sm text-slate-800 focus:border-primary outline-none"
               />
             </div>
@@ -84,7 +96,7 @@ export default function LabelSizeModal({ onConfirm, onCancel, onSkip, currentSiz
             <span className="material-symbols-outlined text-primary text-xl">info</span>
             <p className="text-slate-600 text-xs leading-relaxed">
               <span className="font-bold text-slate-800">{preset.name}</span> — artboard will be{' '}
-              <span className="font-mono text-primary">{preset.w}×{preset.h}px</span>.
+              <span className="font-mono text-primary">{fromPx(preset.w, unit).toFixed(2)}×{fromPx(preset.h, unit).toFixed(2)}{unit}</span>.
               All elements will be constrained inside this area.
             </p>
           </div>

@@ -16,5 +16,6 @@ public class CreateLabelRequest {
     @NotBlank(message = "Status is required")
     private String status; // DRAFT, PREDEFINED, ACTIVE
 
+    private String notes;
     private Object designJson;
 }

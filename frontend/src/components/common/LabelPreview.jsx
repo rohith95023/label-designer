@@ -2,6 +2,7 @@ import React from 'react';
 import Barcode from 'react-barcode';
 import { QRCodeSVG } from 'qrcode.react';
 import { calcAutoFitFontSize } from '../../utils/autoFitFont';
+import { resolveUrl } from '../../utils/url';
 
 export default function LabelPreview({ elements, meta, scale = 1 }) {
   const { labelSize, bgColor } = meta;
@@ -107,7 +108,7 @@ export default function LabelPreview({ elements, meta, scale = 1 }) {
                   />
                 </div>
               ) : el.type === 'image' ? (
-                <img src={el.src} alt="Uploaded" className="w-full h-full pointer-events-none" style={{ objectFit: el.imageFit || 'contain' }} />
+                <img src={resolveUrl(el.src)} alt="Uploaded" className="w-full h-full pointer-events-none" style={{ objectFit: el.imageFit || 'contain' }} />
               ) : el.type === 'icon' ? (
                 <div className="w-full h-full flex items-center justify-center overflow-hidden">
                   <span className="material-symbols-outlined leading-[0]" style={{ fontSize: `${Math.min(elW, elH)}px`, color: el.color || '#191c1e' }}>{el.iconName}</span>

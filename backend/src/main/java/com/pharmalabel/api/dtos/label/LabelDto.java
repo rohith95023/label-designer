@@ -18,6 +18,7 @@ public class LabelDto {
     private String createdByUsername;
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
+    private String notes;
     private Integer latestVersionNo;
     private Object latestVersionDesign;
 }

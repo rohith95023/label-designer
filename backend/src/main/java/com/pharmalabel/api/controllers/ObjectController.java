@@ -29,12 +29,24 @@ public class ObjectController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PostMapping("/upload")
+    @PostMapping(value = "/upload", consumes = "multipart/form-data")
     public ResponseEntity<ObjectEntity> uploadObject(
-            @RequestParam("name") String name,
-            @RequestParam("type") String type,
-            @RequestParam("file") MultipartFile file) {
-        return ResponseEntity.ok(objectService.createObject(name, type, file));
+            @RequestPart("name") String name,
+            @RequestPart("type") String type,
+            @RequestPart("file") MultipartFile file,
+            @RequestPart(value = "labelId", required = false) String labelId) {
+        System.out.println("Processing Upload: " + name + " (" + type + ") linked to: " + labelId);
+        
+        UUID labelUuid = null;
+        if (labelId != null && !labelId.isEmpty() && !"null".equalsIgnoreCase(labelId) && !labelId.startsWith("tpl-")) {
+            try {
+                labelUuid = UUID.fromString(labelId);
+            } catch (Exception e) {
+                System.err.println("Skipping invalid labelId: " + labelId);
+            }
+        }
+        
+        return ResponseEntity.ok(objectService.createObject(name, type, file, labelUuid));
     }
 
     @PutMapping("/{id}")

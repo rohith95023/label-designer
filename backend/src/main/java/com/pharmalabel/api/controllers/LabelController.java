@@ -3,6 +3,7 @@ package com.pharmalabel.api.controllers;
 import com.pharmalabel.api.dtos.label.CreateLabelRequest;
 import com.pharmalabel.api.dtos.label.LabelDto;
 import com.pharmalabel.api.dtos.label.LabelVersionDto;
+import com.pharmalabel.api.dtos.label.SaveVersionRequest;
 import com.pharmalabel.api.models.Label;
 import com.pharmalabel.api.models.LabelStock;
 import com.pharmalabel.api.models.LabelVersion;
@@ -51,6 +52,7 @@ public class LabelController {
         Label label = Label.builder()
                 .name(request.getName())
                 .labelStock(stock)
+                .notes(request.getNotes())
                 .status(request.getStatus())
                 .build();
 
@@ -81,9 +83,9 @@ public class LabelController {
     }
 
     @PostMapping("/{id}/versions")
-    public ResponseEntity<LabelVersionDto> saveNewVersion(@PathVariable UUID id, @RequestBody Object designJson) {
+    public ResponseEntity<LabelVersionDto> saveNewVersion(@PathVariable UUID id, @RequestBody SaveVersionRequest request) {
         User currentUser = userService.getCurrentUser();
-        LabelVersion version = labelService.saveNewVersion(id, designJson, currentUser);
+        LabelVersion version = labelService.saveNewVersion(id, request.getDesignJson(), request.getNotes(), currentUser);
         return ResponseEntity.ok(mapVersionToDto(version));
     }
 
@@ -101,6 +103,7 @@ public class LabelController {
         dto.setCategory(label.getCategory());
         dto.setStatus(label.getStatus());
         dto.setImageUrl(label.getImageUrl());
+        dto.setNotes(label.getNotes());
         dto.setLabelStockId(label.getLabelStock() != null ? label.getLabelStock().getId() : null);
         dto.setLabelStockName(label.getLabelStock() != null ? label.getLabelStock().getName() : null);
         dto.setCreatedById(label.getCreatedBy() != null ? label.getCreatedBy().getId() : null);

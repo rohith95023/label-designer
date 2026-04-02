@@ -9,7 +9,7 @@ import java.util.UUID;
 public interface ObjectService {
     List<ObjectEntity> getAllObjects();
     Optional<ObjectEntity> getObjectById(UUID id);
-    ObjectEntity createObject(String name, String type, MultipartFile file);
+    ObjectEntity createObject(String name, String type, MultipartFile file, UUID labelId);
     ObjectEntity updateObject(UUID id, ObjectEntity objectEntity);
     void deleteObject(UUID id);
 }

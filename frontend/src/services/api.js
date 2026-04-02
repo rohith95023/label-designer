@@ -1,5 +1,7 @@
 import authApi from '../context/AuthContext';
 
+export const BASE_URL = import.meta.env.VITE_API_URL?.replace('/api/v1', '') || 'http://localhost:8080';
+
 export const api = {
   // Dashboard / User Session
   getDashboard: (userId) => 
@@ -114,9 +116,7 @@ export const api = {
   // Objects (Assets)
   getObjects: () => authApi.get('/objects').then(res => res.data),
   getObject: (id) => authApi.get(`/objects/${id}`).then(res => res.data),
-  uploadObject: (formData) => authApi.post('/objects/upload', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  }).then(res => res.data),
+  uploadObject: (formData) => authApi.post('/objects/upload', formData).then(res => res.data),
   updateObject: (id, data) => authApi.put(`/objects/${id}`, data).then(res => res.data),
   deleteObject: (id) => authApi.delete(`/objects/${id}`).then(res => res.status === 204),
 

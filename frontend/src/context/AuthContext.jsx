@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import SplashScreen from '../components/common/SplashScreen';
 
 const AuthContext = createContext();
 
@@ -15,6 +17,7 @@ export const AuthProvider = ({ children }) => {
   const [accessToken, setAccessToken] = useState(null);
   const [loading, setLoading] = useState(true);
   const [logoutLoading, setLogoutLoading] = useState(false);
+  const navigate = useNavigate();
 
   const login = async (username, password) => {
     try {
@@ -32,12 +35,14 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     setLogoutLoading(true);
     try {
+      // Clear token immediately from client to improve perceived speed
+      setAccessToken(null);
+      delete api.defaults.headers.common['Authorization'];
       await api.post('/auth/logout');
     } finally {
       setUser(null);
-      setAccessToken(null);
-      delete api.defaults.headers.common['Authorization'];
-      window.location.href = '/login';
+      setLogoutLoading(false);
+      navigate('/login');
     }
   };
 
@@ -95,17 +100,19 @@ export const AuthProvider = ({ children }) => {
           } catch (refreshError) {
             // ignore
           }
-          window.location.href = '/login';
+          navigate('/login');
         }
         return Promise.reject(error);
       }
     );
     return () => api.interceptors.response.eject(interceptor);
-  }, [refreshAction]);
+  }, [refreshAction, navigate]);
+
+  if (loading) return <SplashScreen />;
 
   return (
     <AuthContext.Provider value={{ user, accessToken, login, logout, refreshAction, loading, logoutLoading }}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 };

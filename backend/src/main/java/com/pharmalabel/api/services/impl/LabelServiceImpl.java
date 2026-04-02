@@ -48,9 +48,14 @@ public class LabelServiceImpl implements LabelService {
 
     @Override
     @Transactional
-    public LabelVersion saveNewVersion(UUID labelId, Object designJson, User user) {
+    public synchronized LabelVersion saveNewVersion(UUID labelId, Object designJson, String notes, User user) {
         Label label = labelRepository.findById(labelId)
                 .orElseThrow(() -> new RuntimeException("Label not found with id: " + labelId));
+
+        if (notes != null) {
+            label.setNotes(notes);
+            labelRepository.save(label);
+        }
 
         Integer nextVersionNo = labelVersionRepository.findFirstByLabelIdOrderByVersionNoDesc(labelId)
                 .map(v -> v.getVersionNo() + 1)

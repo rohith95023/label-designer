@@ -1,6 +1,8 @@
 package com.pharmalabel.api.services.impl;
 
+import com.pharmalabel.api.models.Label;
 import com.pharmalabel.api.models.ObjectEntity;
+import com.pharmalabel.api.repositories.LabelRepository;
 import com.pharmalabel.api.repositories.ObjectRepository;
 import com.pharmalabel.api.services.ObjectService;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +24,7 @@ import java.util.UUID;
 public class ObjectServiceImpl implements ObjectService {
 
     private final ObjectRepository objectRepository;
+    private final LabelRepository labelRepository;
 
     @Value("${upload.path:uploads}")
     private String uploadPath;
@@ -38,7 +41,7 @@ public class ObjectServiceImpl implements ObjectService {
 
     @Override
     @Transactional
-    public ObjectEntity createObject(String name, String type, MultipartFile file) {
+    public ObjectEntity createObject(String name, String type, MultipartFile file, UUID labelId) {
         try {
             Path root = Paths.get(uploadPath);
             if (!Files.exists(root)) {
@@ -48,10 +51,16 @@ public class ObjectServiceImpl implements ObjectService {
             String filename = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
             Files.copy(file.getInputStream(), root.resolve(filename));
 
+            Label label = null;
+            if (labelId != null) {
+                label = labelRepository.findById(labelId).orElse(null);
+            }
+
             ObjectEntity objectEntity = ObjectEntity.builder()
                     .name(name)
                     .type(type)
                     .fileUrl("/uploads/" + filename)
+                    .label(label)
                     .status("ACTIVE")
                     .build();
 

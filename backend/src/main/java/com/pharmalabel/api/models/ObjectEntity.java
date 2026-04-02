@@ -27,6 +27,10 @@ public class ObjectEntity {
     @Column(name = "file_url")
     private String fileUrl;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "label_id")
+    private Label label;
+
     @Builder.Default
     @Column(nullable = false)
     private String status = "ACTIVE";

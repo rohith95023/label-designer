@@ -40,6 +40,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/v1/auth/**").permitAll()
                 .requestMatchers("/api/v1/dev/reset-password").permitAll()
+                .requestMatchers("/uploads/**").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/templates/**", "/api/v1/placeholders", "/api/v1/placeholders/**", "/api/v1/label-stocks", "/api/v1/label-stocks/**").permitAll()
                 .anyRequest().authenticated()
             )

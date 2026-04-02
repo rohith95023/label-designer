@@ -1,15 +1,15 @@
 import React, { useMemo } from 'react';
+import { UNITS, PX_PER_UNIT, getTickIntervals } from '../../utils/units';
 
 /**
  * A highly accurate ruler component for professional editors.
- * Supports mm and px measurements.
+ * Supports mm, cm, in, and px measurements.
  */
-const PX_PER_MM = 3.7795275591;
-
 export default function Ruler({ 
   orientation, 
   length, 
   zoomLevel, 
+  unit = UNITS.MM,
   cursorPos = null, 
   selection = null,
   isDark = false,
@@ -21,28 +21,40 @@ export default function Ruler({
   const highlightColor = isDark ? 'rgba(37, 99, 235, 0.5)' : 'rgba(37, 99, 235, 0.25)';
   const cursorColor = isDark ? '#60a5fa' : '#2563eb';
 
+  const pxFactor = PX_PER_UNIT[unit] || 1;
+  const { major, medium, minor } = getTickIntervals(unit);
+
   // Calculate markers
   const markers = useMemo(() => {
     const list = [];
-    const totalMm = Math.round(length / PX_PER_MM);
+    const totalUnits = length / pxFactor;
     
-    for (let i = 0; i <= totalMm; i++) {
-        const pos = i * PX_PER_MM;
+    // We iterate by the minor interval
+    const step = minor;
+    for (let i = 0; i <= totalUnits + step; i += step) {
+        const pos = i * pxFactor;
         if (pos > length + 1) break;
+
         let tickSize = 4;
         let showLabel = false;
+        let label = null;
 
-        if (i % 10 === 0) {
+        // Check if i is close to major/medium/minor
+        const isMajor = Math.abs(i % major) < 0.001 || Math.abs((i % major) - major) < 0.001;
+        const isMedium = !isMajor && (Math.abs(i % medium) < 0.001 || Math.abs((i % medium) - medium) < 0.001);
+
+        if (isMajor) {
             tickSize = 12;
             showLabel = true;
-        } else if (i % 5 === 0) {
+            label = Number(i.toFixed(1)).toString(); // avoid long decimals
+        } else if (isMedium) {
             tickSize = 8;
         }
 
-        list.push({ pos, tickSize, label: showLabel ? i : null });
+        list.push({ pos, tickSize, label: showLabel ? label : null });
     }
     return list;
-  }, [length]);
+  }, [length, pxFactor, major, medium, minor]);
 
   return (
     <div 
@@ -65,8 +77,8 @@ export default function Ruler({
       }}
     >
       <svg 
-        width={isHorizontal ? length : 32} 
-        height={isHorizontal ? 32 : length}
+        width={isHorizontal ? length : 100} 
+        height={isHorizontal ? 100 : length}
         style={{ overflow: 'visible', shapeRendering: 'crispEdges' }}
       >
         {/* Selection Highlight */}
@@ -81,35 +93,42 @@ export default function Ruler({
         )}
 
         {/* Ticks & Labels */}
-        {markers.map((m, idx) => (
-          <React.Fragment key={idx}>
-            <line
-              x1={isHorizontal ? m.pos : 32 - m.tickSize}
-              y1={isHorizontal ? 32 - m.tickSize : m.pos}
-              x2={isHorizontal ? m.pos : 32}
-              y2={isHorizontal ? 32 : m.pos}
-              stroke={strokeColor}
-              strokeWidth="1.5"
-            />
-            {m.label !== null && (
-              <text
-                x={isHorizontal ? m.pos + 3 : 6}
-                y={isHorizontal ? 12 : m.pos + 9}
-                fontSize="9"
-                fontWeight="800"
-                fill={textColor}
-                fontFamily="Inter, sans-serif"
-                style={{ 
-                  shapeRendering: 'auto',
-                  transform: isHorizontal ? 'none' : 'rotate(-90deg)', 
-                  transformOrigin: `${isHorizontal ? 0 : 6}px ${isHorizontal ? 0 : m.pos + 9}px` 
-                }}
-              >
-                {m.label}
-              </text>
-            )}
-          </React.Fragment>
-        ))}
+        {markers.map((m, idx) => {
+          // Skip logic: if major ticks are too close, skip every second label
+          // (Distance between major ticks = pxFactor * major)
+          const majorDist = pxFactor * major;
+          const shouldSkipLabel = majorDist < 40 && (Math.round(m.pos / majorDist) % 2 !== 0);
+
+          return (
+            <React.Fragment key={idx}>
+              <line
+                x1={isHorizontal ? m.pos : 32 - m.tickSize}
+                y1={isHorizontal ? 32 - m.tickSize : m.pos}
+                x2={isHorizontal ? m.pos : 32}
+                y2={isHorizontal ? 32 : m.pos}
+                stroke={strokeColor}
+                strokeWidth="1"
+              />
+              {m.label !== null && !shouldSkipLabel && (
+                <text
+                  x={isHorizontal ? m.pos + 2 : 2}
+                  y={isHorizontal ? 10 : m.pos + 8}
+                  fontSize="8"
+                  fontWeight="600"
+                  fill={textColor}
+                  fontFamily="Inter, sans-serif"
+                  style={{ 
+                    shapeRendering: 'auto',
+                    transform: isHorizontal ? 'none' : 'rotate(-90deg)', 
+                    transformOrigin: `${isHorizontal ? 0 : 2}px ${isHorizontal ? 0 : m.pos + 8}px` 
+                  }}
+                >
+                  {m.label}
+                </text>
+              )}
+            </React.Fragment>
+          );
+        })}
 
         {/* Cursor Position Indicator */}
         {cursorPos !== null && cursorPos >= 0 && cursorPos <= length && (
@@ -127,7 +146,9 @@ export default function Ruler({
       
       {/* Unit Indicator */}
       {isHorizontal && (
-          <div className="absolute top-1 left-[-28px] text-[7px] font-black uppercase text-blue-500/50 transform -rotate-90">mm</div>
+          <div className="absolute top-1 left-[-26px] text-[8px] font-black uppercase text-blue-600/70 leading-none">
+            {unit}
+          </div>
       )}
     </div>
   );

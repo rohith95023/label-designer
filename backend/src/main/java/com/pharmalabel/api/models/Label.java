@@ -47,6 +47,9 @@ public class Label {
     @Column(name = "created_at", updatable = false)
     private OffsetDateTime createdAt;
 
+    @Column(columnDefinition = "TEXT")
+    private String notes;
+
     @UpdateTimestamp
     @Column(name = "updated_at")
     private OffsetDateTime updatedAt;

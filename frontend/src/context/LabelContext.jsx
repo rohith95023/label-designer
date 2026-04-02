@@ -3,13 +3,12 @@ import { v4 as uuidv4 } from 'uuid';
 import { api } from '../services/api';
 import { getGuestId } from '../utils/auth';
 import { useAuth } from './AuthContext';
+import { UNITS, toPx, fromPx, PX_PER_UNIT } from '../utils/units';
 
 const LabelContext = createContext();
-export const useLabel = () => useContext(LabelContext);
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-const getPx = (mm) => Math.round(mm * 3.7795275591); // mm → px at 96 dpi
-
+// Initial definitions in PX (96dpi)
 export const LABEL_PRESETS = [
   { id: 'bottle',   name: 'Bottle Label',    w: 302, h: 454 },  // 80×120mm
   { id: 'vial',     name: 'Vial Wrap',       w: 208, h: 132 },  // 55×35mm
@@ -21,7 +20,7 @@ export const LABEL_PRESETS = [
   { id: 'custom',   name: 'Custom …',        w: 600, h: 400 },
 ];
 
-const DEFAULT_META = { fileId: null, fileName: null, labelSize: { w: 302, h: 454 }, bgColor: '#FFFFFF' };
+const DEFAULT_META = { fileId: null, fileName: null, labelSize: { w: 302, h: 454 }, bgColor: '#FFFFFF', unit: UNITS.MM, notes: '' };
 
 export const DEFAULT_SETTINGS = {
   profileName: 'Pharma Designer',
@@ -170,7 +169,7 @@ export const LabelProvider = ({ children }) => {
   const [activeTemplate, setActiveTemplate] = useState(null);
   const [meta,     setMeta]    = useState(DEFAULT_META);
   const [elements, setElements] = useState([]);
-  const [selectedElementId, setSelectedElementId] = useState(null);
+  const [selectedIds, setSelectedIds] = useState([]);
   const [zoomLevel, setZoomLevel]   = useState(1);
   const [history,   setHistory]     = useState([[]]);
   const [historyIndex, setHistoryIndex] = useState(0);
@@ -183,6 +182,7 @@ export const LabelProvider = ({ children }) => {
   const [userFiles, setUserFiles]       = useState([]);
   const [labelStocks, setLabelStocks]   = useState([]);
   const defaultStockIdRef = useRef(null);
+  const isSavingRef = useRef(false);
 
   const { user } = useAuth();
   const guestId = getGuestId();
@@ -202,74 +202,67 @@ export const LabelProvider = ({ children }) => {
         setLoading(true);
 
         if (!user) {
-          // Not authenticated — use local predefined labels, do not fetch from backend
           setHydrated(true);
           return;
         }
 
-        // 1. Fetch Dashboard (Settings & Logs)
-        try {
-          const session = await api.getDashboard(effectiveId);
-          if (session.dashboardPreferences) {
-            setSettings(prev => ({ ...prev, ...session.dashboardPreferences }));
-          }
-          if (session.recentActivityLog) {
-            setActivityLogs(Array.isArray(session.recentActivityLog) ? session.recentActivityLog : []);
-          }
-        } catch (dashErr) {
-          console.error('Failed to fetch dashboard data', dashErr);
+        // Parallelize initial fetches to improve boot time
+        const [dashRes, stockRes, templatesRes, labelsRes] = await Promise.allSettled([
+          api.getDashboard(effectiveId),
+          api.getLabelStocks(),
+          api.getLabels('PREDEFINED'),
+          api.getLabels('ACTIVE')
+        ]);
+
+        // 1. Process Dashboard
+        if (dashRes.status === 'fulfilled') {
+          const session = dashRes.value;
+          if (session.dashboardPreferences) setSettings(prev => ({ ...prev, ...session.dashboardPreferences }));
+          if (session.recentActivityLog) setActivityLogs(Array.isArray(session.recentActivityLog) ? session.recentActivityLog : []);
         }
 
-        // 2. Fetch Label Stocks (needed for label creation)
-        try {
-          const stocks = await api.getLabelStocks();
+        // 2. Process Stocks
+        if (stockRes.status === 'fulfilled') {
+          const stocks = stockRes.value;
           if (Array.isArray(stocks) && stocks.length > 0) {
             setLabelStocks(stocks);
             defaultStockIdRef.current = stocks[0].id;
           }
-        } catch (stockErr) {
-          console.error('Failed to fetch label stocks', stockErr);
         }
 
-        // 3. Fetch Predefined Templates — merge with built-in PREDEFINED_TEMPLATES
-        try {
-          const systemLabels = await api.getLabels('PREDEFINED');
-          // Only replace built-ins if the backend actually has predefined templates
-          if (Array.isArray(systemLabels) && systemLabels.length > 0) {
-            setTemplates(systemLabels);
-          }
-          // else: keep PREDEFINED_TEMPLATES as the default (already in state)
-        } catch (tempErr) {
-          console.error('Failed to fetch predefined labels, using built-in defaults', tempErr);
-          // Keep PREDEFINED_TEMPLATES (already in state) — no toast needed
+        // 3. Process Templates
+        if (templatesRes.status === 'fulfilled') {
+          const systemLabels = templatesRes.value;
+          if (Array.isArray(systemLabels) && systemLabels.length > 0) setTemplates(systemLabels);
         }
 
-        // 4. Fetch User Labels
-        try {
-          const labels = await api.getLabels('ACTIVE');
+        // 4. Process Labels & Restore Last Session
+        if (labelsRes.status === 'fulfilled') {
+          const labels = labelsRes.value;
           setUserFiles(labels);
 
-          // 4. Last session restore
           if (labels.length > 0) {
             const last = labels.sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0))[0];
-            const latestVersion = await api.getLatestLabelVersion(last.id);
-            
-            setMeta(prev => ({ 
-              ...prev,
-              fileId: last.id, 
-              fileName: last.name, 
-              labelSize: latestVersion.designJson?.labelSize || { w: 600, h: 400 },
-              bgColor: latestVersion.designJson?.bgColor || '#FFFFFF'
-            }));
-            setElements(latestVersion.designJson?.elementsData || []);
+            try {
+              const latestVersion = await api.getLatestLabelVersion(last.id);
+              setMeta(prev => ({ 
+                ...prev,
+                fileId: last.id, 
+                fileName: last.name, 
+                labelSize: latestVersion.designJson?.labelSize || { w: 600, h: 400 },
+                bgColor: latestVersion.designJson?.bgColor || '#FFFFFF',
+                notes: latestVersion.designJson?.notes || ''
+              }));
+              setElements(latestVersion.designJson?.elementsData || []);
+            } catch (verErr) {
+              console.error('Failed to restore last version', verErr);
+            }
           }
-        } catch (fileErr) {
-          console.error('Failed to fetch user labels', fileErr);
         }
 
         setHydrated(true);
       } catch (err) {
-        console.error('Failed to hydrate from backend', err);
+        console.error('Critical hydration error', err);
         showToast('Offline mode: Using local defaults', 'warning');
         setHydrated(true);
       } finally {
@@ -308,17 +301,24 @@ export const LabelProvider = ({ children }) => {
     setSavedStatus('unsaved');
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(async () => {
+      if (isSavingRef.current) return;
+      isSavingRef.current = true;
       try {
         setSavedStatus('saving');
         await api.saveLabelVersion(meta.fileId, {
-          elementsData: elements,
-          labelSize: meta.labelSize,
-          bgColor: meta.bgColor
+          designJson: {
+            elementsData: elements,
+            labelSize: meta.labelSize,
+            bgColor: meta.bgColor
+          },
+          notes: meta.notes
         });
         setSavedStatus('saved');
       } catch (err) {
         console.error('Auto-save failed', err);
         setSavedStatus('unsaved');
+      } finally {
+        isSavingRef.current = false;
       }
     }, 60000);
   }, [elements, meta, hydrated]);
@@ -338,7 +338,7 @@ export const LabelProvider = ({ children }) => {
       const pi = historyIndex - 1;
       setElements([...history[pi]]);
       setHistoryIndex(pi);
-      setSelectedElementId(null);
+      setSelectedIds([]);
     }
   };
 
@@ -347,7 +347,7 @@ export const LabelProvider = ({ children }) => {
       const ni = historyIndex + 1;
       setElements([...history[ni]]);
       setHistoryIndex(ni);
-      setSelectedElementId(null);
+      setSelectedIds([]);
     }
   };
 
@@ -358,7 +358,7 @@ export const LabelProvider = ({ children }) => {
     setElements([]);
     setHistory([[]]);
     setHistoryIndex(0);
-    setSelectedElementId(null);
+    setSelectedIds([]);
     setZoomLevel(1);
     setSavedStatus('unsaved');
   };
@@ -371,6 +371,8 @@ export const LabelProvider = ({ children }) => {
         showToast('No label stock available. Please contact admin.', 'error');
         return;
       }
+      if (isSavingRef.current) return;
+      isSavingRef.current = true;
       try {
         setSavedStatus('saving');
         const newLabel = await api.createLabel({
@@ -380,7 +382,8 @@ export const LabelProvider = ({ children }) => {
           designJson: {
             elementsData: elements,
             labelSize: meta.labelSize,
-            bgColor: meta.bgColor
+            bgColor: meta.bgColor,
+            notes: meta.notes
           }
         });
         setMeta(m => ({ ...m, fileName: trimmed, fileId: newLabel.id }));
@@ -390,6 +393,8 @@ export const LabelProvider = ({ children }) => {
       } catch (err) {
         console.error('Failed to create label:', err);
         showToast('Failed to initialize label in backend', 'error');
+      } finally {
+        isSavingRef.current = false;
       }
     } else {
       setMeta(m => ({ ...m, fileName: trimmed }));
@@ -397,24 +402,32 @@ export const LabelProvider = ({ children }) => {
   };
 
   const setLabelSize = (w, h) => setMeta(m => ({ ...m, labelSize: { w, h } }));
+  const setUnit = (unit) => setMeta(m => ({ ...m, unit }));
 
   const saveFile = async () => {
     if (!meta.fileId) {
         showToast('Please name your file first', 'warning');
         return;
     }
+    if (isSavingRef.current) return;
+    isSavingRef.current = true;
     try {
         setSavedStatus('saving');
         await api.saveLabelVersion(meta.fileId, {
-            elementsData: elements,
-            labelSize: meta.labelSize,
-            bgColor: meta.bgColor
+            designJson: {
+              elementsData: elements,
+              labelSize: meta.labelSize,
+              bgColor: meta.bgColor
+            },
+            notes: meta.notes
         });
         setSavedStatus('saved');
         showToast('New version saved ✓', 'success');
     } catch (err) {
         console.error('Manual save failed', err);
         showToast('Manual save failed', 'error');
+    } finally {
+        isSavingRef.current = false;
     }
   };
 
@@ -424,12 +437,15 @@ export const LabelProvider = ({ children }) => {
       showToast('No label stock available. Please contact admin.', 'error');
       return;
     }
+    if (isSavingRef.current) return;
+    isSavingRef.current = true;
     try {
       setSavedStatus('saving');
       const newLabel = await api.createLabel({
         name: newName,
         labelStockId: stockId,
         status: 'ACTIVE',
+        notes: meta.notes,
         designJson: {
           elementsData: elements,
           labelSize: meta.labelSize,
@@ -440,7 +456,8 @@ export const LabelProvider = ({ children }) => {
         fileId: newLabel.id, 
         fileName: newName, 
         labelSize: meta.labelSize,
-        bgColor: meta.bgColor 
+        bgColor: meta.bgColor,
+        notes: meta.notes 
       });
       setUserFiles(prev => [...prev, newLabel]);
       setSavedStatus('saved');
@@ -449,6 +466,8 @@ export const LabelProvider = ({ children }) => {
     } catch (err) {
       console.error('Save as failed', err);
       showToast('Save as failed', 'error');
+    } finally {
+      isSavingRef.current = false;
     }
   };
 
@@ -464,12 +483,13 @@ export const LabelProvider = ({ children }) => {
         fileId: label.id, 
         fileName: label.name, 
         labelSize: design.labelSize || { w: 600, h: 400 },
-        bgColor: design.bgColor || '#FFFFFF'
+        bgColor: design.bgColor || '#FFFFFF',
+        notes: label.notes || design.notes || ''
       });
       setElements(design.elementsData || []);
       setHistory([design.elementsData || []]);
       setHistoryIndex(0);
-      setSelectedElementId(null);
+      setSelectedIds([]);
       setSavedStatus('saved');
       addActivityLog('Opened label', id, label.name);
     } catch (err) {
@@ -513,7 +533,8 @@ export const LabelProvider = ({ children }) => {
           fileId: null, // New file ID will be created when saved
           fileName: data.meta.fileName || 'Imported Label',
           labelSize: data.meta.labelSize || { w: 600, h: 400 },
-          bgColor: data.meta.bgColor || '#FFFFFF'
+          bgColor: data.meta.bgColor || '#FFFFFF',
+          notes: data.meta.notes || ''
         });
       }
       if (data.elements && Array.isArray(data.elements)) {
@@ -521,7 +542,7 @@ export const LabelProvider = ({ children }) => {
         setHistory([data.elements]);
         setHistoryIndex(0);
       }
-      setSelectedElementId(null);
+      setSelectedIds([]);
       setSavedStatus('unsaved');
       showToast('File imported successfully ✓', 'success');
       addActivityLog('Imported JSON file', null, data.meta?.fileName || 'Imported Label');
@@ -595,7 +616,7 @@ export const LabelProvider = ({ children }) => {
     const minScale = Math.min(scaleX, scaleY); // Used for font sizes/dimensions to prevent stretching
 
     const enriched = rawElements.map((el, i) => {
-      return {
+      const up = {
         ...el,
         id: el.id || uuidv4(),
         x: Math.round((el.x || 0) * scaleX),
@@ -605,6 +626,14 @@ export const LabelProvider = ({ children }) => {
         fontSize: el.fontSize ? Math.round(el.fontSize * minScale) : el.fontSize,
         zIndex: el.zIndex || (i + 10)
       };
+
+      // Proportional border/stroke scaling for shapes
+      if (el.type === 'shape') {
+          if (el.borderWidth)  up.borderWidth  = Math.max(1, Math.round(el.borderWidth * minScale));
+          if (el.borderRadius) up.borderRadius = Math.round(el.borderRadius * minScale);
+      }
+
+      return up;
     });
 
     console.log(`[LabelContext] Auto-scaling complete (Ratio ${scaleX.toFixed(2)}x${scaleY.toFixed(2)}). Elements:`, enriched.length);
@@ -613,13 +642,14 @@ export const LabelProvider = ({ children }) => {
       fileId: null, 
       fileName: null, 
       labelSize: { w: targetW, h: targetH }, 
-      bgColor: template.bgColor || '#FFFFFF' 
+      bgColor: template.bgColor || '#FFFFFF',
+      notes: template.notes || ''
     });
     setActiveTemplate(template);
     setElements(enriched);
     setHistory([enriched]);
     setHistoryIndex(0);
-    setSelectedElementId(null);
+    setSelectedIds([]);
     setZoomLevel(1);
     setSavedStatus('unsaved');
   };
@@ -631,7 +661,7 @@ export const LabelProvider = ({ children }) => {
     const next = [...elements, el];
     setElements(next);
     saveToHistory(next);
-    setSelectedElementId(el.id);
+    setSelectedIds([el.id]);
   };
 
   const duplicateElement = (id) => {
@@ -642,7 +672,7 @@ export const LabelProvider = ({ children }) => {
     const next = [...elements, copy];
     setElements(next);
     saveToHistory(next);
-    setSelectedElementId(copy.id);
+    setSelectedIds([copy.id]);
   };
 
   const updateElement = (id, updates) => {
@@ -653,11 +683,46 @@ export const LabelProvider = ({ children }) => {
     setElements(prev => { saveToHistory(prev); return prev; });
   };
 
+  const toggleOrientation = () => {
+    setMeta(prev => ({
+      ...prev,
+      labelSize: { w: prev.labelSize.h, h: prev.labelSize.w }
+    }));
+  };
+
+  const saveAsTemplate = async (name) => {
+    if (isSavingRef.current) return;
+    isSavingRef.current = true;
+    try {
+      setSavedStatus('saving');
+      const newTpl = await api.createLabel({
+        name,
+        labelStockId: defaultStockIdRef.current,
+        status: 'PREDEFINED', // Promotes to template library
+        designJson: {
+          elementsData: elements,
+          labelSize: meta.labelSize,
+          bgColor: meta.bgColor,
+          notes: meta.notes
+        }
+      });
+      setTemplates(prev => [newTpl, ...prev]);
+      setSavedStatus('saved');
+      showToast('Design saved to templates ✓', 'success');
+      return newTpl;
+    } catch (err) {
+      console.error('Failed to save as template', err);
+      showToast('Failed to save as template', 'error');
+    } finally {
+      isSavingRef.current = false;
+    }
+  };
+
   const deleteElement = (id) => {
     const next = elements.filter(e => e.id !== id);
     setElements(next);
     saveToHistory(next);
-    if (selectedElementId === id) setSelectedElementId(null);
+    setSelectedIds(prev => prev.filter(sid => sid !== id));
   };
 
   const moveLayer = (id, dir) => {
@@ -673,6 +738,51 @@ export const LabelProvider = ({ children }) => {
     setElements(next);
     saveToHistory(next);
   };
+
+  // ── Design Tools: Alignment Helpers ──────────────────────────────────────────
+  const alignElements = useCallback((direction, relativeTo = 'selection') => {
+    if (selectedIds.length === 0) return;
+
+    const AW = meta.labelSize.w;
+    const AH = meta.labelSize.h;
+    const selectedElements = elements.filter(el => selectedIds.includes(el.id));
+
+    // Calculate common bounding box
+    const minX = Math.min(...selectedElements.map(el => el.x));
+    const minY = Math.min(...selectedElements.map(el => el.y));
+    const maxX = Math.max(...selectedElements.map(el => el.x + (el.width || 0)));
+    const maxY = Math.max(...selectedElements.map(el => el.y + (el.height || 0)));
+    const centerX = (minX + maxX) / 2;
+    const centerY = (minY + maxY) / 2;
+
+    const next = elements.map(el => {
+      if (!selectedIds.includes(el.id)) return el;
+      const w = el.width || 0;
+      const h = el.height || 0;
+      
+      const isCanvas = relativeTo === 'canvas' || selectedIds.length === 1;
+
+      if (isCanvas) {
+        if (direction === 'left') return { ...el, x: 0 };
+        if (direction === 'right') return { ...el, x: AW - w };
+        if (direction === 'top') return { ...el, y: 0 };
+        if (direction === 'bottom') return { ...el, y: AH - h };
+        if (direction === 'centerH') return { ...el, x: (AW - w) / 2 };
+        if (direction === 'centerV') return { ...el, y: (AH - h) / 2 };
+      } else {
+        if (direction === 'left') return { ...el, x: minX };
+        if (direction === 'right') return { ...el, x: maxX - w };
+        if (direction === 'top') return { ...el, y: minY };
+        if (direction === 'bottom') return { ...el, y: maxY - h };
+        if (direction === 'centerH') return { ...el, x: centerX - w/2 };
+        if (direction === 'centerV') return { ...el, y: centerY - h/2 };
+      }
+      return el;
+    });
+
+    setElements(next);
+    saveToHistory(next);
+  }, [selectedIds, elements, meta]);
 
   // ── FDA Validation ──
   const validateLabel = () => {
@@ -691,7 +801,7 @@ export const LabelProvider = ({ children }) => {
     activeTemplate, setActiveTemplate,
     meta, setMeta,
     elements, setElements,
-    selectedElementId, setSelectedElementId,
+    selectedIds, setSelectedIds,
     zoomLevel, setZoomLevel,
     savedStatus, toast,
     historyIndex, historyLength: history.length,
@@ -708,14 +818,18 @@ export const LabelProvider = ({ children }) => {
     loadTemplate,
     // Element ops
     addElement, duplicateElement, updateElement, commitUpdate,
-    deleteElement, moveLayer,
-    // History
-    undo, redo,
+    deleteElement, moveLayer, alignElements,
+    // Design Tools: Orientation & Template logic
+    toggleOrientation, saveAsTemplate,
     // Validation
     validateLabel,
     LABEL_PRESETS,
+    setUnit,
+    toPx, fromPx, UNITS,
   };
 
   return <LabelContext.Provider value={value}>{children}</LabelContext.Provider>;
 };
+
+export const useLabel = () => useContext(LabelContext);
 
