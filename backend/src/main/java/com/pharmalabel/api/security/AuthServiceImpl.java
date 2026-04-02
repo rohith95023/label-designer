@@ -36,6 +36,7 @@ public class AuthServiceImpl implements AuthService {
     private final UserDetailsService userDetailsService;
     private final AuditLogService auditLogService;
     private final PermissionService permissionService;
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AuthServiceImpl.class);
 
     @Value("${jwt.refresh-expiration}")
     private long refreshExpiration;
@@ -43,10 +44,17 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public LoginResponse login(LoginRequest request, HttpServletResponse response) {
-        // Support login by username OR email
-        User user = userRepository.findByUsername(request.getUsername())
-                .or(() -> userRepository.findByEmail(request.getUsername()))
-                .orElseThrow(() -> new BadCredentialsException("Invalid username or password"));
+        String inputIdentity = request.getUsername() != null ? request.getUsername().trim() : "";
+        
+        // Support login by username OR email (case-insensitive)
+        User user = userRepository.findByUsername(inputIdentity)
+                .or(() -> userRepository.findByEmail(inputIdentity))
+                .or(() -> userRepository.findByUsername(inputIdentity.toLowerCase()))
+                .or(() -> userRepository.findByEmail(inputIdentity.toLowerCase()))
+                .orElseThrow(() -> {
+                    logger.warn("Login rejection: Identity '{}' not found in database.", inputIdentity);
+                    return new BadCredentialsException("Invalid username or password");
+                });
 
         // Check if account is locked
         if (user.getLockedUntil() != null && user.getLockedUntil().isAfter(OffsetDateTime.now())) {

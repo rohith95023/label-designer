@@ -35,6 +35,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<Map<String, Object>> handleBadCredentials(BadCredentialsException ex) {
+        logger.warn("Login failed: {}", ex.getMessage());
         Map<String, Object> body = new HashMap<>();
         body.put("success", false);
         body.put("message", ex.getMessage());

@@ -3,13 +3,6 @@ import React, { useMemo } from 'react';
 /**
  * A highly accurate ruler component for professional editors.
  * Supports mm and px measurements.
- * @param {Object} props
- * @param {'horizontal' | 'vertical'} props.orientation
- * @param {number} props.length - The total length in pixels
- * @param {number} props.zoomLevel - Current zoom level of the canvas
- * @param {number} props.cursorPos - Current mouse position relative to the artboard's 0,0
- * @param {Object} props.selection - { start, end } in pixels of the currently selected element
- * @param {boolean} props.isDark - Dynamic theme support
  */
 const PX_PER_MM = 3.7795275591;
 
@@ -19,9 +12,10 @@ export default function Ruler({
   zoomLevel, 
   cursorPos = null, 
   selection = null,
-  isDark = false
+  isDark = false,
+  onAddGuide
 }) {
-    const isHorizontal = orientation === 'horizontal';
+  const isHorizontal = orientation === 'horizontal';
   const strokeColor = isDark ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.3)';
   const textColor = isDark ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)';
   const highlightColor = isDark ? 'rgba(37, 99, 235, 0.5)' : 'rgba(37, 99, 235, 0.25)';
@@ -53,8 +47,14 @@ export default function Ruler({
   return (
     <div 
       className={`absolute ${isHorizontal ? 'top-[-32px] left-0 right-0 h-8 flex' : 'top-0 left-[-32px] bottom-0 w-8 inline-flex'}`}
+      onClick={(e) => {
+          const rect = e.currentTarget.getBoundingClientRect();
+          const pos = isHorizontal ? (e.clientX - rect.left) / zoomLevel : (e.clientY - rect.top) / zoomLevel;
+          if (onAddGuide) onAddGuide(pos);
+      }}
       style={{ 
-          pointerEvents: 'none',
+          pointerEvents: 'auto',
+          cursor: 'crosshair',
           userSelect: 'none',
           backgroundColor: isDark ? 'rgba(15, 23, 42, 0.95)' : 'rgba(255, 255, 255, 0.95)',
           backdropFilter: 'blur(8px)',
@@ -125,7 +125,7 @@ export default function Ruler({
         )}
       </svg>
       
-      {/* Unit Indicator (top left corner if we had one but we're inside artboard space) */}
+      {/* Unit Indicator */}
       {isHorizontal && (
           <div className="absolute top-1 left-[-28px] text-[7px] font-black uppercase text-blue-500/50 transform -rotate-90">mm</div>
       )}

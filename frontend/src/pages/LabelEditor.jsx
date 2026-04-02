@@ -18,6 +18,9 @@ import { WORDART_CATEGORIES, WORDART_STYLES } from '../data/wordArtPresets';
 import PreviewModal from '../components/modals/PreviewModal';
 import { calcAutoFitFontSize } from '../utils/autoFitFont';
 import Ruler from '../components/ui/Ruler';
+import SmartGuides from '../components/ui/SmartGuides';
+import GridOverlay from '../components/ui/GridOverlay';
+import { calculateAlignmentGuides } from '../utils/alignment';
 
 function resolvePlaceholders(text, placeholderValues) {
   if (!text) return '';
@@ -203,6 +206,9 @@ export default function LabelEditor() {
   const [activeTab, setActiveTab] = useState('elements');
   const [showFileMenu, setShowFileMenu] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
+  const [showViewMenu, setShowViewMenu] = useState(false);
+  const [showEditorViewSettings, setShowEditorViewSettings] = useState(false);
+  const [showToolsMenu, setShowToolsMenu] = useState(false);
   const [showValidation, setShowValidation] = useState(false);
   const [validationResult, setValidationResult] = useState({ isValid: true, errors: [] });
 
@@ -229,6 +235,13 @@ export default function LabelEditor() {
   const [previewMode, setPreviewMode] = useState(false);
   const originalTexts = useRef({}); // Tracks base text during bulk suffix editing
   const [artboardCursor, setArtboardCursor] = useState({ x: null, y: null });
+  const [activeAlignmentGuides, setActiveAlignmentGuides] = useState([]);
+  const [showGuidelines, setShowGuidelines] = useState(true);
+  const [showGrid, setShowGrid] = useState(false);
+  const [snapToGuides, setSnapToGuides] = useState(true);
+  const [snapToGrid, setSnapToGrid] = useState(false);
+  const [manualGuidelines, setManualGuidelines] = useState([]); // [{ orientation, pos }]
+  const GRID_SIZE = 20;
 
   // --- Placeholder Logic ---
   const [placeholders, setPlaceholders] = useState([]);
@@ -276,7 +289,13 @@ export default function LabelEditor() {
 
   // Close file menu on outside click
   useEffect(() => {
-    const close = () => { setShowFileMenu(false); setShowExportMenu(false); };
+    const close = () => { 
+      setShowFileMenu(false); 
+      setShowExportMenu(false); 
+      setShowViewMenu(false);
+      setShowEditorViewSettings(false);
+      setShowToolsMenu(false);
+    };
     window.addEventListener('click', close);
     return () => window.removeEventListener('click', close);
   }, []);
@@ -739,44 +758,41 @@ export default function LabelEditor() {
           <div className="w-[1px] h-5 bg-outline-variant/30 mx-1"></div>
 
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-slate-700 truncate max-w-[200px]">{meta.fileName || 'Untitled Label'}</span>
-            <span className={`flex items-center gap-1 text-[10px] font-bold ${statusColor}`}>
+            <span className="text-sm font-bold text-slate-800 dark:text-slate-100 tracking-tight truncate max-w-[200px]">{meta.fileName || 'Untitled Label'}</span>
+            <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full ${savedStatus === 'saved' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'} text-[9px] font-black uppercase tracking-wider`}>
               <span className={`material-symbols-outlined text-[13px] ${savedStatus === 'saving' ? 'animate-spin' : ''}`}>{statusIcon}</span>
               {statusLabel}
-            </span>
+            </div>
           </div>
         </div>
 
         {/* Center: Nav links */}
-        <nav className="hidden lg:flex absolute left-1/2 -translate-x-1/2 items-center gap-6 text-[13px] font-semibold">
-          <Link to="/" className="text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white transition-colors">Dashboard</Link>
-          <Link to="/assets" className="text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white transition-colors">Template Library</Link>
-          <Link to="/editor" className="text-blue-700 dark:text-blue-400 font-bold border-b-2 border-blue-600 pb-1">Label Editor</Link>
-          <Link to="/translation" className="text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white transition-colors">Translation</Link>
+        <nav className="hidden xl:flex absolute left-1/2 -translate-x-1/2 items-center gap-1 bg-slate-100/80 dark:bg-white/5 p-1 rounded-xl border border-slate-200/50 dark:border-white/10 shadow-sm">
+          <Link to="/" className="px-5 py-1.5 rounded-lg text-[12px] font-bold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/90 dark:hover:bg-white/10 transition-all">Dashboard</Link>
+          <Link to="/assets" className="px-5 py-1.5 rounded-lg text-[12px] font-bold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/90 dark:hover:bg-white/10 transition-all">Templates</Link>
+          <Link to="/editor" className="px-5 py-1.5 rounded-lg text-[12px] font-bold bg-white dark:bg-white/15 text-primary shadow-sm border border-slate-200/50 dark:border-white/10 forced-active">Label Editor</Link>
+          <Link to="/translation" className="px-5 py-1.5 rounded-lg text-[12px] font-bold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/90 dark:hover:bg-white/10 transition-all">Translation</Link>
         </nav>
 
         {/* Right: Toolset */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           {/* Theme Toggle */}
           <button
             onClick={toggleTheme}
-            title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-            className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10 hover:text-slate-700 dark:hover:text-white transition-all"
+            className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10 transition-all"
           >
-            <span className="material-symbols-outlined text-[18px]">
+            <span className="material-symbols-outlined text-[20px]">
               {theme === 'dark' ? 'light_mode' : 'dark_mode'}
             </span>
           </button>
-          <button onClick={handleValidate} className="px-3 py-1.5 text-[11px] font-bold uppercase tracking-widest bg-slate-100 text-blue-700 border border-blue-200 rounded-lg hover:bg-blue-50 transition-all flex items-center gap-1.5">
-            <span className="material-symbols-outlined text-[14px]">fact_check</span> Validate
-          </button>
+
           <div className="relative">
             <button
               onClick={(e) => { e.stopPropagation(); setShowExportMenu(!showExportMenu); setShowFileMenu(false); }}
-              className="px-4 py-1.5 btn-gradient text-white rounded-lg text-[11px] font-bold uppercase tracking-widest shadow-sm flex items-center gap-1.5 transition-all"
+              className="h-9 px-5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl text-[11px] font-black uppercase tracking-[0.05em] shadow-sm flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all"
             >
               Export
-              <span className="material-symbols-outlined text-[16px] -mr-1">{showExportMenu ? 'arrow_drop_up' : 'arrow_drop_down'}</span>
+              <span className="material-symbols-outlined text-[18px]">{showExportMenu ? 'arrow_drop_up' : 'arrow_drop_down'}</span>
             </button>
 
             {showExportMenu && (
@@ -802,112 +818,205 @@ export default function LabelEditor() {
 
       {/* ── Premium Secondary Toolbar ────────────────────────────────────────── */}
       <motion.div 
-        className="h-12 glass border-b border-white/20 dark:border-white/10 flex items-center justify-between px-4 shrink-0 z-30"
+        className="h-14 glass-header border-b border-white/20 dark:border-white/10 flex items-center px-4 gap-4 shrink-0 relative z-[100] shadow-sm select-none"
         initial={{ y: -10, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.1, type: "spring", stiffness: 300, damping: 30 }}
       >
-        <div className="flex items-center gap-2">
-          <motion.button 
-            onClick={undo} 
-            disabled={historyIndex <= 0} 
-            title="Undo (Ctrl+Z)" 
-            className="p-2 rounded-xl hover:bg-slate-100 disabled:opacity-30 text-slate-600 transition-all"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <span className="material-symbols-outlined text-[18px]">undo</span>
-          </motion.button>
-          <motion.button 
-            onClick={redo} 
-            disabled={historyIndex >= historyLength - 1} 
-            title="Redo (Ctrl+Y)" 
-            className="p-2 rounded-xl hover:bg-slate-100 disabled:opacity-30 text-slate-600 transition-all"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <span className="material-symbols-outlined text-[18px]">redo</span>
-          </motion.button>
+        {/* Column 1: Precision Controls (Left) */}
+        <div className="flex-1 flex items-center justify-start">
+          <div className="flex items-center gap-1.5 bg-slate-100/80 dark:bg-white/5 p-1 rounded-xl border border-slate-200/50 dark:border-white/10 shadow-sm h-10">
+            <motion.button 
+              onClick={undo} 
+              disabled={historyIndex <= 0} 
+              title="Undo (Ctrl+Z)" 
+              className="w-8 h-8 rounded-lg hover:bg-white dark:hover:bg-white/10 disabled:opacity-20 text-slate-600 dark:text-slate-400 transition-all flex items-center justify-center shadow-sm"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
+            </motion.button>
+            <motion.button 
+              onClick={redo} 
+              disabled={historyIndex >= historyLength - 1} 
+              title="Redo (Ctrl+Y)" 
+              className="w-8 h-8 rounded-lg hover:bg-white dark:hover:bg-white/10 disabled:opacity-20 text-slate-600 dark:text-slate-400 transition-all flex items-center justify-center shadow-sm"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13"/></svg>
+            </motion.button>
 
-          <div className="w-[1px] h-4 bg-outline-variant/20 mx-1"></div>
+            <div className="w-[1px] h-4 bg-slate-300 dark:bg-white/10 mx-1"></div>
 
-          <button onClick={() => setZoomLevel(z => Math.max(0.2, +(z - 0.25).toFixed(2)))} className="p-1 rounded hover:bg-slate-100 text-slate-600 transition-colors">
-            <span className="material-symbols-outlined text-[16px]">zoom_out</span>
-          </button>
-          <button onClick={() => setZoomLevel(1)} className="text-[11px] font-mono font-bold text-slate-600 w-12 text-center hover:bg-slate-100 rounded px-1 py-0.5">
-            {Math.round(zoomLevel * 100)}%
-          </button>
-          <button onClick={() => setZoomLevel(z => Math.min(4, +(z + 0.25).toFixed(2)))} className="p-1 rounded hover:bg-slate-100 text-slate-600 transition-colors">
-            <span className="material-symbols-outlined text-[16px]">zoom_in</span>
-          </button>
+            <button onClick={() => setZoomLevel(z => Math.max(0.2, +(z - 0.25).toFixed(2)))} className="w-8 h-8 rounded-lg hover:bg-white dark:hover:bg-white/10 text-slate-500 flex items-center justify-center transition-colors">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+            </button>
+            <div className="text-[10px] font-black font-mono text-slate-700 dark:text-slate-200 w-12 text-center select-none py-1">
+              {Math.round(zoomLevel * 100)}%
+            </div>
+            <button onClick={() => setZoomLevel(z => Math.min(4, +(z + 0.25).toFixed(2)))} className="w-8 h-8 rounded-lg hover:bg-white dark:hover:bg-white/10 text-slate-500 flex items-center justify-center transition-colors">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+            </button>
+          </div>
         </div>
 
-        {/* Center: Tools & Modes */}
-        <div className="flex-1 flex items-center justify-center gap-2">
-          <button 
-            onClick={() => setShowWordArtModal(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-white/50 dark:bg-slate-800/50 border border-slate-200 dark:border-white/10 rounded-full shadow-sm hover:shadow-md hover:border-primary/40 transition-all text-primary font-bold text-[9px] uppercase tracking-widest"
-          >
-            <span className="material-symbols-outlined text-[14px]">abc</span> WordArt
-          </button>
-          
-          <div className="w-[1px] h-3 bg-slate-200 dark:bg-slate-700/50 mx-0.5"></div>
-          
-          <button 
-            onClick={() => setIsDrawingMode(!isDrawingMode)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 border rounded-full shadow-sm hover:shadow-md transition-all font-bold text-[9px] uppercase tracking-widest ${isDrawingMode ? 'btn-gradient shadow-glow' : 'bg-white/50 dark:bg-slate-800/50 border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:border-primary/40'}`}
-          >
-            <span className="material-symbols-outlined text-[14px]">edit_note</span> Writing
-          </button>
+        {/* Column 2: Workspace Options (Center) */}
+        <div className="flex-1 flex items-center justify-center">
+          <div className="flex items-center gap-3">
+            {/* Consolidated View Options Dropdown */}
+            <div className="relative">
+              <button 
+                onClick={(e) => { e.stopPropagation(); setShowEditorViewSettings(!showEditorViewSettings); }}
+                className={`h-10 px-4 rounded-xl text-[10px] font-black uppercase tracking-[0.05em] transition-all flex items-center gap-2 border shadow-sm ${showEditorViewSettings ? 'bg-primary/5 border-primary/30 text-primary' : 'bg-slate-100/80 dark:bg-white/5 border-slate-200/50 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:border-primary/40'}`}
+              >
+                <span className="material-symbols-outlined text-[18px]">grid_guides</span>
+                View Options
+                <span className="material-symbols-outlined text-[16px]">{showEditorViewSettings ? 'expand_less' : 'expand_more'}</span>
+              </button>
 
-          <div className="w-[1px] h-3 bg-slate-200 dark:bg-slate-700/50 mx-0.5"></div>
+              {showEditorViewSettings && (
+                <div className="absolute top-11 left-1/2 -translate-x-1/2 w-64 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-2xl p-2 z-[9999] animate-in fade-in slide-in-from-top-2 duration-300">
+                  <div className="px-3 py-2 mb-1">
+                    <p className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-400">Environment & Snapping</p>
+                  </div>
+                  
+                  {[
+                    { id: 'guides', label: 'Smart Guidelines', desc: 'Alignment & distance lines', icon: 'grid_guides', active: showGuidelines, toggle: () => setShowGuidelines(!showGuidelines) },
+                    { id: 'grid', label: 'Visual Grid', desc: 'Static document grid', icon: 'grid_4x4', active: showGrid, toggle: () => setShowGrid(!showGrid) },
+                    { id: 'magnet', label: 'Snap to Objects', desc: 'Magnetic positioning', active: snapToGuides, toggle: () => setSnapToGuides(!snapToGuides), isSVG: true },
+                  ].map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={(e) => { e.stopPropagation(); item.toggle(); }}
+                      className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-all group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${item.active ? 'bg-primary/10 text-primary' : 'bg-slate-100 text-slate-400 dark:bg-white/5'}`}>
+                          {item.isSVG ? (
+                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 10v4a7 7 0 0 0 14 0v-4" /><path d="M15 10V5a3 3 0 0 0-6 0v5" /><path d="M12 2v3" /></svg>
+                          ) : (
+                            <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
+                          )}
+                        </div>
+                        <div className="flex flex-col items-start gap-0.5">
+                          <span className={`text-[12px] font-bold ${item.active ? 'text-slate-900 dark:text-white' : 'text-slate-500'}`}>{item.label}</span>
+                          <span className="text-[10px] text-slate-400 font-medium">{item.desc}</span>
+                        </div>
+                      </div>
+                      <div className={`w-9 h-5 rounded-full relative transition-all duration-300 border shadow-inner ${item.active ? 'bg-primary border-primary shadow-indigo-600/20' : 'bg-slate-200 dark:bg-slate-700 border-slate-300 dark:border-slate-600'}`}>
+                         <div className={`absolute top-0.5 w-3.5 h-3.5 rounded-full bg-white shadow-md transition-all duration-300 ${item.active ? 'right-1' : 'left-1'}`} />
+                      </div>
+                    </button>
+                  ))}
 
-          <button 
-            onClick={() => setShowPreviewModal(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50/50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-500/20 rounded-full shadow-sm hover:shadow-md hover:border-emerald-400 transition-all text-emerald-700 dark:text-emerald-300 font-bold text-[9px] uppercase tracking-widest"
-          >
-            <span className="material-symbols-outlined text-[14px]">visibility</span> Preview
-          </button>
+                  <div className="h-[1px] bg-slate-100 dark:bg-white/5 my-2 mx-2" />
+                  
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setManualGuidelines([]); setShowEditorViewSettings(false); }}
+                    className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/10 text-red-500 transition-all group"
+                  >
+                    <div className="w-9 h-9 rounded-xl bg-red-100/50 dark:bg-red-900/20 flex items-center justify-center group-hover:bg-red-500 group-hover:text-white transition-colors">
+                      <span className="material-symbols-outlined text-[18px]">delete_sweep</span>
+                    </div>
+                    <span className="text-[12px] font-bold">Purge Manual Guides</span>
+                  </button>
+                </div>
+              )}
+            </div>
 
-          <button 
-            onClick={() => setPreviewMode(!previewMode)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 border rounded-full shadow-sm hover:shadow-md transition-all font-bold text-[9px] uppercase tracking-widest ${previewMode ? 'bg-indigo-600 text-white border-indigo-600 shadow-indigo-200' : 'bg-white/50 dark:bg-slate-800/50 border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:border-indigo-400'}`}
-          >
-            <span className="material-symbols-outlined text-[14px]">{previewMode ? 'data_object' : 'toll'}</span>
-            {previewMode ? 'Live Mode' : 'Tokens'}
-          </button>
+            <div className="w-[1px] h-4 bg-outline-variant/20 mx-1"></div>
+
+            {/* Consolidated Tools & Modes Dropdown */}
+            <div className="relative">
+              <button 
+                onClick={(e) => { e.stopPropagation(); setShowToolsMenu(!showToolsMenu); }}
+                className={`h-10 px-4 rounded-xl text-[10px] font-black uppercase tracking-[0.05em] transition-all flex items-center gap-2 border shadow-sm ${showToolsMenu ? 'bg-indigo-50 dark:bg-indigo-900/10 border-indigo-200 text-indigo-700' : 'bg-slate-100/80 dark:bg-white/5 border-slate-200/50 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:border-indigo-400'}`}
+              >
+                <span className="material-symbols-outlined text-[18px]">build</span>
+                Editor Tools
+                <span className="material-symbols-outlined text-[16px]">{showToolsMenu ? 'expand_less' : 'expand_more'}</span>
+              </button>
+
+              {showToolsMenu && (
+                <div className="absolute top-11 left-1/2 -translate-x-1/2 w-72 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-2xl p-2 z-[9999] animate-in fade-in slide-in-from-top-2 duration-300">
+                  <div className="px-3 py-2 mb-1">
+                    <p className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-400">Content & Interaction</p>
+                  </div>
+                  
+                  <button onClick={() => { setShowWordArtModal(true); setShowToolsMenu(false); }} className="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-all group">
+                    <div className="w-11 h-11 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform"><span className="material-symbols-outlined text-[24px]">abc</span></div>
+                    <div className="flex flex-col items-start gap-0.5"><span className="text-[13px] font-bold text-slate-900 dark:text-white uppercase tracking-tight">WordArt</span><span className="text-[10px] text-slate-400 font-medium">Add stylized decorative text</span></div>
+                  </button>
+
+                  <button onClick={() => { setIsDrawingMode(!isDrawingMode); setShowToolsMenu(false); }} className={`w-full flex items-center gap-4 p-3 rounded-xl transition-all group ${isDrawingMode ? 'bg-indigo-50 dark:bg-indigo-900/10' : 'hover:bg-slate-50 dark:hover:bg-white/5'}`}>
+                    <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform ${isDrawingMode ? 'bg-indigo-600 text-white shadow-glow' : 'bg-slate-100 text-slate-400'}`}><span className="material-symbols-outlined text-[24px]">edit_note</span></div>
+                    <div className="flex flex-col items-start gap-0.5"><span className={`text-[13px] font-bold uppercase tracking-tight ${isDrawingMode ? 'text-indigo-700 dark:text-indigo-400' : 'text-slate-900 dark:text-white'}`}>Freehand</span><span className="text-[10px] text-slate-400 font-medium text-left">Draw or write on the label</span></div>
+                  </button>
+
+                  <div className="h-[1px] bg-slate-100 dark:bg-white/5 my-2 mx-2" />
+
+                  <button onClick={() => { handleValidate(); setShowToolsMenu(false); }} className="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-900/10 transition-all group">
+                    <div className="w-11 h-11 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform"><span className="material-symbols-outlined text-[24px]">fact_check</span></div>
+                    <div className="flex flex-col items-start gap-0.5"><span className="text-[13px] font-bold text-indigo-700 uppercase tracking-tight">Validate</span><span className="text-[10px] text-slate-400 font-medium">Check for compliance errors</span></div>
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
-        {/* Right: Info & Coordinates */}
-        <div className="flex items-center gap-3">
+        {/* Column 3: Design Review (Right) */}
+        <div className="flex-1 flex items-center justify-end gap-2 pr-1">
           {/* Label Size Info */}
           <button
             onClick={() => setModalStep('labelsize')}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100/50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-[9px] font-bold text-slate-500 dark:text-slate-400 hover:text-primary transition-all"
+            className="flex items-center gap-2 h-10 px-4 rounded-xl bg-slate-100/80 dark:bg-white/5 border border-slate-200/50 dark:border-white/10 text-[10px] font-black text-slate-500 dark:text-slate-400 hover:text-primary transition-all shadow-sm"
             title="Edit label size"
           >
-            <span className="material-symbols-outlined text-[12px] opacity-60">aspect_ratio</span>
-            <span className="font-mono tracking-tighter text-[9px]">
+            <span className="material-symbols-outlined text-[14px]">aspect_ratio</span>
+            <span className="font-mono tracking-tight">
               {Math.round(AW / 3.7795275591)}×{Math.round(AH / 3.7795275591)}mm
             </span>
           </button>
 
-          {/* POS Display - Compact */}
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-500/10 text-[9px] font-bold">
-             <div className="flex items-center gap-2 text-blue-800 dark:text-blue-300 font-mono">
-                <span className="w-[50px] bg-white/40 dark:bg-blue-900/20 px-1 rounded flex justify-between">
-                   <span className="opacity-40 mr-1">X</span>
+          {/* POS Display - Premium Compact */}
+          <div className="flex items-center gap-1.5 bg-slate-100/80 dark:bg-white/5 p-1 rounded-xl border border-slate-200/50 dark:border-white/10 shadow-sm h-10">
+             <div className="flex items-center gap-1 text-[10px] font-black font-mono">
+                <div className="flex items-center gap-1 px-2 py-1.5 rounded-lg bg-white/50 dark:bg-white/5 text-blue-600 dark:text-blue-400 min-w-[58px] justify-between shadow-xs">
+                   <span className="opacity-40">X</span>
                    <span>{artboardCursor.x !== null ? (artboardCursor.x / 3.7795275591).toFixed(1) : '—'}</span>
-                </span>
-                <span className="w-[50px] bg-white/40 dark:bg-blue-900/20 px-1 rounded flex justify-between">
-                   <span className="opacity-40 mr-1">Y</span>
+                </div>
+                <div className="flex items-center gap-1 px-2 py-1.5 rounded-lg bg-white/50 dark:bg-white/5 text-indigo-600 dark:text-indigo-400 min-w-[58px] justify-between shadow-xs">
+                   <span className="opacity-40">Y</span>
                    <span>{artboardCursor.y !== null ? (artboardCursor.y / 3.7795275591).toFixed(1) : '—'}</span>
-                </span>
+                </div>
              </div>
           </div>
-        </div>
 
-        <div className="flex-1" />
+          <div className="w-[1px] h-4 bg-slate-300 dark:bg-white/10 mx-1"></div>
+
+          {/* Live Review Group */}
+          <div className="flex items-center gap-1.5 px-1.5 py-1 bg-slate-100/50 dark:bg-white/5 rounded-xl border border-slate-200/50 dark:border-white/10 shadow-sm h-10">
+            <button 
+              onClick={() => setPreviewMode(!previewMode)} 
+              title="Toggle Live Tokens"
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all h-8 ${previewMode ? 'bg-amber-500 text-white shadow-lg' : 'text-slate-500 hover:bg-white dark:hover:bg-white/10'}`}
+            >
+              <span className="material-symbols-outlined text-[16px]">{previewMode ? 'data_object' : 'toll'}</span>
+              Tokens
+            </button>
+            <div className="w-[1px] h-3 bg-slate-300 dark:bg-white/10"></div>
+            <button 
+              onClick={() => setShowPreviewModal(true)} 
+              title="Print Preview"
+              className="flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider text-slate-500 hover:bg-white dark:hover:bg-white/10 transition-all h-8"
+            >
+              <span className="material-symbols-outlined text-[16px]">visibility</span>
+              Preview
+            </button>
+          </div>
+        </div>
       </motion.div>
 
       {/* ── Premium Main 3-Column Area ──────────────────────────────────────────── */}
@@ -1502,6 +1611,7 @@ export default function LabelEditor() {
                     cursorPos={artboardCursor.x} 
                     selection={selectedElement ? { start: selectedElement.x, end: selectedElement.x + (selectedElement.width || 0) } : null}
                     isDark={theme === 'dark'}
+                    onAddGuide={(pos) => setManualGuidelines(prev => [...prev, { orientation: 'vertical', pos }])}
                   />
                   <Ruler 
                     orientation="vertical" 
@@ -1510,6 +1620,7 @@ export default function LabelEditor() {
                     cursorPos={artboardCursor.y} 
                     selection={selectedElement ? { start: selectedElement.y, end: selectedElement.y + (selectedElement.height || 0) } : null}
                     isDark={theme === 'dark'}
+                    onAddGuide={(pos) => setManualGuidelines(prev => [...prev, { orientation: 'horizontal', pos }])}
                   />
                   {/* Corner Box where rulers meet */}
                   <div 
@@ -1527,6 +1638,30 @@ export default function LabelEditor() {
                   </div>
                 </>
               )}
+
+              {/* Grid Overlay */}
+               <GridOverlay 
+                 width={AW} 
+                 height={AH} 
+                 visible={showGrid} 
+                 isDark={theme === 'dark'} 
+                 spacing={GRID_SIZE} 
+               />
+
+               {/* Smart Guidelines Layer */}
+               {showGuidelines && (
+                 <SmartGuides 
+                   activeGuides={[
+                     ...activeAlignmentGuides,
+                     ...manualGuidelines.map(g => ({ ...g, type: 'manual' }))
+                   ]} 
+                   zoomLevel={zoomLevel} 
+                   isDark={theme === 'dark'}
+                   onRemoveManualCenter={(pos, orientation) => {
+                     setManualGuidelines(prev => prev.filter(g => g.pos !== pos || g.orientation !== orientation));
+                   }}
+                 />
+               )}
 
               {/* Label Name watermark */}
               {!elements.length && !isDrawingMode && (
@@ -1560,12 +1695,21 @@ export default function LabelEditor() {
                       position: 'absolute'
                     }}
                     onDrag={(_, d) => {
-                      // Real-time feedback for dark mode visibility when dragging outside
-                      if (theme === 'dark' || (d.x < 0 || d.y < 0 || d.x + elW > AW || d.y + elH > AH)) {
-                        updateElement(el.id, { x: d.x, y: d.y });
-                      }
+                      const { snappedPos, activeGuides } = calculateAlignmentGuides(
+                        { ...el, x: d.x, y: d.y },
+                        elements,
+                        AW,
+                        AH,
+                        { snapToGrid, gridSize: GRID_SIZE, snapToGuides }
+                      );
+
+                      setActiveAlignmentGuides(activeGuides);
+                      
+                      // Magnetic Snapping Effect
+                      updateElement(el.id, { x: snappedPos.x, y: snappedPos.y });
                     }}
                     onDragStop={(_, d) => {
+                      setActiveAlignmentGuides([]); // Hide guides on stop
                       const clamped = clampPos(d.x, d.y, elW, elH, el.rotation);
                       updateElement(el.id, clamped);
                       commitUpdate();
