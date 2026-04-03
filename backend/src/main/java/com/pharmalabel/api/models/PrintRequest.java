@@ -6,7 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import org.hibernate.annotations.CreationTimestamp;
 import java.util.UUID;
 
 @Entity
@@ -43,11 +44,7 @@ public class PrintRequest {
     @JoinColumn(name = "requested_by_id")
     private User requestedBy;
 
-    @Column(nullable = false)
-    private LocalDateTime requestedAt;
-
-    @PrePersist
-    protected void onCreate() {
-        requestedAt = LocalDateTime.now();
-    }
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
+    private OffsetDateTime requestedAt;
 }

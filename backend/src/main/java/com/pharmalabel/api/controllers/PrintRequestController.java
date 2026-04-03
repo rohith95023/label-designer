@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/print-requests")
+@RequestMapping("/api/v1/print-requests")
 @RequiredArgsConstructor
 public class PrintRequestController {
 

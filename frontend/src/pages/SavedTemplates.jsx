@@ -4,15 +4,17 @@ import { useLabel } from '../context/LabelContext';
 import { useAuth } from '../context/AuthContext';
 import AppLayout from '../components/common/AppLayout';
 import PreviewModal from '../components/modals/PreviewModal';
+import TemplateConflictModal from '../components/modals/TemplateConflictModal';
 
 export default function SavedTemplates() {
-  const { userFiles, openFileById, deleteUserTemplate, loading, getTemplateById } = useLabel();
+  const { userFiles, openFileById, deleteUserTemplate, loading, getTemplateById, newFile, meta } = useLabel();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState(null); // { id, name }
   const [previewFile, setPreviewFile] = useState(null);    // file object
   const [isDeleting, setIsDeleting] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(null); // { id, name }
 
   const isAdmin = user?.role === 'ADMIN';
 
@@ -23,7 +25,16 @@ export default function SavedTemplates() {
     );
   }, [userFiles, searchQuery, isAdmin]);
 
-  const handleOpen = async (id) => {
+  const handleOpen = (file) => {
+    const isDirty = (elements && elements.length > 0) || (meta.fileName && meta.fileName !== 'Untitled Label') || (meta.fileId && meta.fileId !== 'new');
+    if (isDirty) {
+      setConfirmOpen(file);
+    } else {
+      executeOpen(file.id);
+    }
+  };
+
+  const executeOpen = async (id) => {
     await openFileById(id);
     navigate('/editor');
   };
@@ -174,7 +185,7 @@ export default function SavedTemplates() {
                             <span className="material-symbols-outlined text-base">visibility</span>
                           </button>
                           <button
-                            onClick={() => handleOpen(file.id)}
+                            onClick={() => handleOpen(file)}
                             className="bg-primary/10 hover:bg-primary text-primary hover:text-on-primary p-2.5 rounded-xl transition-all active:scale-95 group"
                             title="Open in Designer"
                           >
@@ -252,6 +263,24 @@ export default function SavedTemplates() {
           title={previewFile.name}
         />
       )}
+
+      {/* Template Conflict Resolution Modal */}
+      <TemplateConflictModal
+        isOpen={!!confirmOpen}
+        onClose={() => setConfirmOpen(null)}
+        onClearAndLoad={() => {
+          if (confirmOpen) executeOpen(confirmOpen.id);
+          setConfirmOpen(null);
+        }}
+        onCreateNew={async () => {
+          if (confirmOpen) {
+            await newFile();
+            executeOpen(confirmOpen.id);
+          }
+          setConfirmOpen(null);
+        }}
+        canvasName={meta.fileName || 'Untitled Label'}
+      />
     </AppLayout>
   );
 }

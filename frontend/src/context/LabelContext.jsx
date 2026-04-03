@@ -6,29 +6,29 @@ import { useAuth } from './AuthContext';
 import { UNITS, toPx, fromPx, PX_PER_UNIT } from '../utils/units';
 import { SAMPLE_TRIAL_DATA } from '../utils/dynamicData';
 
-const LabelContext = createContext();
+const LabelContext = createContext({ loading: true, hydrated: false });
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 // Initial definitions in PX (96dpi)
 export const LABEL_PRESETS = [
-  { id: 'bottle',   name: 'Bottle Label',    w: 302, h: 454 },  // 80×120mm
-  { id: 'vial',     name: 'Vial Wrap',       w: 208, h: 132 },  // 55×35mm
-  { id: 'blister',  name: 'Blister Pack',    w: 416, h: 265 },  // 110×70mm
-  { id: 'a5',       name: 'A5 Label',        w: 559, h: 794 },
-  { id: 'a4',       name: 'A4 Sheet',        w: 794, h: 1123 },
-  { id: 'strip',    name: 'Strip Pack',      w: 567, h: 189 },  // 150×50mm
-  { id: 'sachet',   name: 'Sachet',          w: 265, h: 340 },  // 70×90mm
-  { id: 'custom',   name: 'Custom …',        w: 600, h: 400 },
+  { id: 'bottle', name: 'Bottle Label', w: 302, h: 454 },  // 80×120mm
+  { id: 'vial', name: 'Vial Wrap', w: 208, h: 132 },  // 55×35mm
+  { id: 'blister', name: 'Blister Pack', w: 416, h: 265 },  // 110×70mm
+  { id: 'a5', name: 'A5 Label', w: 559, h: 794 },
+  { id: 'a4', name: 'A4 Sheet', w: 794, h: 1123 },
+  { id: 'strip', name: 'Strip Pack', w: 567, h: 189 },  // 150×50mm
+  { id: 'sachet', name: 'Sachet', w: 265, h: 340 },  // 70×90mm
+  { id: 'custom', name: 'Custom …', w: 600, h: 400 },
 ];
 
-const DEFAULT_META = { 
-  fileId: null, 
-  fileName: null, 
+const DEFAULT_META = {
+  fileId: null,
+  fileName: null,
   labelStockId: null,
-  labelSize: { w: 302, h: 454 }, 
-  bgColor: '#FFFFFF', 
-  unit: UNITS.MM, 
-  notes: '' 
+  labelSize: { w: 302, h: 454 },
+  bgColor: '#FFFFFF',
+  unit: UNITS.MM,
+  notes: ''
 };
 
 export const DEFAULT_SETTINGS = {
@@ -54,27 +54,27 @@ const PREDEFINED_TEMPLATES = [
       // 🔝 Top Section
       { id: "t1-rx", type: "text", text: "Rx", x: 20, y: 20, fontSize: 18, fontWeight: "bold", color: "#000000", zIndex: 10 },
       { id: "t1-brand", type: "text", subtype: "brand", text: "ASPIRIN USP", x: 60, y: 20, fontSize: 22, fontWeight: "bold", color: "#cc0000", zIndex: 11 },
-      
+
       // 🧾 Middle Section
       { id: "t1-strength", type: "text", text: "Strength: 500 mg tablets", x: 60, y: 50, fontSize: 13, fontWeight: "bold", color: "#111111", zIndex: 12 },
       { id: "t1-category", type: "text", text: "Category: Analgesic / Antipyretic", x: 60, y: 70, fontSize: 10, color: "#555555", zIndex: 13 },
-      
+
       // 📄 Details Section
       { id: "t1-active", type: "text", text: "Active Ingredient: Aspirin USP 500mg", x: 20, y: 105, fontSize: 9, color: "#333333", zIndex: 14 },
       { id: "t1-dosage", type: "text", text: "Dosage: Adults (12+) 1 tablet every 4-6h", x: 20, y: 125, fontSize: 9, color: "#000000", fontWeight: "bold", zIndex: 15 },
-      
+
       // ⚠️ Warning Section
       { id: "t1-warning", type: "warnings", text: "KEEP OUT OF REACH OF CHILDREN", x: 20, y: 160, fontSize: 11, color: "#ff0000", fontWeight: "bold", zIndex: 16 },
       { id: "t1-storage", type: "text", text: "Store below 25°C in a dry place.", x: 20, y: 185, fontSize: 9, color: "#444444", zIndex: 17 },
-      
+
       // 📦 Bottom Section
       { id: "t1-barcode", type: "barcode", text: "7192837465", x: 25, y: 215, width: 250, height: 50, zIndex: 18 },
-      
+
       // 📊 Bottom Left
       { id: "t1-batch", type: "text", text: "Batch: 2024-X91", x: 20, y: 290, fontSize: 9, color: "#333333", zIndex: 20 },
       { id: "t1-exp", type: "text", text: "Exp: 02/2027", x: 20, y: 310, fontSize: 10, color: "#333333", fontWeight: "bold", zIndex: 21 },
       { id: "t1-mfg", type: "text", text: "Mfd by: PharmaCore Labs, USA", x: 20, y: 330, fontSize: 9, fontWeight: "bold", color: "#002244", zIndex: 22 },
-      
+
       // 🔳 Bottom Right
       { id: "t1-qr", type: "qrcode", text: "ASP-REF-001928", x: 210, y: 280, width: 75, height: 75, zIndex: 23 }
     ]
@@ -174,22 +174,22 @@ const PREDEFINED_TEMPLATES = [
 ];
 
 export const LabelProvider = ({ children }) => {
-  const [templates, setTemplates]      = useState(PREDEFINED_TEMPLATES);
+  const [templates, setTemplates] = useState(PREDEFINED_TEMPLATES);
   const [activeTemplate, setActiveTemplate] = useState(null);
-  const [meta,     setMeta]    = useState(DEFAULT_META);
+  const [meta, setMeta] = useState(DEFAULT_META);
   const [elements, setElements] = useState([]);
   const [selectedIds, setSelectedIds] = useState([]);
-  const [zoomLevel, setZoomLevel]   = useState(1);
-  const [history,   setHistory]     = useState([[]]);
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [history, setHistory] = useState([[]]);
   const [historyIndex, setHistoryIndex] = useState(0);
-  const [savedStatus, setSavedStatus]   = useState('saved'); // 'saved'|'saving'|'unsaved'
-  const [toast, setToast]               = useState(null);     // { msg, type }
-  const [hydrated, setHydrated]         = useState(false);    // true after API restore
-  const [settings, setSettings]         = useState(DEFAULT_SETTINGS);
+  const [savedStatus, setSavedStatus] = useState('saved'); // 'saved'|'saving'|'unsaved'
+  const [toast, setToast] = useState(null);     // { msg, type }
+  const [hydrated, setHydrated] = useState(false);    // true after API restore
+  const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [activityLogs, setActivityLogs] = useState([]);
-  const [loading, setLoading]           = useState(true);
-  const [userFiles, setUserFiles]       = useState([]);
-  const [labelStocks, setLabelStocks]   = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [userFiles, setUserFiles] = useState([]);
+  const [labelStocks, setLabelStocks] = useState([]);
   const defaultStockIdRef = useRef(null);
   const isSavingRef = useRef(false);
 
@@ -254,10 +254,10 @@ export const LabelProvider = ({ children }) => {
             const last = labels.sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0))[0];
             try {
               const latestVersion = await api.getLatestLabelVersion(last.id);
-              setMeta(prev => ({ 
+              setMeta(prev => ({
                 ...prev,
-                fileId: last.id, 
-                fileName: last.name, 
+                fileId: last.id,
+                fileName: last.name,
                 labelStockId: last.labelStockId || last.labelStock?.id,
                 labelSize: latestVersion.designJson?.labelSize || { w: 600, h: 400 },
                 bgColor: latestVersion.designJson?.bgColor || '#FFFFFF',
@@ -413,15 +413,15 @@ export const LabelProvider = ({ children }) => {
   };
 
   const setLabelSize = (w, h) => setMeta(m => ({ ...m, labelSize: { w, h } }));
-  
+
   const setLabelStock = (stockId) => {
     const stock = labelStocks.find(s => s.id === stockId);
     if (stock) {
       const MM_TO_PX = 3.7795;
       const w = Math.round(stock.breadth * MM_TO_PX);
       const h = Math.round(stock.height * MM_TO_PX);
-      setMeta(prev => ({ 
-        ...prev, 
+      setMeta(prev => ({
+        ...prev,
         labelStockId: stockId,
         labelSize: { w, h }
       }));
@@ -433,29 +433,29 @@ export const LabelProvider = ({ children }) => {
 
   const saveFile = async () => {
     if (!meta.fileId) {
-        showToast('Please name your file first', 'warning');
-        return;
+      showToast('Please name your file first', 'warning');
+      return;
     }
     if (isSavingRef.current) return;
     isSavingRef.current = true;
     try {
-        setSavedStatus('saving');
-        await api.saveLabelVersion(meta.fileId, {
-            designJson: {
-              elementsData: elements,
-              labelSize: meta.labelSize,
-              bgColor: meta.bgColor,
-              labelStockId: meta.labelStockId
-            },
-            notes: meta.notes
-        });
-        setSavedStatus('saved');
-        showToast('New version saved ✓', 'success');
+      setSavedStatus('saving');
+      await api.saveLabelVersion(meta.fileId, {
+        designJson: {
+          elementsData: elements,
+          labelSize: meta.labelSize,
+          bgColor: meta.bgColor,
+          labelStockId: meta.labelStockId
+        },
+        notes: meta.notes
+      });
+      setSavedStatus('saved');
+      showToast('New version saved ✓', 'success');
     } catch (err) {
-        console.error('Manual save failed', err);
-        showToast('Manual save failed', 'error');
+      console.error('Manual save failed', err);
+      showToast('Manual save failed', 'error');
     } finally {
-        isSavingRef.current = false;
+      isSavingRef.current = false;
     }
   };
 
@@ -480,12 +480,12 @@ export const LabelProvider = ({ children }) => {
           bgColor: meta.bgColor
         }
       });
-      setMeta({ 
-        fileId: newLabel.id, 
-        fileName: newName, 
+      setMeta({
+        fileId: newLabel.id,
+        fileName: newName,
         labelSize: meta.labelSize,
         bgColor: meta.bgColor,
-        notes: meta.notes 
+        notes: meta.notes
       });
       setUserFiles(prev => [...prev, newLabel]);
       setSavedStatus('saved');
@@ -504,12 +504,12 @@ export const LabelProvider = ({ children }) => {
       setLoading(true);
       const label = await api.getLabel(id);
       const version = await api.getLatestLabelVersion(id);
-      
+
       const design = version.designJson || {};
-      
-      setMeta({ 
-        fileId: label.id, 
-        fileName: label.name, 
+
+      setMeta({
+        fileId: label.id,
+        fileName: label.name,
         labelStockId: label.labelStockId || label.labelStock?.id,
         labelSize: design.labelSize || { w: 600, h: 400 },
         bgColor: design.bgColor || '#FFFFFF',
@@ -558,7 +558,7 @@ export const LabelProvider = ({ children }) => {
     try {
       const data = JSON.parse(jsonString);
       if (data.meta) {
-        setMeta({ 
+        setMeta({
           fileId: null, // New file ID will be created when saved
           fileName: data.meta.fileName || 'Imported Label',
           labelSize: data.meta.labelSize || { w: 600, h: 400 },
@@ -596,8 +596,8 @@ export const LabelProvider = ({ children }) => {
     try {
       const label = await api.getLabel(id);
       const version = await api.getLatestLabelVersion(id);
-      return { 
-        ...label, 
+      return {
+        ...label,
         elementsData: version.designJson?.elementsData,
         labelSize: version.designJson?.labelSize,
         bgColor: version.designJson?.bgColor
@@ -609,19 +609,32 @@ export const LabelProvider = ({ children }) => {
   };
 
   // ── Template Loader ──
-  const loadTemplate = (template) => {
+  const loadTemplate = async (template) => {
     console.log('[LabelContext] Loading Template:', template.name, template);
-    
+    setLoading(true);
+
+    let fullTemplate = template;
+    // If elementsData is missing, fetch the full details including latest version
+    if (!template.elementsData && !template.elements_data && template.id) {
+      try {
+        const details = await getTemplateById(template.id);
+        if (details) fullTemplate = details;
+      } catch (err) {
+        console.error('Failed to fetch full template details', err);
+        showToast('Could not load full template details', 'error');
+      }
+    }
+
     // Normalize elements data
-    const rawElements = template.elementsData || template.elements_data || [];
-    
+    const rawElements = fullTemplate.elementsData || fullTemplate.elements_data || [];
+
     const MM_TO_PX = 3.7795275591;
     let targetW = 600, targetH = 400;
     let designW = 600, designH = 400; // Default design basis if not specified
 
     // Determine Design Size (what it was built for in DB)
-    if (template.size && template.size.toLowerCase().includes('x')) {
-      const parts = template.size.toLowerCase().split('x');
+    if (fullTemplate.size && fullTemplate.size.toLowerCase().includes('x')) {
+      const parts = fullTemplate.size.toLowerCase().split('x');
       const val1 = parseFloat(parts[0]);
       const val2 = parseFloat(parts[1]);
       if (!isNaN(val1) && !isNaN(val2)) {
@@ -631,9 +644,9 @@ export const LabelProvider = ({ children }) => {
     }
 
     // Determine Target Size (what we will set the canvas to)
-    if (template.labelSize) {
-      targetW = template.labelSize.w;
-      targetH = template.labelSize.h;
+    if (fullTemplate.labelSize) {
+      targetW = fullTemplate.labelSize.w;
+      targetH = fullTemplate.labelSize.h;
     } else {
       targetW = designW;
       targetH = designH;
@@ -658,8 +671,8 @@ export const LabelProvider = ({ children }) => {
 
       // Proportional border/stroke scaling for shapes
       if (el.type === 'shape') {
-          if (el.borderWidth)  up.borderWidth  = Math.max(1, Math.round(el.borderWidth * minScale));
-          if (el.borderRadius) up.borderRadius = Math.round(el.borderRadius * minScale);
+        if (el.borderWidth) up.borderWidth = Math.max(1, Math.round(el.borderWidth * minScale));
+        if (el.borderRadius) up.borderRadius = Math.round(el.borderRadius * minScale);
       }
 
       return up;
@@ -667,20 +680,21 @@ export const LabelProvider = ({ children }) => {
 
     console.log(`[LabelContext] Auto-scaling complete (Ratio ${scaleX.toFixed(2)}x${scaleY.toFixed(2)}). Elements:`, enriched.length);
 
-    setMeta({ 
-      fileId: null, 
-      fileName: null, 
-      labelSize: { w: targetW, h: targetH }, 
-      bgColor: template.bgColor || '#FFFFFF',
-      notes: template.notes || ''
+    setMeta({
+      fileId: null,
+      fileName: fullTemplate.name || null,
+      labelSize: { w: targetW, h: targetH },
+      bgColor: fullTemplate.bgColor || '#FFFFFF',
+      notes: fullTemplate.notes || ''
     });
-    setActiveTemplate(template);
+    setActiveTemplate(fullTemplate);
     setElements(enriched);
     setHistory([enriched]);
     setHistoryIndex(0);
     setSelectedIds([]);
     setZoomLevel(1);
     setSavedStatus('unsaved');
+    setLoading(false);
   };
 
   // ── Element CRUD ──
@@ -759,10 +773,10 @@ export const LabelProvider = ({ children }) => {
     if (!el) return;
     let z = el.zIndex || 10;
     const allZ = elements.map(e => e.zIndex || 10);
-    if (dir === 'up')    z += 1;
-    if (dir === 'down')  z = Math.max(1, z - 1);
+    if (dir === 'up') z += 1;
+    if (dir === 'down') z = Math.max(1, z - 1);
     if (dir === 'front') z = Math.max(...allZ) + 1;
-    if (dir === 'back')  z = Math.min(...allZ) - 1;
+    if (dir === 'back') z = Math.min(...allZ) - 1;
     const next = elements.map(e => e.id === id ? { ...e, zIndex: z } : e);
     setElements(next);
     saveToHistory(next);
@@ -788,7 +802,7 @@ export const LabelProvider = ({ children }) => {
       if (!selectedIds.includes(el.id)) return el;
       const w = el.width || 0;
       const h = el.height || 0;
-      
+
       const isCanvas = relativeTo === 'canvas' || selectedIds.length === 1;
 
       if (isCanvas) {
@@ -803,8 +817,8 @@ export const LabelProvider = ({ children }) => {
         if (direction === 'right') return { ...el, x: maxX - w };
         if (direction === 'top') return { ...el, y: minY };
         if (direction === 'bottom') return { ...el, y: maxY - h };
-        if (direction === 'centerH') return { ...el, x: centerX - w/2 };
-        if (direction === 'centerV') return { ...el, y: centerY - h/2 };
+        if (direction === 'centerH') return { ...el, x: centerX - w / 2 };
+        if (direction === 'centerV') return { ...el, y: centerY - h / 2 };
       }
       return el;
     });
@@ -817,20 +831,34 @@ export const LabelProvider = ({ children }) => {
   const validateLabel = () => {
     const errors = [];
     const has = (fn) => elements.some(fn);
-    
-    // 1. Basic FDA Compliance
-    if (!has(e => e.type === 'barcode' || e.type === 'qrcode'))          errors.push('Missing Barcode / QR Code.');
-    if (!has(e => (e.text || '').toLowerCase().includes('exp') || (e.text || '').toLowerCase().includes('expiry')))
-                                                                          errors.push('Missing Expiry Date field.');
-    if (!has(e => (e.fontSize || 0) > 18 || e.subtype === 'brand'))      errors.push('Missing prominent Brand Name.');
-    if (!has(e => e.type === 'warnings'))                                 errors.push('Missing Safety / Rx Warning.');
 
-    // 2. Dynamic Field Validation (AC 10)
+    // 1. Basic FDA Compliance
+    if (!has(e => e.type === 'barcode' || e.type === 'qrcode')) errors.push('Missing Barcode / QR Code.');
+    if (!has(e => (e.text || '').toLowerCase().includes('exp') || (e.text || '').toLowerCase().includes('expiry')))
+      errors.push('Missing Expiry Date field.');
+    if (!has(e => (e.fontSize || 0) > 18 || e.subtype === 'brand')) errors.push('Missing prominent Brand Name.');
+    if (!has(e => e.type === 'warnings')) errors.push('Missing Safety / Rx Warning.');
+
+    // 2. Physical Stock Validation
+    if (meta.labelStockId) {
+      const stock = labelStocks.find(s => s.id === meta.labelStockId || s.stockId === meta.labelStockId);
+      if (stock) {
+        if (stock.quantityOnHand <= 0) {
+          errors.push(`OUT OF STOCK: "${stock.name}" has zero inventory. Cannot print.`);
+        } else if (stock.quantityOnHand <= stock.reorderLevel) {
+          errors.push(`LOW STOCK: "${stock.name}" is below reorder level (${stock.quantityOnHand} ${stock.unitOfMeasure} remaining).`);
+        }
+      }
+    } else {
+      errors.push('No physical Label Stock selected for this design.');
+    }
+
+    // 3. Dynamic Field Validation (AC 10)
     const validKeys = Object.keys(SAMPLE_TRIAL_DATA);
     elements.forEach(el => {
       const text = el.text || '';
       const placeholders = [...text.matchAll(/\{\{([\w\d_]+)\}\}/g)].map(m => m[1]);
-      
+
       placeholders.forEach(key => {
         if (!validKeys.includes(key)) {
           errors.push(`Invalid placeholder: {{${key}}} in element "${el.name || 'Text'}"`);
@@ -885,5 +913,12 @@ export const LabelProvider = ({ children }) => {
   return <LabelContext.Provider value={value}>{children}</LabelContext.Provider>;
 };
 
-export const useLabel = () => useContext(LabelContext);
+export const useLabel = () => {
+  const context = useContext(LabelContext);
+  if (context === undefined) {
+    console.error('useLabel must be used within a LabelProvider');
+    return { loading: true, hydrated: false }; // Fallback to prevent destructuring crash
+  }
+  return context;
+};
 

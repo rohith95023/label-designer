@@ -516,34 +516,44 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   DARK MODE OVERRIDES
+   DARK MODE OVERRIDES - Midnight Blue Theme
    ═══════════════════════════════════════════════════════════════════════════ */
 .dark {
   color-scheme: dark;
+  --color-primary: #818cf8; /* Lighter indigo for dark mode */
+}
+
+:is(.dark) .bg-mesh {
+  background: 
+    radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(139, 92, 246, 0.1) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(99, 102, 241, 0.1) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, rgba(139, 92, 246, 0.15) 0px, transparent 50%),
+    #0a0c14;
 }
 
 :is(.dark) .bg-surface,
-:is(.dark) .bg-background            { background-color: #0f172a !important; }
-:is(.dark) .bg-surface-bright        { background-color: #1e293b !important; }
-:is(.dark) .bg-surface-container-lowest { background-color: #1e293b !important; }
-:is(.dark) .bg-surface-container-low { background-color: #1e293b !important; }
-:is(.dark) .bg-surface-container     { background-color: #334155 !important; }
-:is(.dark) .bg-surface-container-high{ background-color: #475569 !important; }
-:is(.dark) .bg-surface-container-highest { background-color: #64748b !important; }
-:is(.dark) .bg-surface-dim           { background-color: #020617 !important; }
-:is(.dark) .bg-surface-variant       { background-color: #334155 !important; }
+:is(.dark) .bg-background            { background-color: #0a0c10; }
+:is(.dark) .bg-surface-bright        { background-color: #111827; }
+:is(.dark) .bg-surface-container-lowest { background-color: #0f172a; }
+:is(.dark) .bg-surface-container-low { background-color: #1a2236; }
+:is(.dark) .bg-surface-container     { background-color: #1e293b; }
+:is(.dark) .bg-surface-container-high{ background-color: #334155; }
+:is(.dark) .bg-surface-container-highest { background-color: #475569; }
+:is(.dark) .bg-surface-dim           { background-color: #020617; }
+:is(.dark) .bg-surface-variant       { background-color: #1e293b; }
 
 .dark body,
-:is(.dark) .bg-white                 { background-color: #1e293b !important; }
-:is(.dark) .bg-slate-50              { background-color: #1e293b !important; }
-:is(.dark) .bg-slate-100             { background-color: #334155 !important; }
-:is(.dark) .bg-\[\#F1F3F6\]          { background-color: #0f172a !important; }
-:is(.dark) .bg-\[\#E8EAF0\]          { background-color: #020617 !important; }
-:is(.dark) .bg-blue-50\/50           { background-color: rgba(99,102,241,0.15) !important; }
-:is(.dark) .bg-blue-50               { background-color: rgba(99,102,241,0.12) !important; }
-:is(.dark) .bg-slate-50\/50          { background-color: rgba(30,41,59,0.6) !important; }
-:is(.dark) .bg-slate-50\/80          { background-color: rgba(30,41,59,0.85) !important; }
-:is(.dark) .bg-amber-50              { background-color: rgba(78,55,0,0.4) !important; }
+:is(.dark) .bg-white                 { background-color: #0f172a; }
+:is(.dark) .bg-slate-50              { background-color: #0f172a; }
+:is(.dark) .bg-slate-100             { background-color: #1e293b; }
+:is(.dark) .bg-\[\#F1F3F6\]          { background-color: #0a0c10; }
+:is(.dark) .bg-\[\#E8EAF0\]          { background-color: #020617; }
+:is(.dark) .bg-blue-50\/50           { background-color: rgba(99, 102, 241, 0.15); }
+:is(.dark) .bg-blue-50               { background-color: rgba(99, 102, 241, 0.12); }
+:is(.dark) .bg-slate-50\/50          { background-color: rgba(15, 23, 42, 0.6); }
+:is(.dark) .bg-slate-50\/80          { background-color: rgba(15, 23, 42, 0.85); }
+:is(.dark) .bg-amber-50              { background-color: rgba(120, 53, 15, 0.2); }
 
 /* Text */
 :is(.dark) .text-on-surface          { color: #f8fafc !important; }
@@ -560,10 +570,10 @@
 :is(.dark) .text-primary             { color: #a5b4fc !important; }
 
 /* Borders */
-:is(.dark) .border-slate-100         { border-color: rgba(255,255,255,0.06) !important; }
-:is(.dark) .border-slate-200         { border-color: rgba(255,255,255,0.1) !important; }
-:is(.dark) .border-white\/20         { border-color: rgba(255,255,255,0.06) !important; }
-:is(.dark) .border-white\/10         { border-color: rgba(255,255,255,0.04) !important; }
+:is(.dark) .border-slate-100         { border-color: rgba(255,255,255,0.06); }
+:is(.dark) .border-slate-200         { border-color: rgba(255,255,255,0.1); }
+:is(.dark) .border-white\/20         { border-color: rgba(255,255,255,0.06); }
+:is(.dark) .border-white\/10         { border-color: rgba(255,255,255,0.04); }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    PREMIUM TAB STYLES

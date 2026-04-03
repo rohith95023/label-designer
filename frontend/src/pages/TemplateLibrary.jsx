@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useLabel } from '../context/LabelContext';
 import AppLayout from '../components/common/AppLayout';
+import TemplateConflictModal from '../components/modals/TemplateConflictModal';
 
 const CATEGORIES = ['All', 'Tablets', 'Syrups', 'Injections', 'Ointments', 'Generic Labels'];
 const SIZES = ['All Sizes', '30x60mm', '35x75mm', '40x80mm', '50x100mm', 'Custom Sizes'];
@@ -13,7 +14,7 @@ const CATEGORY_ICONS = {
 };
 
 export default function TemplateLibrary() {
-  const { templates, loadTemplate, meta } = useLabel();
+  const { templates, loadTemplate, newFile, meta, elements } = useLabel();
   const navigate = useNavigate();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -33,9 +34,15 @@ export default function TemplateLibrary() {
   }, [templates, searchQuery, activeCategory, activeSize]);
 
   const executeLoad = (template) => { loadTemplate(template); navigate('/editor'); };
+  
   const handleUseTemplate = (template) => {
-    if (meta.fileName) setConfirmTemplate(template);
-    else executeLoad(template);
+    const isDirty = (elements && elements.length > 0) || (meta.fileName && meta.fileName !== 'Untitled Label') || (meta.fileId && meta.fileId !== 'new');
+    
+    if (isDirty) {
+      setConfirmTemplate(template);
+    } else {
+      executeLoad(template);
+    }
   };
 
   const searchBar = (
@@ -242,46 +249,23 @@ export default function TemplateLibrary() {
         )}
       </div>
 
-      {/* Confirm modal */}
-      {confirmTemplate && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4 animate-fade-in">
-          <div className="glass-card rounded-3xl shadow-float w-full max-w-md p-8 animate-scale-in">
-            <div className="w-14 h-14 rounded-2xl bg-amber-50 dark:bg-amber-950/40 flex items-center justify-center mb-5">
-              <span className="material-symbols-outlined text-amber-500 text-2xl"
-                style={{ fontVariationSettings: "'FILL' 1" }}>
-                warning_amber
-              </span>
-            </div>
-            <h2 className="text-xl font-bold text-on-surface mb-2 tracking-tight">Active Design Detected</h2>
-            <p className="text-on-surface-variant text-sm leading-relaxed mb-6">
-              You are editing <strong className="text-primary">"{meta.fileName}"</strong>.
-              Using this template will replace your current design. How do you want to proceed?
-            </p>
-            <div className="flex flex-col gap-3">
-              <button
-                onClick={() => executeLoad(confirmTemplate)}
-                className="btn-gradient w-full py-3 flex items-center justify-center gap-2"
-              >
-                <span className="material-symbols-outlined text-base">add_box</span>
-                Start New Label with Template
-              </button>
-              <button
-                onClick={() => navigate('/editor')}
-                className="w-full py-3 rounded-xl bg-surface-container-low text-on-surface text-sm font-bold hover:bg-surface-container transition-colors border border-outline-variant/20"
-              >
-                Continue Editing "{meta.fileName}"
-              </button>
-              <button
-                onClick={() => setConfirmTemplate(null)}
-                className="w-full py-2 text-xs font-bold text-on-surface-variant uppercase tracking-widest hover:text-on-surface transition-colors"
-              >
-                Go Back
-              </button>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
+      {/* Template Conflict Resolution Modal */}
+      <TemplateConflictModal
+        isOpen={!!confirmTemplate}
+        onClose={() => setConfirmTemplate(null)}
+        onClearAndLoad={() => {
+          if (confirmTemplate) executeLoad(confirmTemplate);
+          setConfirmTemplate(null);
+        }}
+        onCreateNew={async () => {
+          if (confirmTemplate) {
+            await newFile();
+            executeLoad(confirmTemplate);
+          }
+          setConfirmTemplate(null);
+        }}
+        canvasName={meta.fileName || 'Untitled Label'}
+      />
     </AppLayout>
   );
 }

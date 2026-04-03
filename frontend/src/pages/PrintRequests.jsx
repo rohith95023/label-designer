@@ -12,7 +12,7 @@ const PrintRequests = () => {
   const [stocks, setStocks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const { showToast } = useToast();
+  const { addToast: showToast } = useToast();
   const { user } = useAuth();
 
   // Form State
