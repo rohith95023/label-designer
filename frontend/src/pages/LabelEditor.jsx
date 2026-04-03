@@ -451,6 +451,60 @@ export default function LabelEditor() {
     });
   };
 
+  // ── Export ──────────────────────────────────────────────────────────────────
+  const captureArtboard = useCallback(async () => {
+    const prevSelection = selectedIds;
+    setSelectedIds([]);
+    
+    // Temporarily force overflow hidden to clip elements outside label area for export
+    const originalOverflow = artboardRef.current.style.overflow;
+    artboardRef.current.style.overflow = 'hidden';
+    
+    await new Promise(r => setTimeout(r, 120));
+    const canvas = await html2canvas(artboardRef.current, { 
+      scale: 3, 
+      useCORS: true, 
+      backgroundColor: '#ffffff',
+      logging: false 
+    });
+    
+    // Restore state
+    artboardRef.current.style.overflow = originalOverflow;
+    if (prevSelection.length > 0) setSelectedIds(prevSelection);
+    return canvas;
+  }, [selectedIds, setSelectedIds]);
+
+  const handleExportPNG = async () => {
+    const canvas = await captureArtboard();
+    const a = document.createElement('a');
+    a.download = `${meta.fileName || 'label'}.png`;
+    a.href = canvas.toDataURL('image/png');
+    a.click();
+    setShowFileMenu(false);
+  };
+
+  const handleExportPDF = async () => {
+    const canvas = await captureArtboard();
+    const { jsPDF } = await import('jspdf');
+    const { w, h } = meta.labelSize;
+    const pdf = new jsPDF({ orientation: w > h ? 'landscape' : 'portrait', unit: 'px', format: [w, h] });
+    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, w, h);
+    pdf.save(`${meta.fileName || 'label'}.pdf`);
+    setShowFileMenu(false);
+  };
+
+  const handlePrint = useCallback(async () => {
+    const canvas = await captureArtboard();
+    const win = window.open('', '_blank');
+    win.document.write(`
+      <html><head><title>Print – ${meta.fileName || 'Label'}</title>
+      <style>body{margin:0;display:flex;justify-content:center;align-items:center;min-height:100vh;background:#fff;} img{max-width:100%;}</style>
+      </head><body><img src="${canvas.toDataURL()}" /><script>window.onload=()=>{window.print();window.close();}<\/script></body></html>
+    `);
+    win.document.close();
+    setShowFileMenu(false);
+  }, [captureArtboard, meta.fileName]);
+
   const addObject = (obj) => {
     if (obj.type === 'LOGO') {
       addElement({
@@ -532,13 +586,14 @@ export default function LabelEditor() {
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && key === 'z') { e.preventDefault(); redo(); }
       if ((e.ctrlKey || e.metaKey) && key === 'd' && selectedIds.length > 0) { e.preventDefault(); duplicateElement(selectedIds[0]); }
       if ((e.ctrlKey || e.metaKey) && key === 'p') {
+        e.preventDefault();
         setSelectedIds([]);
-        // window.print(); handles correctly by browser
+        handlePrint();
       }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [selectedIds, saveFile, undo, redo, duplicateElement, deleteElement, setSelectedIds]);
+  }, [selectedIds, saveFile, undo, redo, duplicateElement, deleteElement, setSelectedIds, handlePrint]);
 
   // ── Auto-expand text elements if content overflows ──────────────────────────
   useEffect(() => {
@@ -625,60 +680,6 @@ export default function LabelEditor() {
   const triggerNewFile = () => {
     setPendingFlow('new');
     setModalStep('filename');
-    setShowFileMenu(false);
-  };
-
-  // ── Export ──────────────────────────────────────────────────────────────────
-  const captureArtboard = async () => {
-    const prevSelection = selectedIds;
-    setSelectedIds([]);
-    
-    // Temporarily force overflow hidden to clip elements outside label area for export
-    const originalOverflow = artboardRef.current.style.overflow;
-    artboardRef.current.style.overflow = 'hidden';
-    
-    await new Promise(r => setTimeout(r, 120));
-    const canvas = await html2canvas(artboardRef.current, { 
-      scale: 3, 
-      useCORS: true, 
-      backgroundColor: '#ffffff',
-      logging: false 
-    });
-    
-    // Restore state
-    artboardRef.current.style.overflow = originalOverflow;
-    if (prevSelection.length > 0) setSelectedIds(prevSelection);
-    return canvas;
-  };
-
-  const handleExportPNG = async () => {
-    const canvas = await captureArtboard();
-    const a = document.createElement('a');
-    a.download = `${meta.fileName || 'label'}.png`;
-    a.href = canvas.toDataURL('image/png');
-    a.click();
-    setShowFileMenu(false);
-  };
-
-  const handleExportPDF = async () => {
-    const canvas = await captureArtboard();
-    const { jsPDF } = await import('jspdf');
-    const { w, h } = meta.labelSize;
-    const pdf = new jsPDF({ orientation: w > h ? 'landscape' : 'portrait', unit: 'px', format: [w, h] });
-    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, w, h);
-    pdf.save(`${meta.fileName || 'label'}.pdf`);
-    setShowFileMenu(false);
-  };
-
-  const handlePrint = async () => {
-    const canvas = await captureArtboard();
-    const win = window.open('', '_blank');
-    win.document.write(`
-      <html><head><title>Print – ${meta.fileName || 'Label'}</title>
-      <style>body{margin:0;display:flex;justify-content:center;align-items:center;min-height:100vh;background:#fff;} img{max-width:100%;}</style>
-      </head><body><img src="${canvas.toDataURL()}" /><script>window.onload=()=>{window.print();window.close();}<\/script></body></html>
-    `);
-    win.document.close();
     setShowFileMenu(false);
   };
 

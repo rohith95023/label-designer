@@ -796,3 +796,77 @@ input[type="color"]::-webkit-color-swatch {
   backface-visibility: hidden;
   perspective: 1000px;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PRINT STYLES - Ensure only the artboard is printed
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media print {
+  /* Hide all UI elements */
+  header, aside, .glass-header, .glass-card, .sidebar-item, 
+  [className*="properties-panel"], [className*="asset-panel"],
+  .ruler, .smart-guides, .grid-overlay, .dimension-indicator, 
+  .zoom-controls, .alignment-toolbar, .view-options-button,
+  .editor-tools-button, .live-review-group, .label-size-info,
+  [className*="sticky-drawing-toolbar"], [className*="shape-drawing-tool"],
+  .material-symbols-outlined {
+    display: none !important;
+  }
+
+  /* Reset main layout for print */
+  main {
+    display: block !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: white !important;
+  }
+
+  section {
+    display: block !important;
+    width: 100% !important;
+    background: white !important;
+    overflow: visible !important;
+  }
+
+  .editor-canvas {
+    background: white !important;
+    background-image: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Center the artboard containers */
+  .flex.items-center.justify-center.min-h-full.p-12 {
+    display: block !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  #pharma-artboard {
+    position: relative !important;
+    margin: 0 auto !important;
+    left: 0 !important;
+    top: 0 !important;
+    transform: none !important; /* Reset zoomLevel for actual scale print */
+    border: none !important;
+    box-shadow: none !important;
+    background-color: white !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  /* Force background colors and images in print */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Page setup */
+  @page {
+    margin: 0;
+    size: auto;
+  }
+
+  body {
+    background: white !important;
+  }
+}
