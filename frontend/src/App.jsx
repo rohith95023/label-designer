@@ -7,6 +7,7 @@ import LabelEditor from './pages/LabelEditor';
 import SavedTemplates from './pages/SavedTemplates';
 import Translation from './pages/Translation';
 import History from './pages/History';
+import PrintRequests from './pages/PrintRequests';
 import Settings from './pages/Settings';
 import UserManagement from './pages/UserManagement';
 import LabelStocks from './pages/masters/LabelStocks';
@@ -71,6 +72,12 @@ function AppContent() {
       <Route path="/history" element={
         <ProtectedRoute requiredPermission="history">
           <History />
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/print-requests" element={
+        <ProtectedRoute requiredPermission="print">
+          <PrintRequests />
         </ProtectedRoute>
       } />
       

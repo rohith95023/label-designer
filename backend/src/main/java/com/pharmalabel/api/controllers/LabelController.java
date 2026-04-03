@@ -105,7 +105,7 @@ public class LabelController {
         dto.setImageUrl(label.getImageUrl());
         dto.setNotes(label.getNotes());
         dto.setLabelStockId(label.getLabelStock() != null ? label.getLabelStock().getId() : null);
-        dto.setLabelStockName(label.getLabelStock() != null ? label.getLabelStock().getName() : null);
+        dto.setLabelStockName(label.getLabelStock() != null ? label.getLabelStock().getStockId() : null);
         dto.setCreatedById(label.getCreatedBy() != null ? label.getCreatedBy().getId() : null);
         dto.setCreatedByUsername(label.getCreatedBy() != null ? label.getCreatedBy().getUsername() : null);
         dto.setCreatedAt(label.getCreatedAt());

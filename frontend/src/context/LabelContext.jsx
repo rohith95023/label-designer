@@ -4,6 +4,7 @@ import { api } from '../services/api';
 import { getGuestId } from '../utils/auth';
 import { useAuth } from './AuthContext';
 import { UNITS, toPx, fromPx, PX_PER_UNIT } from '../utils/units';
+import { SAMPLE_TRIAL_DATA } from '../utils/dynamicData';
 
 const LabelContext = createContext();
 
@@ -20,7 +21,15 @@ export const LABEL_PRESETS = [
   { id: 'custom',   name: 'Custom …',        w: 600, h: 400 },
 ];
 
-const DEFAULT_META = { fileId: null, fileName: null, labelSize: { w: 302, h: 454 }, bgColor: '#FFFFFF', unit: UNITS.MM, notes: '' };
+const DEFAULT_META = { 
+  fileId: null, 
+  fileName: null, 
+  labelStockId: null,
+  labelSize: { w: 302, h: 454 }, 
+  bgColor: '#FFFFFF', 
+  unit: UNITS.MM, 
+  notes: '' 
+};
 
 export const DEFAULT_SETTINGS = {
   profileName: 'Pharma Designer',
@@ -249,6 +258,7 @@ export const LabelProvider = ({ children }) => {
                 ...prev,
                 fileId: last.id, 
                 fileName: last.name, 
+                labelStockId: last.labelStockId || last.labelStock?.id,
                 labelSize: latestVersion.designJson?.labelSize || { w: 600, h: 400 },
                 bgColor: latestVersion.designJson?.bgColor || '#FFFFFF',
                 notes: latestVersion.designJson?.notes || ''
@@ -309,7 +319,8 @@ export const LabelProvider = ({ children }) => {
           designJson: {
             elementsData: elements,
             labelSize: meta.labelSize,
-            bgColor: meta.bgColor
+            bgColor: meta.bgColor,
+            labelStockId: meta.labelStockId
           },
           notes: meta.notes
         });
@@ -377,7 +388,7 @@ export const LabelProvider = ({ children }) => {
         setSavedStatus('saving');
         const newLabel = await api.createLabel({
           name: trimmed,
-          labelStockId: stockId,
+          labelStockId: meta.labelStockId || stockId,
           status: 'ACTIVE',
           designJson: {
             elementsData: elements,
@@ -402,6 +413,22 @@ export const LabelProvider = ({ children }) => {
   };
 
   const setLabelSize = (w, h) => setMeta(m => ({ ...m, labelSize: { w, h } }));
+  
+  const setLabelStock = (stockId) => {
+    const stock = labelStocks.find(s => s.id === stockId);
+    if (stock) {
+      const MM_TO_PX = 3.7795;
+      const w = Math.round(stock.breadth * MM_TO_PX);
+      const h = Math.round(stock.height * MM_TO_PX);
+      setMeta(prev => ({ 
+        ...prev, 
+        labelStockId: stockId,
+        labelSize: { w, h }
+      }));
+      showToast(`Stock changed: ${stock.name}`, 'info');
+    }
+  };
+
   const setUnit = (unit) => setMeta(m => ({ ...m, unit }));
 
   const saveFile = async () => {
@@ -417,7 +444,8 @@ export const LabelProvider = ({ children }) => {
             designJson: {
               elementsData: elements,
               labelSize: meta.labelSize,
-              bgColor: meta.bgColor
+              bgColor: meta.bgColor,
+              labelStockId: meta.labelStockId
             },
             notes: meta.notes
         });
@@ -443,7 +471,7 @@ export const LabelProvider = ({ children }) => {
       setSavedStatus('saving');
       const newLabel = await api.createLabel({
         name: newName,
-        labelStockId: stockId,
+        labelStockId: meta.labelStockId || stockId,
         status: 'ACTIVE',
         notes: meta.notes,
         designJson: {
@@ -482,6 +510,7 @@ export const LabelProvider = ({ children }) => {
       setMeta({ 
         fileId: label.id, 
         fileName: label.name, 
+        labelStockId: label.labelStockId || label.labelStock?.id,
         labelSize: design.labelSize || { w: 600, h: 400 },
         bgColor: design.bgColor || '#FFFFFF',
         notes: label.notes || design.notes || ''
@@ -788,11 +817,36 @@ export const LabelProvider = ({ children }) => {
   const validateLabel = () => {
     const errors = [];
     const has = (fn) => elements.some(fn);
+    
+    // 1. Basic FDA Compliance
     if (!has(e => e.type === 'barcode' || e.type === 'qrcode'))          errors.push('Missing Barcode / QR Code.');
     if (!has(e => (e.text || '').toLowerCase().includes('exp') || (e.text || '').toLowerCase().includes('expiry')))
                                                                           errors.push('Missing Expiry Date field.');
     if (!has(e => (e.fontSize || 0) > 18 || e.subtype === 'brand'))      errors.push('Missing prominent Brand Name.');
     if (!has(e => e.type === 'warnings'))                                 errors.push('Missing Safety / Rx Warning.');
+
+    // 2. Dynamic Field Validation (AC 10)
+    const validKeys = Object.keys(SAMPLE_TRIAL_DATA);
+    elements.forEach(el => {
+      const text = el.text || '';
+      const placeholders = [...text.matchAll(/\{\{([\w\d_]+)\}\}/g)].map(m => m[1]);
+      
+      placeholders.forEach(key => {
+        if (!validKeys.includes(key)) {
+          errors.push(`Invalid placeholder: {{${key}}} in element "${el.name || 'Text'}"`);
+        }
+      });
+
+      // Validate conditional rules
+      if (el.displayRules) {
+        el.displayRules.forEach((rule, idx) => {
+          if (!validKeys.includes(rule.field)) {
+            errors.push(`Invalid rule field: "${rule.field}" in element "${el.name || 'Text'}"`);
+          }
+        });
+      }
+    });
+
     return { isValid: errors.length === 0, errors };
   };
 

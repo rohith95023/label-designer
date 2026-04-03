@@ -1,8 +1,8 @@
 import React from 'react';
-import Barcode from 'react-barcode';
-import { QRCodeSVG } from 'qrcode.react';
+import BarcodeUnified from './BarcodeUnified';
 import { calcAutoFitFontSize } from '../../utils/autoFitFont';
 import { resolveUrl } from '../../utils/url';
+import { resolveElementData, SAMPLE_TRIAL_DATA } from '../../utils/dynamicData';
 
 export default function LabelPreview({ elements, meta, scale = 1 }) {
   const { labelSize, bgColor } = meta;
@@ -20,7 +20,11 @@ export default function LabelPreview({ elements, meta, scale = 1 }) {
         flexShrink: 0
       }}
     >
-      {[...elements].sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0)).map(el => {
+      {[...elements]
+        .sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0))
+        .map(el => resolveElementData(el, SAMPLE_TRIAL_DATA))
+        .filter(el => !el.hidden)
+        .map(el => {
         const elW = (el.width || 120) * scale;
         const elH = (el.height || 40) * scale;
 
@@ -84,27 +88,23 @@ export default function LabelPreview({ elements, meta, scale = 1 }) {
               )}
 
               {el.type === 'barcode' ? (
-                <div className="w-full h-full flex items-center justify-center">
-                  <Barcode
+                <div className="w-full h-full flex items-center justify-center pointer-events-none px-2">
+                  <BarcodeUnified
                     value={el.text || '123456789012'}
-                    format={el.barcodeFormat || 'CODE128'}
-                    lineColor={el.color || '#191c1e'}
-                    background="transparent"
-                    width={1.2 * scale}
-                    height={Math.max(10, (elH - (32 * scale)))}
-                    margin={0}
-                    fontSize={12 * scale}
-                    displayValue={true}
+                    format={el.barcodeFormat || 'code128'}
+                    color={el.color || '#191c1e'}
+                    width={elW}
+                    height={elH}
                   />
                 </div>
               ) : el.type === 'qrcode' ? (
-                <div className="w-full h-full">
-                  <QRCodeSVG
+                <div className="w-full h-full p-1">
+                  <BarcodeUnified
                     value={el.text || 'https://pharma-precision.com/scan'}
-                    fgColor={el.color || '#191c1e'}
-                    bgColor="transparent"
-                    style={{ width: '100%', height: '100%', display: 'block' }}
-                    level="M"
+                    format="qrcode"
+                    color={el.color || '#191c1e'}
+                    width={elW}
+                    height={elH}
                   />
                 </div>
               ) : el.type === 'image' ? (
@@ -118,16 +118,21 @@ export default function LabelPreview({ elements, meta, scale = 1 }) {
               ) : el.type === 'table' ? (
                 <table className="w-full h-full table-fixed" style={{ borderCollapse: 'collapse' }}>
                   <tbody>
-                    {(el.text || '').split('\n').map((row, i) => (
-                      <tr key={i} style={{ backgroundColor: el.tableStriped && i > 0 && i % 2 === 0 ? 'rgba(0,0,0,0.04)' : undefined }}>
+                    {(el.text || '').split('\n').filter(r => r.trim()).map((row, i) => (
+                      <tr key={i}>
                         {row.split('|').map((cell, j) => (
                           <td key={j}
                             className="p-0 px-1 break-words relative overflow-hidden"
                             style={{
-                              borderColor: el.color || '#94a3b8',
+                              borderColor: el.borderColor || '#94a3b8',
                               borderWidth: `${(el.borderWidth || 1) * scale}px`,
-                              borderStyle: 'solid',
+                              borderStyle: el.borderStyle || 'solid',
                               fontSize: el.fontSize ? `${el.fontSize * scale}px` : undefined,
+                              textAlign: el.align || 'left',
+                              color: el.color || 'inherit',
+                              verticalAlign: 'top',
+                              padding: `${4 * scale}px ${6 * scale}px`,
+                              ...(i === 0 && el.tableHeader !== false && { fontWeight: 'bold', backgroundColor: el.color ? el.color + '18' : 'rgba(0,0,0,0.05)' })
                             }}
                           >
                             {cell}
@@ -137,6 +142,16 @@ export default function LabelPreview({ elements, meta, scale = 1 }) {
                     ))}
                   </tbody>
                 </table>
+              ) : el.renderAsBarcode ? (
+                <div className="w-full h-full flex items-center justify-center pointer-events-none overflow-hidden p-1">
+                  <BarcodeUnified
+                    value={el.resolvedText || el.text || ''}
+                    format={el.barcodeFormat || 'code128'}
+                    color={el.color || '#191c1e'}
+                    width={elW}
+                    height={elH - (el.heading ? 12 * scale : 0)}
+                  />
+                </div>
               ) : (
                 <div style={{
                   backgroundImage: el.backgroundImage || undefined,
@@ -147,7 +162,7 @@ export default function LabelPreview({ elements, meta, scale = 1 }) {
                   width: '100%',
                   height: '100%',
                 }}>
-                  {el.text}
+                  {el.resolvedText || el.text}
                 </div>
               )}
             </div>

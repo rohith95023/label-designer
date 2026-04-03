@@ -256,10 +256,22 @@
   border-top: 1px solid var(--um-outline-variant);
 }
 
-.modal-actions button[type="button"] {
+.modal-actions button[type="button"], .um-cancel-btn {
   background: none;
   border: none;
   font-weight: 700;
   color: var(--um-on-surface-variant);
   cursor: pointer;
+  padding: 0.6rem 1rem;
+  border-radius: 12px;
+  transition: all 0.2s;
+}
+
+.um-cancel-btn:hover {
+  background: var(--um-surface-container-high);
+  color: var(--um-on-surface);
+}
+
+.text-primary {
+  color: var(--um-primary);
 }

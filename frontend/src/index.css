@@ -656,6 +656,17 @@ select {
   padding-right: 36px;
 }
 
+:is(.dark) select {
+  color: #f8fafc !important;
+  background-color: #0f172a !important;
+  color-scheme: dark;
+}
+
+:is(.dark) option {
+  background-color: #0f172a;
+  color: #f8fafc;
+}
+
 select:focus {
   border-color: #6366f1;
   box-shadow: 0 0 0 3px rgba(99,102,241,0.14);

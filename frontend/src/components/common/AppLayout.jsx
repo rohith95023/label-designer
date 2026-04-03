@@ -10,6 +10,11 @@ const NAV_ITEMS = [
   { key: 'editor', to: '/editor', icon: 'edit_document', label: 'Label Editor', roles: ['ADMIN', 'OPERATOR'], permission: 'editor' },
   { key: 'translation', to: '/translation', icon: 'translate', label: 'Translation', roles: ['ADMIN', 'REVIEWER', 'OPERATOR', 'EXTERNAL'], permission: 'translation' },
   { key: 'history', to: '/history', icon: 'history', label: 'History', roles: ['ADMIN', 'REVIEWER', 'OPERATOR'], permission: 'history' },
+  { key: 'print', to: '/print-requests', icon: 'print', label: 'Print Center', roles: ['ADMIN', 'OPERATOR'], permission: 'print' },
+  
+  // Masters Section
+  { key: 'masters', to: '/masters/label-stocks', icon: 'inventory_2', label: 'Label Stocks', roles: ['ADMIN'], permission: 'masters' },
+  
   { key: 'users', to: '/admin/users', icon: 'group', label: 'Users', roles: ['ADMIN'], permission: 'users' },
   { key: 'settings', to: '/settings', icon: 'settings', label: 'Settings', roles: ['ADMIN'], permission: 'settings' },
 ];

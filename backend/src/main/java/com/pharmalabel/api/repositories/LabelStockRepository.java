@@ -8,5 +8,9 @@ import java.util.UUID;
 
 @Repository
 public interface LabelStockRepository extends JpaRepository<LabelStock, UUID> {
-    Optional<LabelStock> findByName(String name);
+    Optional<LabelStock> findByStockId(String stockId);
+    boolean existsByStockIdAndIdNot(String stockId, UUID id);
+    boolean existsByNameAndIdNot(String name, UUID id);
+    boolean existsByName(String name);
+    boolean existsByStockId(String stockId);
 }

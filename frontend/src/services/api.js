@@ -151,5 +151,12 @@ export const api = {
     authApi.post(`/approvals/${id}/approve${comments ? `?comments=${encodeURIComponent(comments)}` : ''}`).then(res => res.data),
   rejectLabel: (id, comments) => 
     authApi.post(`/approvals/${id}/reject${comments ? `?comments=${encodeURIComponent(comments)}` : ''}`).then(res => res.data),
+
+  // Print Requests
+  getPrintRequests: () => authApi.get('/print-requests').then(res => res.data),
+  getMyPrintRequests: () => authApi.get('/print-requests/my').then(res => res.data),
+  createPrintRequest: (data) => authApi.post('/print-requests', data).then(res => res.data),
+  updatePrintRequestStatus: (id, status) => authApi.patch(`/print-requests/${id}/status?status=${status}`).then(res => res.data),
 };
+
 

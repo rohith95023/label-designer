@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
+import BarcodeUnified from '../components/common/BarcodeUnified';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../services/api';
 import { Link, useNavigate } from 'react-router-dom';
@@ -9,8 +10,6 @@ import { Rnd } from 'react-rnd';
 import html2canvas from 'html2canvas';
 import { basicShapes, allIcons } from '../data/shapesLibrary';
 import { v4 as uuidv4 } from 'uuid';
-import Barcode from 'react-barcode';
-import { QRCodeSVG } from 'qrcode.react';
 import FileNameModal from '../components/modals/FileNameModal';
 import LabelSizeModal from '../components/modals/LabelSizeModal';
 import { IconsIcons } from '../data/premiumIcons';
@@ -22,6 +21,7 @@ import SmartGuides from '../components/ui/SmartGuides';
 import GridOverlay from '../components/ui/GridOverlay';
 import { calculateAlignmentGuides } from '../utils/alignment';
 import { UNITS, toPx, fromPx, PX_PER_UNIT, getTickIntervals } from '../utils/units';
+import { resolveElementData, SAMPLE_TRIAL_DATA } from '../utils/dynamicData';
 import { resolveUrl } from '../utils/url';
 
 function resolvePlaceholders(text, placeholderValues) {
@@ -1201,7 +1201,7 @@ export default function LabelEditor() {
                   <div className="h-[1px] bg-slate-100 dark:bg-white/5 my-2 mx-2" />
                   
                   <div className="px-3 py-2">
-                    <p className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-400 mb-2">Display Units</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-400">Display Units</p>
                     <div className="flex bg-slate-100 dark:bg-white/5 p-1 rounded-xl gap-1">
                       {[UNITS.MM, UNITS.CM, UNITS.IN, UNITS.PX].map(u => (
                         <button
@@ -1302,11 +1302,11 @@ export default function LabelEditor() {
           <div className="flex items-center gap-1.5 px-1.5 py-1 bg-slate-100/50 dark:bg-white/5 rounded-xl border border-slate-200/50 dark:border-white/10 shadow-sm h-10">
             <button 
               onClick={() => setPreviewMode(!previewMode)} 
-              title="Toggle Live Tokens"
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all h-8 ${previewMode ? 'bg-amber-500 text-white shadow-lg' : 'text-slate-500 hover:bg-white dark:hover:bg-white/10'}`}
+              title={previewMode ? "Show Raw Placeholders" : "Show Live Trial Data"}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all h-8 ${previewMode ? 'bg-blue-600 text-white shadow-lg' : 'bg-white dark:bg-white/10 text-slate-500 shadow-sm border border-slate-200 dark:border-white/10'}`}
             >
-              <span className="material-symbols-outlined text-[16px]">{previewMode ? 'data_object' : 'toll'}</span>
-              Tokens
+              <span className="material-symbols-outlined text-[16px]">{previewMode ? 'database' : 'toll'}</span>
+              {previewMode ? 'Live Data' : 'Tokens'}
             </button>
             <div className="w-[1px] h-3 bg-slate-300 dark:bg-white/10"></div>
             <button 
@@ -1390,6 +1390,7 @@ export default function LabelEditor() {
                 items: [
                   { id: 'Objects', icon: 'image', label: 'Objects' },
                   { id: 'templates', icon: 'auto_awesome_motion', label: 'Templates' },
+                  { id: 'stocks', icon: 'inventory', label: 'Label Stocks' },
                   { id: 'Variables', icon: 'database', label: 'Variables' },
                 ] 
               },
@@ -1494,6 +1495,76 @@ export default function LabelEditor() {
            {!panelCollapsed && (
              <div className="flex-1 overflow-y-auto custom-scrollbar-thin p-6 animate-fade-in">
 
+            {/* LABEL STOCKS TAB */}
+            {activeTab === 'stocks' && (
+              <div className="animate-fade-in flex flex-col gap-6">
+                <div className="flex flex-col gap-1 mb-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Pharma Inventory</span>
+                    <button onClick={() => navigate('/masters/label-stocks')} className="text-[9px] font-black text-blue-600 hover:underline">Manage</button>
+                  </div>
+                  <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest leading-none">Select Physical Media</p>
+                </div>
+
+                <div className="flex flex-col gap-3">
+                  {labelStocks.filter(s => s.status === 'ACTIVE').map(stock => {
+                    const isSelected = meta.labelStockId === stock.id;
+                    const isLowStock = stock.quantityOnHand <= stock.reorderLevel;
+
+                    return (
+                      <motion.button
+                        key={stock.id}
+                        onClick={() => setLabelStock(stock.id)}
+                        className={`group relative flex flex-col p-4 rounded-2xl border-2 text-left transition-all ${
+                          isSelected 
+                          ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-500/20' 
+                          : 'bg-white border-slate-200 dark:bg-slate-800 dark:border-white/10 hover:border-blue-500/50'
+                        }`}
+                        whileHover={{ y: -2 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${isSelected ? 'bg-white/20' : 'bg-slate-100 dark:bg-slate-700'}`}>
+                            <span className="material-symbols-outlined text-[18px]">{isSelected ? 'check_circle' : 'inventory'}</span>
+                          </div>
+                          <div className="flex flex-col items-end">
+                            <span className={`text-[10px] font-mono font-bold ${isSelected ? 'text-white' : 'text-slate-500'}`}>
+                              {stock.breadth}×{stock.height}mm
+                            </span>
+                            {isLowStock && (
+                              <span className="flex items-center gap-1 text-[8px] font-black text-red-500 animate-pulse mt-0.5">
+                                <span className="material-symbols-outlined text-[10px]">warning</span> LOW STOCK
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <span className={`text-[12px] font-black uppercase tracking-tight truncate ${isSelected ? 'text-white' : 'text-slate-800 dark:text-white'}`}>
+                          {stock.name}
+                        </span>
+                        <div className="flex items-center gap-2 mt-1 opacity-70">
+                          <span className="text-[9px] font-bold uppercase tracking-widest">{stock.materialType || 'Paper'}</span>
+                          <div className="w-1 h-1 rounded-full bg-current opacity-30"></div>
+                          <code className="text-[9px] font-mono">{stock.stockId}</code>
+                        </div>
+                        {isSelected && (
+                          <div className="mt-3 pt-3 border-t border-white/20 grid grid-cols-2 gap-2">
+                            <div className="flex flex-col">
+                              <span className="text-[8px] font-black uppercase opacity-60">Supplier</span>
+                              <span className="text-[10px] font-bold truncate">{stock.supplier || 'N/A'}</span>
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-[8px] font-black uppercase opacity-60">Available</span>
+                              <span className="text-[10px] font-bold">{stock.quantityOnHand} {stock.unitOfMeasure}</span>
+                            </div>
+                          </div>
+                        )}
+                      </motion.button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {/* VARIABLES / PLACEHOLDERS TAB */}
             {activeTab === 'Variables' && (
               <div className="animate-fade-in flex flex-col gap-4">
@@ -1571,7 +1642,7 @@ export default function LabelEditor() {
                     </button>
                     <button 
                       onClick={() => saveFile()} 
-                      className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-colors shadow-sm border border-emerald-100/50 dark:border-emerald-900/40"
+                      className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:emerald-400 flex items-center justify-center hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-colors shadow-sm border border-emerald-100/50 dark:border-emerald-900/40"
                       title="Save All Changes"
                     >
                       <span className="material-symbols-outlined text-[18px]">save</span>
@@ -2481,7 +2552,11 @@ export default function LabelEditor() {
                 </div>
               )}
 
-              {elements.map(el => {
+              {[...elements]
+                .sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0))
+                .map(el => previewMode ? resolveElementData(el, SAMPLE_TRIAL_DATA) : el)
+                .filter(el => !el.hidden)
+                .map(el => {
                 const isSelected = selectedIds.includes(el.id);
                 const elW = el.width || 120;
                 const elH = el.height || 40;
@@ -2548,23 +2623,31 @@ export default function LabelEditor() {
                         }
                       }
                     }}
-                    onDoubleClick={e => {
-                      if (!el.locked && ['text', 'warnings', 'manufacturing', 'dosage', 'storage', 'subtext', 'shape', 'table'].includes(el.type)) {
+                    onDoubleTap={e => {
+                      if (!el.locked && ['barcode', 'qrcode'].includes(el.type)) {
                         e.stopPropagation();
-                        setEditingElementId(el.id);
-                      } else if (!el.locked && ['barcode', 'qrcode'].includes(el.type)) {
-                        e.stopPropagation();
-                        // No prompt here anymore, handled in properties or toolbar
                       }
                     }}
                   >
+                    {/* Boundary Alert Overlay */}
+                    {(() => {
+                      const isOutOfBounds = (el.x < -1 || el.y < -1 || el.x + (el.width || 0) > AW + 1 || el.y + (el.height || 0) > AH + 1);
+                      if (!isOutOfBounds) return null;
+                      return (
+                        <div className="absolute inset-[-4px] border-2 border-red-500 border-dashed rounded-lg pointer-events-none z-0">
+                          <div className="absolute top-[-20px] left-1/2 -translate-x-1/2 bg-red-600 text-white text-[8px] font-black px-2 py-0.5 rounded-full shadow-lg whitespace-nowrap">
+                            EXCEEDS PRINTABLE AREA
+                          </div>
+                        </div>
+                      );
+                    })()}
                     {isSelected && (
                       <div className={`absolute left-0 bg-white dark:bg-slate-800 shadow-xl min-w-max px-2 py-1.5 rounded-lg border border-slate-200 dark:border-white/10 flex items-center gap-1 z-[500] pointer-events-auto transform transition-all origin-top-left ${
                         (el.y * zoomLevel > AH * zoomLevel - 60 || (el.rotation > 110 && el.rotation < 250)) 
                         ? '-top-[56px]' 
                         : 'top-[calc(100%+8px)]'
                       }`}
-                        style={{ transform: `scale(${1 / zoomLevel})` }}
+                        style={{ transform: `scale(${1 / zoomLevel}) rotate(${- (el.rotation || 0)}deg)` }}
                         onMouseDown={e => e.stopPropagation()}
                        >
 
@@ -2581,7 +2664,7 @@ export default function LabelEditor() {
                                   e.stopPropagation();
                                   const lines = (el.text || '').split('\n');
                                   const colCount = lines[0].split('|').length;
-                                  lines.push(Array(colCount).fill('').join('|'));
+                                  lines.push(Array(colCount).fill('').join('\n'));
                                   updateElement(el.id, { text: lines.join('\n'), height: (el.height || 0) + 25 });
                                   commitUpdate();
                                 }} className="px-2 py-0.5 rounded bg-blue-50 hover:bg-blue-100 text-blue-700 text-[10px] font-bold flex items-center gap-1 transition-all" title="Add Row">
@@ -2733,37 +2816,23 @@ export default function LabelEditor() {
                         ) : null}
 
                         {el.type === 'barcode' ? (
-                          <div className="w-full flex-1 min-h-0 flex items-center justify-center pointer-events-none">
-                            <Barcode
+                          <div className="w-full flex-1 min-h-0 flex items-center justify-center pointer-events-none px-2">
+                            <BarcodeUnified
                               value={el.text || '123456789012'}
-                              format={el.barcodeFormat || 'CODE128'}
-                              lineColor={(() => {
-                                if (theme === 'dark' && (el.x < 0 || el.y < 0 || el.x + (el.width || 120) > AW || el.y + (el.height || 40) > AH)) {
-                                  if (el.color === '#191c1e' || !el.color || el.color === '#191C1E') return '#ffffff';
-                                }
-                                return el.color || '#191c1e';
-                              })()}
-                              background="transparent"
-                              width={1.2}
-                              height={Math.max(20, elH - (el.heading ? 18 : 6))}
-                              margin={0}
-                              fontSize={12}
-                              displayValue={true}
+                              format={el.barcodeFormat || 'code128'}
+                              color={el.color || '#191c1e'}
+                              width={elW}
+                              height={elH}
                             />
                           </div>
                         ) : el.type === 'qrcode' ? (
-                          <div className="w-full flex-1 min-h-0">
-                            <QRCodeSVG
+                          <div className="w-full flex-1 min-h-0 p-1">
+                            <BarcodeUnified
                               value={el.text || 'https://pharma-precision.com/scan'}
-                              fgColor={(() => {
-                                if (theme === 'dark' && (el.x < 0 || el.y < 0 || el.x + (el.width || 120) > AW || el.y + (el.height || 40) > AH)) {
-                                  if (el.color === '#191c1e' || !el.color || el.color === '#191C1E') return '#ffffff';
-                                }
-                                return el.color || '#191c1e';
-                              })()}
-                              bgColor="transparent"
-                              style={{ width: '100%', height: '100%', display: 'block' }}
-                              level="M"
+                              format="qrcode"
+                              color={el.color || '#191c1e'}
+                              width={elW}
+                              height={elH}
                             />
                           </div>
                         ) : el.type === 'image' ? (
@@ -2792,25 +2861,18 @@ export default function LabelEditor() {
                         ) : el.type === 'table' ? (
                           <table className="w-full flex-1 min-h-0 table-fixed" style={{ borderCollapse: 'collapse' }}>
                             <tbody>
-                              {(el.text || '').split('\n').map((row, i) => (
-                                <tr key={i} style={{ backgroundColor: el.tableStriped && i > 0 && i % 2 === 0 ? 'rgba(0,0,0,0.04)' : undefined }}>
+                              {(el.text || '').split('\n').filter(r => r.trim()).map((row, i) => (
+                                <tr key={i}>
                                   {row.split('|').map((cell, j) => (
-                                    <td key={j}
-                                      onClick={(e) => {
-                                        if (isSelected) {
-                                          e.stopPropagation();
-                                          setEditingCell({ r: i, c: j });
-                                        }
-                                      }}
-                                      className={`p-0 px-1 break-words relative transition-colors ${editingCell?.r === i && editingCell?.c === j ? 'p-0 ring-2 ring-blue-500 z-10' : 'hover:bg-blue-50/50'}`}
+                                    <td 
+                                      key={j} 
+                                      onClick={() => { if (!el.locked) setEditingCell({ r: i, c: j }); }}
                                       style={{
-                                        borderColor: (() => {
-                                          if (theme === 'dark' && (el.x < 0 || el.y < 0 || el.x + (el.width || 120) > AW || el.y + (el.height || 40) > AH)) {
-                                            if (el.color === '#191c1e' || !el.color || el.color === '#191C1E') return '#ffffff';
-                                          }
-                                          return el.color || '#94a3b8';
-                                        })(),
-                                        borderWidth: el.borderWidth ? `${el.borderWidth}px` : '1px',
+                                        border: `${el.borderWidth || 1}px solid ${el.borderColor || '#94a3b8'}`,
+                                        padding: '4px 6px',
+                                        wordBreak: 'break-word',
+                                        textAlign: el.align || 'left',
+                                        color: el.color || 'inherit',
                                         borderStyle: el.borderStyle || 'solid',
                                         verticalAlign: 'top',
                                         fontSize: `${el.fontSize || 10}px`,
@@ -2887,21 +2949,22 @@ export default function LabelEditor() {
                               textAlign: el.align || 'inherit',
                             }}
                           />
+                        ) : el.renderAsBarcode ? (
+                          <div className="w-full h-full flex items-center justify-center pointer-events-none overflow-hidden p-1">
+                            <BarcodeUnified
+                              value={el.resolvedText || el.text || ''}
+                              format={el.barcodeFormat || 'code128'}
+                              color={el.color || '#191c1e'}
+                              width={elW}
+                              height={elH - (el.heading ? 12 : 0)}
+                            />
+                          </div>
                         ) : (
                           <span className="block w-full" style={{
                             wordBreak: 'break-word',
                             textAlign: el.align || (el.type === 'shape' ? 'center' : 'left'),
                           }}>
-                            {(() => {
-                              if (previewMode && el.text) {
-                                const previewData = placeholders.reduce((acc, ph) => {
-                                  acc[ph.mappingKey] = ph.defaultValue || `[${ph.name}]`;
-                                  return acc;
-                                }, {});
-                                return resolvePlaceholders(el.text, previewData);
-                              }
-                              return el.text;
-                            })()}
+                            {el.resolvedText || el.text}
                           </span>
                         )}
                       </div>
@@ -3119,16 +3182,16 @@ export default function LabelEditor() {
 
               {/* ── Premium Position Block ────────────────────────────────────────── */}
               <motion.div 
-                className="p-5 border-b border-white/20 dark:border-white/10 bg-slate-50/50"
+                className="p-5 border-b border-white/20 dark:border-white/10 bg-slate-50/50 dark:bg-slate-800/50"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
               >
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Position & Size</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-primary dark:text-blue-400">Position & Size</span>
                   <motion.button 
                     onClick={() => deleteElement(selectedElement.id)} 
-                    className="h-7 px-3 bg-red-50 hover:bg-red-100 text-red-600 text-[10px] font-bold uppercase rounded-lg border border-red-200 transition-all flex items-center gap-1.5"
+                    className="h-7 px-3 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 text-[10px] font-bold uppercase rounded-lg border border-red-200 dark:border-red-800/50 transition-all flex items-center gap-1.5"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
@@ -3138,12 +3201,12 @@ export default function LabelEditor() {
                 </div>
                 <div className="grid grid-cols-2 gap-2 mb-2">
                   {['x', 'y'].map(axis => (
-                    <div key={axis} className="bg-white border border-slate-200 rounded-lg p-1.5 flex items-center">
-                      <span className="text-[9px] font-bold text-slate-400 w-8 pl-1">{axis.toUpperCase()} ({meta.unit})</span>
+                    <div key={axis} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-lg p-1.5 flex items-center">
+                      <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 w-8 pl-1">{axis.toUpperCase()} ({meta.unit})</span>
                       <input 
                         type="number" 
                         step="0.1"
-                        className="w-full text-[11px] font-mono outline-none text-right bg-transparent" 
+                        className="w-full text-[11px] font-mono outline-none text-right bg-transparent dark:text-white" 
                         value={Number(fromPx(selectedElement[axis] || 0, meta.unit).toFixed(2))} 
                         onChange={e => { 
                           const val = parseFloat(e.target.value) || 0;
@@ -3156,12 +3219,12 @@ export default function LabelEditor() {
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   {[['width', 'W'], ['height', 'H']].map(([dim, label]) => (
-                    <div key={dim} className="bg-white border border-slate-200 rounded-lg p-1.5 flex items-center">
-                      <span className="text-[9px] font-bold text-slate-400 w-8 pl-1">{label} ({meta.unit})</span>
+                    <div key={dim} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-lg p-1.5 flex items-center">
+                      <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 w-8 pl-1">{label} ({meta.unit})</span>
                       <input 
                         type="number" 
                         step="0.1"
-                        className="w-full text-[11px] font-mono outline-none text-right bg-transparent"
+                        className="w-full text-[11px] font-mono outline-none text-right bg-transparent dark:text-white"
                         value={Number(fromPx(selectedElement[dim] || 0, meta.unit).toFixed(2))}
                         onChange={e => { 
                           const val = parseFloat(e.target.value) || 0;
@@ -3171,11 +3234,11 @@ export default function LabelEditor() {
                       />
                     </div>
                   ))}
-                  <div className="bg-white border border-slate-200 rounded-lg p-1.5 flex items-center mt-2 col-span-2">
-                    <span className="text-[9px] font-bold text-slate-400 w-12 pl-1">ROTATE</span>
+                  <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-lg p-1.5 flex items-center mt-2 col-span-2">
+                    <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 w-12 pl-1">ROTATE</span>
                     <input 
                       type="number" 
-                      className="w-full text-[11px] font-mono outline-none text-right bg-transparent"
+                      className="w-full text-[11px] font-mono outline-none text-right bg-transparent dark:text-white"
                       value={selectedElement.rotation || 0}
                       onChange={e => { updateElement(selectedElement.id, { rotation: parseInt(e.target.value) || 0 }); }} 
                       onBlur={commitUpdate}
@@ -3188,16 +3251,16 @@ export default function LabelEditor() {
               {/* Data / Content Block — for all text-bearing types */}
               {['text', 'warnings', 'barcode', 'qrcode', 'manufacturing', 'dosage', 'storage', 'subtext', 'table'].includes(selectedElement.type) && (
                 <div className="p-4 border-b border-white/20 dark:border-white/10">
-                  <span className="text-[11px] font-bold uppercase tracking-widest text-slate-500 block mb-2">
+                  <span className="text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 block mb-2">
                     {['barcode', 'qrcode'].includes(selectedElement.type) ? 'Data String' : (selectedElement.type === 'table' ? 'Table Data' : 'Text Content')}
                   </span>
 
                   {!['barcode', 'qrcode', 'table'].includes(selectedElement.type) && (
                     <div className="mb-4">
-                      <label className="text-[9px] font-extrabold uppercase text-primary mb-1.5 block tracking-wider">Field Heading</label>
+                      <label className="text-[9px] font-extrabold uppercase text-primary dark:text-blue-400 mb-1.5 block tracking-wider">Field Heading</label>
                       <input
                         type="text"
-                        className="w-full bg-blue-50/50 border border-blue-100 text-[11px] font-bold py-2 px-2.5 focus:border-primary outline-none rounded-lg transition-all"
+                        className="w-full bg-blue-50/50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/40 text-[11px] font-bold py-2 px-2.5 dark:text-white focus:border-primary outline-none rounded-lg transition-all"
                         value={selectedElement.heading ?? ''}
                         onChange={e => updateElement(selectedElement.id, { heading: e.target.value })}
                         onBlur={commitUpdate}
@@ -3208,14 +3271,14 @@ export default function LabelEditor() {
 
                    {selectedElement.type === 'table' ? (
                     <div className="space-y-1.5">
-                      <div className="max-h-[320px] overflow-y-auto overflow-x-hidden custom-scrollbar border border-slate-200/50 rounded-xl bg-slate-50/30 p-2 space-y-1">
+                      <div className="max-h-[320px] overflow-y-auto overflow-x-hidden custom-scrollbar border border-slate-200/50 dark:border-slate-700 rounded-xl bg-slate-50/30 dark:bg-slate-900/30 p-2 space-y-1">
                         {(selectedElement.text || '').split('\n').map((row, i) => (
                           <div key={i} className="flex gap-1 group">
                             <div className="w-4 h-7 flex items-center justify-center text-[9px] font-bold text-slate-300 select-none">{i + 1}</div>
                             {row.split('|').map((cell, j) => (
                               <input
                                 key={j}
-                                className="flex-1 min-w-0 h-7 bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 text-[10px] px-2 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 outline-none transition-all"
+                                className="flex-1 min-w-0 h-7 bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 text-[10px] px-2 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 outline-none transition-all dark:text-white"
                                 value={cell}
                                 onChange={e => {
                                   const lines = (selectedElement.text || '').split('\n');
@@ -3239,7 +3302,7 @@ export default function LabelEditor() {
                             updateElement(selectedElement.id, { text: lines.join('\n'), height: (selectedElement.height || 0) + 25 });
                             commitUpdate();
                           }}
-                          className="flex-1 h-8 bg-blue-50 hover:bg-blue-100 text-blue-700 text-[10px] font-bold rounded-lg border border-blue-200 transition-colors flex items-center justify-center gap-1.5"
+                          className="flex-1 h-8 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-[10px] font-bold rounded-lg border border-blue-200 dark:border-blue-800/50 transition-colors flex items-center justify-center gap-1.5"
                         >
                           <span className="material-symbols-outlined text-[16px]">add</span> Add Row
                         </button>
@@ -3250,7 +3313,7 @@ export default function LabelEditor() {
                             updateElement(selectedElement.id, { text: next.join('\n'), width: (selectedElement.width || 0) + 100 });
                             commitUpdate();
                           }}
-                          className="flex-1 h-8 bg-blue-50 hover:bg-blue-100 text-blue-700 text-[10px] font-bold rounded-lg border border-blue-200 transition-colors flex items-center justify-center gap-1.5"
+                          className="flex-1 h-8 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-[10px] font-bold rounded-lg border border-blue-200 dark:border-blue-800/50 transition-colors flex items-center justify-center gap-1.5"
                         >
                           <span className="material-symbols-outlined text-[16px]">view_column</span> Add Column
                         </button>
@@ -3258,7 +3321,7 @@ export default function LabelEditor() {
                     </div>
                   ) : (
                     <textarea
-                      className="w-full bg-slate-50 border border-slate-200 text-[12px] py-2 px-2.5 focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none rounded-lg resize-none"
+                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-[12px] py-2 px-2.5 focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none rounded-lg resize-none dark:text-white"
                       style={{ minHeight: '80px', height: 'auto' }}
                       value={selectedElement.text || ''}
                       placeholder={selectedElement.type === 'qrcode' ? 'https://...' : selectedElement.type === 'barcode' ? '123456789012' : 'Enter text…'}
@@ -3281,12 +3344,12 @@ export default function LabelEditor() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 }}
                 >
-                  <span className="text-[11px] font-bold uppercase tracking-widest text-slate-500 block mb-4">Typography</span>
+                  <span className="text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 block mb-4">Typography</span>
                   <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-2">
                       <div>
                         <label className="text-[10px] font-bold uppercase text-slate-400 mb-1 block">Font</label>
-                        <select className="w-full bg-slate-50 border border-slate-200 text-[11px] py-1.5 px-1.5 rounded-lg outline-none cursor-pointer"
+                        <select className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-[11px] py-1.5 px-1.5 rounded-lg outline-none cursor-pointer dark:text-slate-200"
                           value={selectedElement.fontFamily || 'Inter, sans-serif'}
                           onChange={e => { updateElement(selectedElement.id, { fontFamily: e.target.value }); commitUpdate(); }}>
                           <option value="Inter, sans-serif">Inter</option>
@@ -3324,7 +3387,7 @@ export default function LabelEditor() {
                       </div>
                       <div>
                         <label className="text-[10px] font-bold uppercase text-slate-400 mb-1 block">Weight</label>
-                        <select className="w-full bg-slate-50 border border-slate-200 text-[11px] py-1.5 px-1.5 rounded-lg outline-none cursor-pointer"
+                        <select className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-[11px] py-1.5 px-1.5 rounded-lg outline-none cursor-pointer dark:text-slate-200"
                           value={selectedElement.fontWeight || '400'}
                           onChange={e => { updateElement(selectedElement.id, { fontWeight: e.target.value }); commitUpdate(); }}>
                           <option value="800">Extra Bold</option>
@@ -3339,12 +3402,9 @@ export default function LabelEditor() {
 
                     <div>
                       <label className="text-[10px] font-bold uppercase text-slate-400 mb-1 block flex justify-between">
-                        <span>Size</span><span className="font-mono">{selectedElement.fontSize || 12}px</span>
+                        <span>Size</span><span className="font-mono dark:text-slate-200">{selectedElement.fontSize || 12}px</span>
                       </label>
-                      <input type="range" min="6" max={Math.max(12, Math.min(
-                        Math.floor((selectedElement.width || AW) / (Math.max(1, ...(selectedElement.text || 'text').split(/[\s\n]+/).map(w => w.length)) * 0.7)),
-                        Math.floor(Math.sqrt(((selectedElement.width || AW) * Math.max(10, AH - (selectedElement.y || 0) - 10)) / (Math.max(1, (selectedElement.text || 'text').length) * 0.7 * parseFloat(selectedElement.lineHeight || 1.25))))
-                      )) || 144} className="w-full accent-blue-600"
+                      <input type="range" min="6" max="256" className="w-full accent-blue-600"
                         value={selectedElement.fontSize || 12}
                         onChange={e => updateElement(selectedElement.id, { fontSize: parseInt(e.target.value) })}
                         onMouseUp={commitUpdate} />
@@ -3352,14 +3412,14 @@ export default function LabelEditor() {
 
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="text-[10px] font-bold uppercase text-slate-400 mb-1 flex justify-between"><span>Line Height</span><span className="font-mono">{selectedElement.lineHeight || '1.25'}</span></label>
+                        <label className="text-[10px] font-bold uppercase text-slate-400 mb-1 block flex justify-between"><span>Line Height</span><span className="font-mono dark:text-slate-200">{selectedElement.lineHeight || '1.25'}</span></label>
                         <input type="range" min="1" max="3" step="0.05" className="w-full accent-blue-600"
                           value={parseFloat(selectedElement.lineHeight) || 1.25}
                           onChange={e => updateElement(selectedElement.id, { lineHeight: parseFloat(e.target.value) })}
                           onMouseUp={commitUpdate} />
                       </div>
                       <div>
-                        <label className="text-[10px] font-bold uppercase text-slate-400 mb-1 flex justify-between"><span>Spacing</span><span className="font-mono">{selectedElement.letterSpacing || 0}px</span></label>
+                        <label className="text-[10px] font-bold uppercase text-slate-400 mb-1 block flex justify-between"><span>Spacing</span><span className="font-mono dark:text-slate-200">{selectedElement.letterSpacing || 0}px</span></label>
                         <input type="range" min="-2" max="20" step="0.5" className="w-full accent-blue-600"
                           value={selectedElement.letterSpacing || 0}
                           onChange={e => updateElement(selectedElement.id, { letterSpacing: parseFloat(e.target.value) })}
@@ -3367,20 +3427,20 @@ export default function LabelEditor() {
                       </div>
                     </div>
 
-                    <div className="flex gap-1 bg-slate-50 p-1 rounded-lg border border-slate-200">
+                    <div className="flex gap-1 bg-slate-50 dark:bg-slate-900 p-1 rounded-lg border border-slate-200 dark:border-slate-700">
                       {[
                         ['fontStyle', 'italic', 'format_italic', selectedElement.fontStyle === 'italic'],
                         ['textDecoration', 'underline', 'format_underlined', selectedElement.textDecoration === 'underline'],
                       ].map(([prop, val, icon, active]) => (
                         <button key={prop} onClick={() => { updateElement(selectedElement.id, { [prop]: active ? (prop === 'fontStyle' ? 'normal' : 'none') : val }); commitUpdate(); }}
-                          className={`flex-1 p-1.5 rounded text-center transition-colors ${active ? 'btn-gradient shadow-sm text-white' : 'hover:bg-slate-200 text-slate-500'}`}>
+                          className={`flex-1 p-1.5 rounded text-center transition-colors ${active ? 'btn-gradient shadow-sm text-white' : 'hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400'}`}>
                           <span className="material-symbols-outlined text-[14px]">{icon}</span>
                         </button>
                       ))}
-                      <div className="w-[1px] bg-slate-200 mx-0.5"></div>
+                      <div className="w-[1px] bg-slate-200 dark:bg-slate-700 mx-0.5"></div>
                       {['left', 'center', 'right'].map(a => (
                         <button key={a} onClick={() => { updateElement(selectedElement.id, { align: a }); commitUpdate(); }}
-                          className={`flex-1 p-1.5 rounded text-center transition-colors ${selectedElement.align === a ? 'bg-blue-100 text-primary' : 'hover:bg-slate-200 text-slate-500'}`}>
+                          className={`flex-1 p-1.5 rounded text-center transition-colors ${selectedElement.align === a ? 'bg-blue-100 dark:bg-blue-900/50 text-primary dark:text-blue-300' : 'hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400'}`}>
                           <span className="material-symbols-outlined text-[14px]">format_align_{a}</span>
                         </button>
                       ))}
@@ -3397,13 +3457,13 @@ export default function LabelEditor() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
                 >
-                  <span className="text-[11px] font-bold uppercase tracking-widest text-slate-500 block">Appearance</span>
+                  <span className="text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 block">Appearance</span>
 
                   {/* Icon size slider */}
                   {selectedElement.type === 'icon' && (
                     <div>
                       <label className="text-[10px] font-bold uppercase text-slate-400 mb-1 flex justify-between">
-                        <span>Icon Size</span><span className="font-mono">{selectedElement.fontSize || 48}px</span>
+                        <span>Icon Size</span><span className="font-mono dark:text-slate-200">{selectedElement.fontSize || 48}px</span>
                       </label>
                       <input type="range" min="12" max="400" className="w-full accent-blue-600"
                         value={selectedElement.fontSize || 48}
@@ -3416,7 +3476,7 @@ export default function LabelEditor() {
                   {selectedElement.type === 'barcode' && (
                     <div>
                       <label className="text-[8px] font-bold uppercase text-slate-400 mb-1.5 block">Barcode Format</label>
-                      <select className="w-full bg-slate-50 border border-slate-200 text-[11px] py-1.5 px-1.5 rounded-lg outline-none cursor-pointer"
+                      <select className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-[11px] py-1.5 px-1.5 rounded-lg outline-none cursor-pointer dark:text-slate-200"
                         value={selectedElement.barcodeFormat || 'CODE128'}
                         onChange={e => { updateElement(selectedElement.id, { barcodeFormat: e.target.value }); commitUpdate(); }}>
                         <option value="CODE128">CODE 128 (default)</option>
@@ -3430,18 +3490,233 @@ export default function LabelEditor() {
                     </div>
                   )}
 
+                  {/* ── Dynamic Data & Rules Section ────────────────────────────────── */}
+                  {(selectedElement.isPlaceholder || (selectedElement.text && selectedElement.text.includes('{{'))) && (
+                    <div className="space-y-4 pt-1">
+                      <div className="flex items-center gap-2 mb-2 p-2 bg-blue-50 dark:bg-blue-500/10 rounded-xl border border-blue-100 dark:border-blue-400/20">
+                         <span className="material-symbols-outlined text-[18px] text-blue-600 dark:text-blue-400">database</span>
+                         <span className="text-[10px] font-black uppercase text-blue-800 dark:text-blue-100 tracking-tighter">Dynamic Configuration</span>
+                      </div>
+
+                      {/* Render as Barcode Toggle */}
+                      <div className="bg-white dark:bg-slate-800/80 p-3 rounded-xl border border-slate-200 dark:border-white/20 shadow-sm space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 tracking-wider">Render as Barcode</span>
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); updateElement(selectedElement.id, { renderAsBarcode: !selectedElement.renderAsBarcode }); commitUpdate(); }}
+                            className={`w-10 h-5 rounded-full relative transition-all duration-300 border ${selectedElement.renderAsBarcode ? 'bg-blue-600 border-blue-700' : 'bg-slate-200 dark:bg-slate-700 border-slate-300 dark:border-slate-600'}`}
+                          >
+                            <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow-sm transition-all duration-300 ${selectedElement.renderAsBarcode ? 'right-0.5' : 'left-0.5'}`} />
+                          </button>
+                        </div>
+
+                        {selectedElement.renderAsBarcode && (
+                          <div className="animate-in fade-in slide-in-from-top-1 duration-300">
+                            <label className="text-[8px] font-bold uppercase text-slate-400 mb-1 block italic">Barcode Format</label>
+                            <select 
+                              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-[11px] py-1.5 px-2 rounded-lg outline-none cursor-pointer dark:text-slate-200 font-medium"
+                              value={selectedElement.barcodeFormat || 'code128'}
+                              onChange={e => { updateElement(selectedElement.id, { barcodeFormat: e.target.value }); commitUpdate(); }}
+                            >
+                              <option value="code128">CODE 128 (Standard)</option>
+                              <option value="code39">CODE 39 (Standard)</option>
+                              <option value="qrcode">QR Code (2D)</option>
+                              <option value="datamatrix">Data Matrix (2D)</option>
+                              <option value="pdf417">PDF417 (2D)</option>
+                              <option value="ean13">EAN-13 (Retail)</option>
+                              <option value="upc">UPC-A (Retail)</option>
+                              <option value="itf14">ITF-14 (Case Code)</option>
+                            </select>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Fallback & Wrap */}
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-[8px] font-bold uppercase text-slate-400 dark:text-slate-300 mb-1 block italic">Fallback Text</label>
+                          <input type="text" className="w-full bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-white/10 text-[11px] py-1.5 px-2 rounded-lg outline-none dark:text-white"
+                            placeholder="If data null..."
+                            value={selectedElement.fallbackValue || ''}
+                            onChange={e => updateElement(selectedElement.id, { fallbackValue: e.target.value })}
+                            onBlur={commitUpdate} />
+                        </div>
+                        <div>
+                          <label className="text-[8px] font-bold uppercase text-slate-400 dark:text-slate-300 mb-1 block italic">Text Case</label>
+                          <select className="w-full bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-white/10 text-[11px] py-1.5 px-1.5 rounded-lg outline-none dark:text-slate-100"
+                            value={selectedElement.formatting?.textCase || 'none'}
+                            onChange={e => { updateElement(selectedElement.id, { formatting: { ...selectedElement.formatting, textCase: e.target.value } }); commitUpdate(); }}>
+                            <option value="none">Original</option>
+                            <option value="uppercase">UPPERCASE</option>
+                            <option value="lowercase">lowercase</option>
+                            <option value="titlecase">Title Case</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      {/* Date / Number Formatting */}
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-[8px] font-bold uppercase text-slate-400 mb-1 block">Value Type</label>
+                          <select className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-[11px] py-1.5 px-1.5 rounded-lg outline-none dark:text-slate-200"
+                            value={selectedElement.formatting?.type || 'text'}
+                            onChange={e => { updateElement(selectedElement.id, { formatting: { ...selectedElement.formatting, type: e.target.value } }); commitUpdate(); }}>
+                            <option value="text">General Text</option>
+                            <option value="date">Clinical Date</option>
+                            <option value="number">Numeric Val</option>
+                          </select>
+                        </div>
+                        {selectedElement.formatting?.type === 'date' && (
+                          <div>
+                            <label className="text-[8px] font-bold uppercase text-slate-400 mb-1 block">Date Format</label>
+                            <select className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-[11px] py-1.5 px-1.5 rounded-lg outline-none dark:text-slate-200"
+                              value={selectedElement.formatting?.dateFormat || 'DD-MMM-YYYY'}
+                              onChange={e => { updateElement(selectedElement.id, { formatting: { ...selectedElement.formatting, dateFormat: e.target.value } }); commitUpdate(); }}>
+                              <option value="MM/YY">MM/YY (Short)</option>
+                              <option value="DD-MMM-YYYY">DD-MMM-YYYY</option>
+                              <option value="YYYY-MM-DD">ISO (YYYY-MM-DD)</option>
+                            </select>
+                          </div>
+                        )}
+                        {selectedElement.formatting?.type === 'number' && (
+                          <div>
+                            <label className="text-[8px] font-bold uppercase text-slate-400 mb-1 block">Decimals</label>
+                            <select className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-[11px] py-1.5 px-1.5 rounded-lg outline-none dark:text-slate-200"
+                              value={selectedElement.formatting?.precision || '0'}
+                              onChange={e => { updateElement(selectedElement.id, { formatting: { ...selectedElement.formatting, precision: e.target.value } }); commitUpdate(); }}>
+                              <option value="0">Whole (0)</option>
+                              <option value="1">1 Decimal</option>
+                              <option value="2">2 Decimals</option>
+                              <option value="3">3 Decimals</option>
+                            </select>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Prefix / Suffix */}
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-[8px] font-bold uppercase text-slate-400 mb-1 block">Prefix</label>
+                          <input type="text" className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-[11px] py-1.5 px-2 rounded-lg outline-none font-mono dark:text-white"
+                            placeholder="Ex: 'ID:'"
+                            value={selectedElement.prefix || ''}
+                            onChange={e => updateElement(selectedElement.id, { prefix: e.target.value })}
+                            onBlur={commitUpdate} />
+                        </div>
+                        <div>
+                          <label className="text-[8px] font-bold uppercase text-slate-400 mb-1 block">Suffix</label>
+                          <input type="text" className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-[11px] py-1.5 px-2 rounded-lg outline-none font-mono dark:text-white"
+                            placeholder="Ex: '/mg'"
+                            value={selectedElement.suffix || ''}
+                            onChange={e => updateElement(selectedElement.id, { suffix: e.target.value })}
+                            onBlur={commitUpdate} />
+                        </div>
+                      </div>
+
+                      {/* Advanced Conditional Logic */}
+                      <div className="bg-slate-100/50 dark:bg-slate-900/50 p-3 rounded-2xl border border-dashed border-slate-300 dark:border-white/10 mt-2">
+                        <div className="flex items-center justify-between mb-3">
+                          <label className="text-[9px] font-black uppercase text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                            <span className="material-symbols-outlined text-[14px]">rule</span> Display Logic
+                          </label>
+                          <button 
+                            onClick={() => {
+                              const rules = selectedElement.displayRules || [];
+                              updateElement(selectedElement.id, { 
+                                displayRules: [...rules, { field: 'BATCH_NO', operator: 'not_empty', value: '' }],
+                                rulesLogic: selectedElement.rulesLogic || 'AND'
+                              });
+                              commitUpdate();
+                            }}
+                            className="text-[9px] font-bold text-blue-600 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
+                          >
+                            + Add Rule
+                          </button>
+                        </div>
+
+                        {selectedElement.displayRules && selectedElement.displayRules.length > 1 && (
+                          <div className="flex gap-2 mb-3 bg-white dark:bg-slate-800 p-1 rounded-lg border border-slate-200 dark:border-white/5">
+                            {['AND', 'OR'].map(l => (
+                              <button key={l} onClick={() => { updateElement(selectedElement.id, { rulesLogic: l }); commitUpdate(); }}
+                                className={`flex-1 text-[9px] font-black py-1 rounded ${selectedElement.rulesLogic === l ? 'bg-blue-500 text-white shadow-sm' : 'text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'}`}>
+                                {l}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+
+                        <div className="space-y-2">
+                          {(selectedElement.displayRules || []).map((rule, idx) => (
+                            <div key={idx} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/5 rounded-xl p-2.5 relative group">
+                              <div className="grid grid-cols-1 gap-2">
+                                <select className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-[10px] p-1.5 rounded-lg outline-none dark:text-slate-200"
+                                  value={rule.field}
+                                  onChange={e => {
+                                    const rules = [...selectedElement.displayRules];
+                                    rules[idx].field = e.target.value;
+                                    updateElement(selectedElement.id, { displayRules: rules });
+                                    commitUpdate();
+                                  }}>
+                                  {Object.keys(SAMPLE_TRIAL_DATA).map(k => <option key={k} value={k}>{k}</option>)}
+                                </select>
+                                <div className="grid grid-cols-2 gap-2">
+                                  <select className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-[10px] p-1.5 rounded-lg outline-none dark:text-slate-200"
+                                    value={rule.operator}
+                                    onChange={e => {
+                                      const rules = [...selectedElement.displayRules];
+                                      rules[idx].operator = e.target.value;
+                                      updateElement(selectedElement.id, { displayRules: rules });
+                                      commitUpdate();
+                                    }}>
+                                    <option value="equals">Equals</option>
+                                    <option value="not_equals">Not Equals</option>
+                                    <option value="not_empty">IS NOT EMPTY</option>
+                                    <option value="is_empty">IS EMPTY</option>
+                                    <option value="contains">Contains</option>
+                                  </select>
+                                  {!['not_empty', 'is_empty'].includes(rule.operator) && (
+                                    <input type="text" className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-[10px] p-1.5 rounded-lg outline-none dark:text-white"
+                                      placeholder="Value..."
+                                      value={rule.value}
+                                      onChange={e => {
+                                        const rules = [...selectedElement.displayRules];
+                                        rules[idx].value = e.target.value;
+                                        updateElement(selectedElement.id, { displayRules: rules });
+                                        commitUpdate();
+                                      }}
+                                    />
+                                  )}
+                                </div>
+                              </div>
+                              <button 
+                                onClick={() => {
+                                  const rules = selectedElement.displayRules.filter((_, i) => i !== idx);
+                                  updateElement(selectedElement.id, { displayRules: rules });
+                                  commitUpdate();
+                                }}
+                                className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity border border-red-200 dark:border-red-800"
+                              >
+                                <span className="material-symbols-outlined text-[12px]">close</span>
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Image Fit Mode */}
                   {selectedElement.type === 'image' && (
                     <div className="space-y-3">
                       <div>
                         <label className="text-[8px] font-bold uppercase text-slate-400 mb-1.5 block">Resizing Behavior</label>
                         <button onClick={() => { updateElement(selectedElement.id, { lockAspectRatio: selectedElement.lockAspectRatio === false }); commitUpdate(); }}
-                          className={`w-full py-2 px-3 rounded-xl border text-[10px] font-bold uppercase flex items-center justify-between transition-all ${selectedElement.lockAspectRatio !== false ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-slate-50 border-slate-200 text-slate-500'}`}>
+                          className={`w-full py-2 px-3 rounded-xl border text-[10px] font-bold uppercase flex items-center justify-between transition-all ${selectedElement.lockAspectRatio !== false ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300' : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400'}`}>
                           <span className="flex items-center gap-2">
                              <span className="material-symbols-outlined text-[16px]">{selectedElement.lockAspectRatio !== false ? 'lock' : 'lock_open'}</span>
                              {selectedElement.lockAspectRatio !== false ? 'Aspect Ratio Locked' : 'Freeform Resizing'}
                           </span>
-                          <div className={`w-6 h-3 rounded-full relative transition-all duration-300 border ${selectedElement.lockAspectRatio !== false ? 'bg-blue-500 border-blue-600' : 'bg-slate-200 border-slate-300'}`}>
+                          <div className={`w-6 h-3 rounded-full relative transition-all duration-300 border ${selectedElement.lockAspectRatio !== false ? 'bg-blue-500 border-blue-600' : 'bg-slate-200 dark:bg-slate-700 border-slate-300 dark:border-slate-600'}`}>
                              <div className={`absolute top-0.5 w-1.5 h-1.5 rounded-full bg-white transition-all duration-300 ${selectedElement.lockAspectRatio !== false ? 'right-0.5' : 'left-0.5'}`} />
                           </div>
                         </button>
@@ -3451,7 +3726,7 @@ export default function LabelEditor() {
                         <div className="grid grid-cols-3 gap-1">
                           {['contain', 'cover', 'fill'].map(fit => (
                             <button key={fit} onClick={() => { updateElement(selectedElement.id, { imageFit: fit }); commitUpdate(); }}
-                              className={`p-1.5 rounded-lg border text-[9px] font-bold capitalize transition-colors ${(selectedElement.imageFit || 'contain') === fit ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-slate-200 bg-slate-50 text-slate-500 hover:bg-slate-100'}`}>
+                              className={`p-1.5 rounded-lg border text-[9px] font-bold capitalize transition-colors ${(selectedElement.imageFit || 'contain') === fit ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300' : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'}`}>
                               {fit}
                             </button>
                           ))}
@@ -3467,13 +3742,13 @@ export default function LabelEditor() {
                         <input type="checkbox" className="accent-blue-600 w-3.5 h-3.5"
                           checked={selectedElement.tableHeader !== false}
                           onChange={e => { updateElement(selectedElement.id, { tableHeader: e.target.checked }); commitUpdate(); }} />
-                        <span className="text-[9px] font-bold text-slate-500">Header Row</span>
+                        <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400">Header Row</span>
                       </label>
                       <label className="flex items-center gap-1.5 cursor-pointer select-none">
                         <input type="checkbox" className="accent-blue-600 w-3.5 h-3.5"
                           checked={!!selectedElement.tableStriped}
                           onChange={e => { updateElement(selectedElement.id, { tableStriped: e.target.checked }); commitUpdate(); }} />
-                        <span className="text-[9px] font-bold text-slate-500">Striped Rows</span>
+                        <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400">Striped Rows</span>
                       </label>
                     </div>
                   )}
@@ -3484,13 +3759,13 @@ export default function LabelEditor() {
                       {selectedElement.type === 'shape' ? 'Fill Color' : selectedElement.type === 'table' ? 'Border / Text Color' : 'Text / Ink Color'}
                     </label>
                     <div className="flex gap-2 h-8">
-                      <div className="w-8 h-full rounded-lg shrink-0 border border-slate-200 relative overflow-hidden">
+                      <div className="w-8 h-full rounded-lg shrink-0 border border-slate-200 dark:border-slate-700 relative overflow-hidden">
                         <input type="color" className="absolute -inset-4 w-20 h-20 cursor-pointer"
                           value={selectedElement.type === 'shape' ? (selectedElement.bgColor || '#f1f5f9') : (selectedElement.color || '#191C1E')}
                           onChange={e => updateElement(selectedElement.id, selectedElement.type === 'shape' ? { bgColor: e.target.value } : { color: e.target.value })}
                           onBlur={commitUpdate} />
                       </div>
-                      <input type="text" className="flex-1 text-[10px] font-mono uppercase px-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-primary outline-none"
+                      <input type="text" className="flex-1 text-[10px] font-mono uppercase px-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-1 focus:ring-primary outline-none dark:text-white"
                         value={selectedElement.type === 'shape' ? (selectedElement.bgColor || '#f1f5f9') : (selectedElement.color || '#191C1E')}
                         onChange={e => updateElement(selectedElement.id, selectedElement.type === 'shape' ? { bgColor: e.target.value } : { color: e.target.value })}
                         onBlur={commitUpdate} />
@@ -3505,7 +3780,7 @@ export default function LabelEditor() {
                         <button onClick={() => { updateElement(selectedElement.id, { bgColor: 'transparent' }); commitUpdate(); }} className="text-error hover:underline text-[8px]">Clear</button>
                       </label>
                       <div className="flex gap-2 h-8">
-                        <div className="w-8 h-full rounded-lg shrink-0 border border-slate-200 relative overflow-hidden bg-slate-200"
+                        <div className="w-8 h-full rounded-lg shrink-0 border border-slate-200 dark:border-slate-700 relative overflow-hidden bg-slate-200 dark:bg-slate-700"
                           style={{ background: 'repeating-conic-gradient(#cbd5e1 0% 25%, transparent 0% 50%) 50% / 8px 8px' }}>
                           <input type="color" className="absolute -inset-4 w-20 h-20 cursor-pointer opacity-0"
                             onChange={e => { updateElement(selectedElement.id, { bgColor: e.target.value }); commitUpdate(); }} />
@@ -3518,7 +3793,7 @@ export default function LabelEditor() {
                             </div>
                           )}
                         </div>
-                        <input type="text" className="flex-1 text-[10px] font-mono uppercase px-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-primary outline-none"
+                        <input type="text" className="flex-1 text-[10px] font-mono uppercase px-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-1 focus:ring-primary outline-none dark:text-white"
                           value={selectedElement.bgColor || 'transparent'}
                           onChange={e => updateElement(selectedElement.id, { bgColor: e.target.value })}
                           onBlur={commitUpdate} />
@@ -3538,13 +3813,13 @@ export default function LabelEditor() {
                         onChange={e => updateElement(selectedElement.id, { borderWidth: parseInt(e.target.value) })}
                         onMouseUp={commitUpdate} />
                       <div className="flex gap-1 h-7">
-                        <div className="w-7 h-full rounded-lg shrink-0 border border-slate-200 relative overflow-hidden">
+                        <div className="w-7 h-full rounded-lg shrink-0 border border-slate-200 dark:border-slate-700 relative overflow-hidden">
                           <input type="color" className="absolute -inset-4 w-20 h-20 cursor-pointer"
                             value={selectedElement.borderColor || '#475569'}
                             onChange={e => updateElement(selectedElement.id, { borderColor: e.target.value })}
                             onBlur={commitUpdate} />
                         </div>
-                        <div className="bg-slate-50 border border-slate-200 rounded-lg flex-1 flex items-center justify-center font-mono text-[9px] text-slate-400 px-2">
+                        <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg flex-1 flex items-center justify-center font-mono text-[9px] text-slate-400 px-2">
                           {selectedElement.borderWidth || 0}px
                         </div>
                       </div>
@@ -3555,7 +3830,7 @@ export default function LabelEditor() {
                   {selectedElement.type === 'shape' && selectedElement.shapeType === 'rectangle' && (
                     <div>
                       <label className="text-[8px] font-bold uppercase text-slate-400 mb-1.5 flex justify-between">
-                        <span>Corner Radius</span><span className="font-mono">{selectedElement.borderRadius || 0}px</span>
+                        <span>Corner Radius</span><span className="font-mono dark:text-slate-200">{selectedElement.borderRadius || 0}px</span>
                       </label>
                       <input type="range" min="0" max="60" className="w-full accent-blue-600"
                         value={selectedElement.borderRadius || 0}
@@ -3579,8 +3854,8 @@ export default function LabelEditor() {
                             key={value}
                             onClick={() => { updateElement(selectedElement.id, { borderStyle: value }); commitUpdate(); }}
                             className={`p-2 rounded-lg border text-[9px] font-bold flex flex-col items-center gap-1 transition-colors ${(selectedElement.borderStyle || 'solid') === value
-                                ? 'border-blue-500 bg-blue-50 text-blue-600'
-                                : 'border-slate-200 bg-slate-50 text-slate-500 hover:bg-slate-100'
+                                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-300'
+                                : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
                               }`}
                           >
                             <div className={`w-full h-0 border-t-2 ${preview}`} style={{ borderColor: selectedElement.bgColor || '#191c1e' }} />
@@ -3590,7 +3865,7 @@ export default function LabelEditor() {
                       </div>
                       {/* Line weight */}
                       <label className="text-[8px] font-bold uppercase text-slate-400 mt-2 mb-1 flex justify-between">
-                        <span>Thickness</span><span className="font-mono">{selectedElement.height || 4}px</span>
+                        <span>Thickness</span><span className="font-mono dark:text-slate-200">{selectedElement.height || 4}px</span>
                       </label>
                       <input type="range" min="1" max="40" className="w-full accent-blue-600"
                         value={selectedElement.height || 4}
@@ -3602,7 +3877,7 @@ export default function LabelEditor() {
                   {/* Opacity */}
                   <div>
                     <label className="text-[8px] font-bold uppercase text-slate-400 mb-1.5 flex justify-between">
-                      <span>Opacity</span><span className="font-mono">{Math.round((selectedElement.opacity !== undefined ? selectedElement.opacity : 1) * 100)}%</span>
+                      <span>Opacity</span><span className="font-mono dark:text-slate-200">{Math.round((selectedElement.opacity !== undefined ? selectedElement.opacity : 1) * 100)}%</span>
                     </label>
                     <input type="range" min="0" max="1" step="0.01" className="w-full accent-blue-600"
                       value={selectedElement.opacity !== undefined ? selectedElement.opacity : 1}
@@ -3613,7 +3888,7 @@ export default function LabelEditor() {
                   {/* Rotation Slider */}
                   <div>
                     <label className="text-[8px] font-bold uppercase text-slate-400 mb-1.5 flex justify-between">
-                      <span>Rotation</span><span className="font-mono">{selectedElement.rotation || 0}°</span>
+                      <span>Rotation</span><span className="font-mono dark:text-slate-200">{selectedElement.rotation || 0}°</span>
                     </label>
                     <div className="flex gap-2 items-center">
                       <input type="range" min="0" max="360" step="1" className="flex-1 accent-blue-600"
