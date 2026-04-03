@@ -7,13 +7,17 @@ export default function GridOverlay({
   width, 
   height, 
   spacing = 20, 
-  isDark = false,
-  visible = true 
+  visible = true,
+  artboardBgColor = '#ffffff'
 }) {
   if (!visible) return null;
 
-  const strokeColor = isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
-  const majorStrokeColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+  // Determine if we should use light or dark lines based on background brightness
+  const bg = artboardBgColor.toLowerCase();
+  const isDarkBg = bg !== '#ffffff' && bg !== 'white' && !bg.startsWith('rgba(255,255,255') && !bg.startsWith('#fff') && bg !== 'transparent';
+  
+  const strokeColor = isDarkBg ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.12)';
+  const majorStrokeColor = isDarkBg ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.22)';
 
   return (
     <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">

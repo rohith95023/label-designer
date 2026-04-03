@@ -454,13 +454,15 @@ export default function LabelEditor() {
   // ── Export ──────────────────────────────────────────────────────────────────
   const captureArtboard = useCallback(async () => {
     const prevSelection = selectedIds;
+    const prevGrid = showGrid;
     setSelectedIds([]);
+    setShowGrid(false);
     
     // Temporarily force overflow hidden to clip elements outside label area for export
     const originalOverflow = artboardRef.current.style.overflow;
     artboardRef.current.style.overflow = 'hidden';
     
-    await new Promise(r => setTimeout(r, 120));
+    await new Promise(r => setTimeout(r, 150));
     const canvas = await html2canvas(artboardRef.current, { 
       scale: 3, 
       useCORS: true, 
@@ -471,8 +473,9 @@ export default function LabelEditor() {
     // Restore state
     artboardRef.current.style.overflow = originalOverflow;
     if (prevSelection.length > 0) setSelectedIds(prevSelection);
+    setShowGrid(prevGrid);
     return canvas;
-  }, [selectedIds, setSelectedIds]);
+  }, [selectedIds, setSelectedIds, showGrid, setShowGrid]);
 
   const handleExportPNG = async () => {
     const canvas = await captureArtboard();
@@ -1141,7 +1144,10 @@ export default function LabelEditor() {
               </button>
 
               {showEditorViewSettings && (
-                <div className="absolute top-11 left-1/2 -translate-x-1/2 w-64 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-2xl p-2 z-[9999] animate-in fade-in slide-in-from-top-2 duration-300">
+                <div 
+                  onClick={(e) => e.stopPropagation()}
+                  className="absolute top-11 left-1/2 -translate-x-1/2 w-64 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-2xl p-2 z-[9999] animate-in fade-in slide-in-from-top-2 duration-300"
+                >
                   <div className="px-3 py-2 mb-1">
                     <p className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-400">Environment & Snapping</p>
                   </div>
@@ -1238,7 +1244,10 @@ export default function LabelEditor() {
               </button>
 
               {showToolsMenu && (
-                <div className="absolute top-11 left-1/2 -translate-x-1/2 w-72 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-2xl p-2 z-[9999] animate-in fade-in slide-in-from-top-2 duration-300">
+                <div 
+                  onClick={(e) => e.stopPropagation()}
+                  className="absolute top-11 left-1/2 -translate-x-1/2 w-72 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-2xl p-2 z-[9999] animate-in fade-in slide-in-from-top-2 duration-300"
+                >
                   <div className="px-3 py-2 mb-1">
                     <p className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-400">Content & Interaction</p>
                   </div>
@@ -2348,8 +2357,8 @@ export default function LabelEditor() {
                  width={AW} 
                  height={AH} 
                  visible={showGrid} 
-                 isDark={theme === 'dark'} 
-                 spacing={getTickIntervals(meta.unit || UNITS.MM).minor * (PX_PER_UNIT[meta.unit || UNITS.MM])} 
+                 artboardBgColor={meta.bgColor || '#ffffff'} 
+                 spacing={gridSize} 
                />
 
                {/* Smart Guidelines Layer */}
