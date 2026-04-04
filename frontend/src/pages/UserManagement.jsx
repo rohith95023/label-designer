@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../services/api';
 import AppLayout from '../components/common/AppLayout';
@@ -351,7 +352,7 @@ const UserManagement = () => {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.1 }}
-            className="um-stat-card border-none bg-[var(--color-primary-light)]/40 backdrop-blur-md"
+            className="um-stat-card bg-white border border-slate-200 shadow-sm"
             onClick={() => {
               setFilterStatus('ALL');
               setFilterExternal(false);
@@ -377,7 +378,7 @@ const UserManagement = () => {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2 }}
-            className="um-stat-card um-stat-active border-none bg-[var(--color-primary-light)]/40 backdrop-blur-md"
+            className="um-stat-card um-stat-active bg-white border border-slate-200 shadow-sm"
             onClick={() => handleStatCardClick('active')}
             style={{
               cursor: 'pointer',
@@ -399,7 +400,7 @@ const UserManagement = () => {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.3 }}
-            className="um-stat-card um-stat-locked border-none bg-[var(--color-primary-light)]/40 backdrop-blur-md"
+            className="um-stat-card um-stat-locked bg-white border border-slate-200 shadow-sm"
             onClick={() => handleStatCardClick('locked')}
             style={{
               cursor: 'pointer',
@@ -472,7 +473,7 @@ const UserManagement = () => {
 
         {/* ── Filter Bar ──────────────────────────────────────────────────── */}
         <motion.div 
-          className="um-filter-bar bg-white/40 backdrop-blur-md p-4 rounded-2xl border border-[var(--color-primary-dark)]/5"
+          className="um-filter-bar bg-white p-4 rounded-2xl border border-slate-200 shadow-sm"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
@@ -554,7 +555,7 @@ const UserManagement = () => {
                               {user.username}
                               {isSelf && <span className="um-self-badge !bg-[var(--color-primary-dark)] !text-white ml-2 text-[9px] uppercase px-2 py-0.5 rounded-full">(Primary)</span>}
                             </span>
-                            <span className="um-email font-bold opacity-60">{user.email}</span>
+                            <span className="um-email font-bold text-slate-500">{user.email}</span>
                           </div>
                         </div>
                       </td>
@@ -579,7 +580,7 @@ const UserManagement = () => {
                           {user.failedLoginAttempts} / 5
                         </span>
                       </td>
-                      <td className="um-date-cell font-bold text-[var(--color-primary-dark)] opacity-70">
+                      <td className="um-date-cell font-bold text-slate-600">
                         {user.createdAt
                           ? format(new Date(user.createdAt), 'MMM dd, yyyy')
                           : '—'}

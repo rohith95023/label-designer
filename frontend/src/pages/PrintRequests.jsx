@@ -147,11 +147,11 @@ const PrintRequests = () => {
         transition={{ delay: 0.3 }}
       >
         <div className="p-8 border-b border-[var(--color-secondary)]/5 bg-[var(--color-primary-dark)] flex items-center justify-between">
-           <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 flex items-center gap-3">
+           <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-white flex items-center gap-3">
              <span className="material-symbols-outlined text-[20px]">history</span>
              Global Print Queue Integrity
            </h3>
-           <button onClick={fetchData} className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-white/40 hover:bg-white/10 hover:text-white transition-all group">
+           <button onClick={fetchData} className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-white hover:bg-white/10 transition-all group">
              <span className="material-symbols-outlined text-[20px] group-active:rotate-180 transition-transform duration-500">refresh</span>
            </button>
         </div>
@@ -160,12 +160,12 @@ const PrintRequests = () => {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-[var(--color-secondary)]/5">
-                <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-[var(--color-on-surface-variant)]/40">Reference / Integrity</th>
-                <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-[var(--color-on-surface-variant)]/40">Clinical Asset</th>
-                <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-[var(--color-on-surface-variant)]/40">Media Substrate</th>
-                <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-[var(--color-on-surface-variant)]/40 text-center">Batch Size</th>
-                <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-[var(--color-on-surface-variant)]/40">Status</th>
-                <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-[var(--color-on-surface-variant)]/40 text-right">Monitoring</th>
+                <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-500">Reference / Integrity</th>
+                <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-500">Clinical Asset</th>
+                <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-500">Media Substrate</th>
+                <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-500 text-center">Batch Size</th>
+                <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-500">Status</th>
+                <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-500 text-right">Monitoring</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--color-secondary)]/5">
@@ -188,7 +188,7 @@ const PrintRequests = () => {
                 >
                   <td className="px-8 py-6">
                     <div className="flex flex-col">
-                      <span className="text-[10px] font-black text-[var(--color-primary)] uppercase tracking-tighter opacity-60 mb-0.5">#{req.id.slice(0, 8)}</span>
+                      <span className="text-[10px] font-black text-[var(--color-primary)] uppercase tracking-tighter mb-0.5">#{req.id.slice(0, 8)}</span>
                       <span className="text-[13px] font-black text-[var(--color-primary-dark)]">
                         {format(new Date(req.requestedAt), 'MMM dd | HH:mm')}
                       </span>
@@ -204,8 +204,8 @@ const PrintRequests = () => {
                   </td>
                   <td className="px-8 py-6">
                     <div className="flex flex-col">
-                      <span className="text-[13px] font-black text-[var(--color-primary-dark)] opacity-70">{req.labelStock.name}</span>
-                      <span className="text-[9px] font-black text-[var(--color-on-surface-variant)]/40 uppercase tracking-widest">{req.labelStock.stockId}</span>
+                      <span className="text-[13px] font-black text-[var(--color-primary-dark)]">{req.labelStock.name}</span>
+                      <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{req.labelStock.stockId}</span>
                     </div>
                   </td>
                   <td className="px-8 py-6 text-center">

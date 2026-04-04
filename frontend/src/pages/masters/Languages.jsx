@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../../services/api';
 import AppLayout from '../../components/common/AppLayout';
@@ -148,7 +148,7 @@ const Languages = () => {
   }).filter(Boolean);
 
   return (
-    <AppLayout activePage="masters">
+    <AppLayout activePage="languages">
       <div className="um-container animate-fade-in">
         <motion.div 
           className="um-header"
@@ -221,7 +221,7 @@ const Languages = () => {
                 {displayData.length === 0 && (
                   <tr><td colSpan="7" className="text-center py-10 text-outline">No languages found matching your criteria.</td></tr>
                 )}
-                {displayData.map(base => {
+                {displayData.map((base, idx) => {
                   const variants = base.variants || [];
                   const isExpanded = expandedBase.has(base.id);
                   const isBaseActive = base.status === 'ACTIVE';

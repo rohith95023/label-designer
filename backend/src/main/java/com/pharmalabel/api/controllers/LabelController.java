@@ -85,7 +85,7 @@ public class LabelController {
     @PostMapping("/{id}/versions")
     public ResponseEntity<LabelVersionDto> saveNewVersion(@PathVariable UUID id, @RequestBody SaveVersionRequest request) {
         User currentUser = userService.getCurrentUser();
-        LabelVersion version = labelService.saveNewVersion(id, request.getDesignJson(), request.getNotes(), currentUser);
+        LabelVersion version = labelService.saveNewVersion(id, request.getDesignJson(), request.getNotes(), request.getLabelStockId(), currentUser);
         return ResponseEntity.ok(mapVersionToDto(version));
     }
 

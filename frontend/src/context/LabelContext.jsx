@@ -47,130 +47,121 @@ export const DEFAULT_SETTINGS = {
 const PREDEFINED_TEMPLATES = [
   {
     id: 'tpl-tablet-std',
-    name: 'Standard Tablet Label',
-    brand: 'ASPIRIN USP',
+    name: 'Standard Tablet Compliant Label',
+    brand: 'PHARMA-ASPIRIN USP',
     category: 'Tablets',
     size: '80x120mm',
     imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBSiaeAayZfueBnsduY5QBuSpvvp1o52sXv9Gms4s8DDXzCg35p1PVI7fGnJBIe6o28S2BMbE0rSBc_dYfthr-9oQFj06PXseU9EmCO9cLMQSwx5kLmfxGNZqwwX8IE1n2samFtoMqoV4I2fsJCBOaKVNEqrjscyyG0Nf81gzIdfc8bxIzsuGBT-olgLyG0zkH_cO3MngPSb93gAsnzm78aZXRasjIPOhLxJkLmCWM4J_f7MDZ0T1v07GKtOZ_98PFPtnoLol5lP6DJ',
     elementsData: [
-      // 🔝 Top Section
-      { id: "t1-rx", type: "text", text: "Rx", x: 20, y: 20, fontSize: 18, fontWeight: "bold", color: "#000000", zIndex: 10 },
-      { id: "t1-brand", type: "text", subtype: "brand", text: "ASPIRIN USP", x: 60, y: 20, fontSize: 22, fontWeight: "bold", color: "#cc0000", zIndex: 11 },
+      { id: "t1-header-bg", type: "shape", subtype: "rect", x: 0, y: 0, width: 600, height: 75, bgColor: "#003366", zIndex: 1 },
+      { id: "t1-rx", type: "text", text: "Rx ONLY", x: 20, y: 25, fontSize: 18, fontWeight: "bold", color: "#ffffff", zIndex: 10 },
+      { id: "t1-brand", type: "text", subtype: "brand", text: "PHARMA-ASPIRIN USP", x: 120, y: 25, fontSize: 24, fontWeight: "bold", color: "#ffffff", tracking: 2, zIndex: 11 },
+      
+      { id: "t1-divider", type: "shape", subtype: "line", x: 20, y: 85, width: 560, height: 2, bgColor: "#cccccc", zIndex: 2 },
+      { id: "t1-strength", type: "text", text: "Strength: 500 mg tablets", x: 20, y: 100, fontSize: 14, fontWeight: "bold", color: "#111111", zIndex: 12 },
+      { id: "t1-ndc", type: "text", text: "NDC: 12345-678-90", x: 420, y: 100, fontSize: 14, fontWeight: "bold", color: "#333333", zIndex: 13 },
+      { id: "t1-active", type: "text", text: "Active Ingredient: Aspirin USP 500mg, NSAID", x: 20, y: 130, fontSize: 11, color: "#333333", zIndex: 14 },
+      { id: "t1-dosage", type: "text", text: "Dosage: Adults (12+) 1 tablet every 4-6h. Do not exceed 8 tablets in 24h.", x: 20, y: 155, fontSize: 11, color: "#000000", fontWeight: "bold", zIndex: 15 },
+      
+      { id: "t1-warning-box", type: "shape", subtype: "rect", x: 20, y: 190, width: 350, height: 60, bgColor: "#fff0f0", borderWidth: 2, borderColor: "#ff0000", zIndex: 3 },
+      { id: "t1-warning", type: "warnings", text: "WARNING: Reye's Syndrome risk in children.", x: 30, y: 210, fontSize: 12, color: "#cc0000", fontWeight: "bold", zIndex: 16 },
 
-      // 🧾 Middle Section
-      { id: "t1-strength", type: "text", text: "Strength: 500 mg tablets", x: 60, y: 50, fontSize: 13, fontWeight: "bold", color: "#111111", zIndex: 12 },
-      { id: "t1-category", type: "text", text: "Category: Analgesic / Antipyretic", x: 60, y: 70, fontSize: 10, color: "#555555", zIndex: 13 },
+      { id: "t1-storage", type: "text", text: "Store at 20°-25°C (68°-77°F); excursions permitted to 15°-30°C.", x: 20, y: 270, fontSize: 10, color: "#444444", zIndex: 17 },
 
-      // 📄 Details Section
-      { id: "t1-active", type: "text", text: "Active Ingredient: Aspirin USP 500mg", x: 20, y: 105, fontSize: 9, color: "#333333", zIndex: 14 },
-      { id: "t1-dosage", type: "text", text: "Dosage: Adults (12+) 1 tablet every 4-6h", x: 20, y: 125, fontSize: 9, color: "#000000", fontWeight: "bold", zIndex: 15 },
-
-      // ⚠️ Warning Section
-      { id: "t1-warning", type: "warnings", text: "KEEP OUT OF REACH OF CHILDREN", x: 20, y: 160, fontSize: 11, color: "#ff0000", fontWeight: "bold", zIndex: 16 },
-      { id: "t1-storage", type: "text", text: "Store below 25°C in a dry place.", x: 20, y: 185, fontSize: 9, color: "#444444", zIndex: 17 },
-
-      // 📦 Bottom Section
-      { id: "t1-barcode", type: "barcode", text: "7192837465", x: 25, y: 215, width: 250, height: 50, zIndex: 18 },
-
-      // 📊 Bottom Left
-      { id: "t1-batch", type: "text", text: "Batch: 2024-X91", x: 20, y: 290, fontSize: 9, color: "#333333", zIndex: 20 },
-      { id: "t1-exp", type: "text", text: "Exp: 02/2027", x: 20, y: 310, fontSize: 10, color: "#333333", fontWeight: "bold", zIndex: 21 },
-      { id: "t1-mfg", type: "text", text: "Mfd by: PharmaCore Labs, USA", x: 20, y: 330, fontSize: 9, fontWeight: "bold", color: "#002244", zIndex: 22 },
-
-      // 🔳 Bottom Right
-      { id: "t1-qr", type: "qrcode", text: "ASP-REF-001928", x: 210, y: 280, width: 75, height: 75, zIndex: 23 }
+      { id: "t1-barcode", type: "barcode", text: "00312345678905", x: 400, y: 190, width: 180, height: 60, zIndex: 18 },
+      { id: "t1-batch", type: "text", text: "Lot: 2024-X91", x: 20, y: 340, fontSize: 12, color: "#111111", fontWeight: "bold", zIndex: 20 },
+      { id: "t1-exp", type: "text", text: "Exp: 02/2027", x: 150, y: 340, fontSize: 12, color: "#111111", fontWeight: "bold", zIndex: 21 },
+      { id: "t1-mfg", type: "text", text: "Mfd by: PharmaCore Labs, USA", x: 20, y: 365, fontSize: 10, color: "#002244", zIndex: 22 },
+      { id: "t1-qr", type: "qrcode", text: "(01)00312345678905(17)270228(10)2024-X91", x: 500, y: 280, width: 80, height: 80, zIndex: 23 }
     ]
   },
   {
     id: 'tpl-syrup-std',
-    name: 'Standard Syrup Label',
+    name: 'Standard Suspension Label',
     brand: 'TUSSI-PRO PLUS',
     category: 'Syrups',
     size: '80x120mm',
     imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB7niTIAhjNqf3IBSGE2I66N6Ji5S7LEyTbd9BSCJD9EI2yimwYPZFlWKP4JEA8JvNqTUoFyGAvP0wZ_-wT3DHsox-iiLYYsKXKmtkOVFGZQEOFXGsxL53GBNeruas6-RcDlRPo96x366pBpnIRjzw40JjI6-l-GcZGqZ0wS9YXY3YqWN-Kja_S6SZvCyrsiYGQ_Tl0g2apTZT-47xXLwoj_U-Bg6xf19Z0tHgGPVllfP867i-ltTw9bWiUUvyqJGTyu4MlQt4_MBHC',
     elementsData: [
-      { id: "t2-rx", type: "text", text: "Rx", x: 20, y: 20, fontSize: 18, fontWeight: "bold", zIndex: 10 },
-      { id: "t2-brand", type: "text", subtype: "brand", text: "TUSSI-PRO PLUS", x: 55, y: 20, fontSize: 20, fontWeight: "bold", color: "#0055aa", zIndex: 11 },
-      { id: "t2-strength", type: "text", text: "Strength: 100mL Content", x: 55, y: 45, fontSize: 12, fontWeight: "bold", color: "#000000", zIndex: 12 },
-      { id: "t2-category", type: "text", text: "Category: Cough & Cold Suspension", x: 55, y: 65, fontSize: 10, color: "#555555", zIndex: 13 },
-      { id: "t2-active", type: "text", text: "Active: 5mg per 10ml liquid base", x: 20, y: 100, fontSize: 9, color: "#444444", zIndex: 14 },
-      { id: "t2-dosage", type: "text", text: "Dosage: Adults 10ml thrice daily.", x: 20, y: 120, fontSize: 10, color: "#000000", fontWeight: "bold", zIndex: 15 },
-      { id: "t2-warning", type: "warnings", text: "SHAKE WELL BEFORE USE", x: 20, y: 155, fontSize: 13, color: "#ff3300", fontWeight: "bold", zIndex: 16 },
-      { id: "t2-storage", type: "text", text: "Store in a cool dry place below 30°C.", x: 20, y: 180, fontSize: 9, color: "#555555", zIndex: 17 },
-      { id: "t2-barcode", type: "barcode", text: "TP-992-1", x: 25, y: 215, width: 250, height: 50, zIndex: 18 },
-      { id: "t2-batch", type: "text", text: "Lot No: TP-101X", x: 20, y: 290, fontSize: 9, color: "#333333", zIndex: 19 },
-      { id: "t2-exp", type: "text", text: "Exp: 11/2026", x: 20, y: 310, fontSize: 10, color: "#333333", fontWeight: "bold", zIndex: 20 },
-      { id: "t2-mfg", type: "text", text: "Mfd by: Tussi Labs, Chicago", x: 20, y: 330, fontSize: 9, fontWeight: "bold", color: "#002244", zIndex: 21 },
-      { id: "t2-qr", type: "qrcode", text: "https://t-pro-info.com", x: 210, y: 280, width: 75, height: 75, zIndex: 22 }
+      { id: "t2-header-bg", type: "shape", subtype: "rect", x: 0, y: 0, width: 600, height: 75, bgColor: "#0055aa", zIndex: 1 },
+      { id: "t2-rx", type: "text", text: "Rx", x: 20, y: 25, fontSize: 18, fontWeight: "bold", color: "#ffffff", zIndex: 10 },
+      { id: "t2-brand", type: "text", subtype: "brand", text: "TUSSI-PRO PLUS", x: 60, y: 25, fontSize: 24, fontWeight: "bold", color: "#ffffff", tracking: 2, zIndex: 11 },
+      { id: "t2-vol", type: "text", text: "120 mL", x: 500, y: 25, fontSize: 18, fontWeight: "bold", color: "#ffffff", zIndex: 12 },
+      
+      { id: "t2-strength", type: "text", text: "10 mg / 5 mL Oral Suspension", x: 20, y: 95, fontSize: 14, fontWeight: "bold", color: "#111111", zIndex: 12 },
+      { id: "t2-active", type: "text", text: "Active: Dextromethorphan HBr USP 10mg per 5mL", x: 20, y: 125, fontSize: 11, color: "#333333", zIndex: 14 },
+      
+      { id: "t2-warning-box", type: "shape", subtype: "rect", x: 20, y: 160, width: 450, height: 40, bgColor: "#ffebd6", borderColor: "#ff8c00", borderWidth: 2, zIndex: 3 },
+      { id: "t2-warning", type: "warnings", text: "SHAKE WELL BEFORE USE. MEASURE WITH DOSING CUP.", x: 30, y: 172, fontSize: 12, color: "#cc4400", fontWeight: "bold", zIndex: 16 },
+
+      { id: "t2-dosage", type: "text", text: "Dosage: See prescribing information.", x: 20, y: 230, fontSize: 11, color: "#111111", fontWeight: "bold", zIndex: 15 },
+      { id: "t2-storage", type: "text", text: "Store at 20° to 25°C (68° to 77°F). Protect from light.", x: 20, y: 255, fontSize: 10, color: "#444444", zIndex: 17 },
+
+      { id: "t2-barcode", type: "barcode", text: "300450123126", x: 20, y: 290, width: 220, height: 45, zIndex: 18 },
+      { id: "t2-batch", type: "text", text: "Lot: TP-9902X", x: 300, y: 300, fontSize: 12, color: "#111111", fontWeight: "bold", zIndex: 19 },
+      { id: "t2-exp", type: "text", text: "Exp: 11/2026", x: 300, y: 325, fontSize: 12, color: "#111111", fontWeight: "bold", zIndex: 20 },
+      { id: "t2-mfg", type: "text", text: "Mfd by: Tussi Labs, Chicago, IL", x: 20, y: 365, fontSize: 10, color: "#002244", zIndex: 21 },
+      { id: "t2-qr", type: "qrcode", text: "(01)10300450123123(17)261130(10)TP-9902X", x: 500, y: 270, width: 80, height: 80, zIndex: 22 }
     ]
   },
   {
     id: 'tpl-injection-std',
-    name: 'Standard Injection Label',
-    brand: 'HUMAN INSULIN',
+    name: 'Vial Direct Print Label',
+    brand: 'HUMAN INSULIN (rDNA)',
     category: 'Injections',
-    size: '80x120mm',
+    size: '55x35mm',
     imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCeDBuiu1BpLkVlOariuZKZGmdjIydU_BaagNhWmo9DmkBkAN3T0E8Hdh2RXhhiGWMRS_tDYjAvQWZ8Ifty0YhOaClraQKl59f5CSeKbl2GjMY35WT6gI1OWseEYymne0pmCwGGGWfF6LXzc20pcWjTVdDjt8fe4dAttzmQKhvPM_HpwWN4qEqIynwnILoQiOSXcAUnLOqkTeKbfKAgqgnHfALtmh_r6_mWsjY1gto8DKvTxDUjpJ8Q0M8zTvn-NYWAyHvaMcXLjgIT',
     elementsData: [
-      { id: "t3-rx", type: "text", text: "Rx Only", x: 20, y: 20, fontSize: 14, fontWeight: "bold", color: "#ff0000", zIndex: 10 },
-      { id: "t3-brand", type: "text", subtype: "brand", text: "HUMAN INSULIN", x: 85, y: 20, fontSize: 18, fontWeight: "bold", color: "#008000", zIndex: 11 },
-      { id: "t3-strength", type: "text", text: "Strength: 100 Units per mL (U-100)", x: 85, y: 45, fontSize: 13, fontWeight: "bold", zIndex: 12 },
-      { id: "t3-category", type: "text", text: "Vial: 10 mL Multi-dose vial", x: 85, y: 65, fontSize: 10, color: "#555555", zIndex: 13 },
-      { id: "t3-active", type: "text", text: "Active: Intermediate-acting Insulin", x: 20, y: 100, fontSize: 9, color: "#444444", zIndex: 14 },
-      { id: "t3-dosage", type: "text", text: "Route: For Subcutaneous Use Only", x: 20, y: 120, fontSize: 10, color: "#cc0000", fontWeight: "bold", zIndex: 15 },
-      { id: "t3-warning", type: "warnings", text: "REFRIGERATE: 2°C TO 8°C", x: 20, y: 155, fontSize: 13, fontWeight: "bold", color: "#003366", zIndex: 16 },
-      { id: "t3-storage", type: "text", text: "Do not freeze. Protect from direct heat.", x: 20, y: 180, fontSize: 9, color: "#444444", zIndex: 17 },
-      { id: "t3-barcode", type: "barcode", text: "HI100ML99", x: 25, y: 215, width: 250, height: 50, zIndex: 18 },
-      { id: "t3-batch", type: "text", text: "Lot No: INS-Q9", x: 20, y: 290, fontSize: 9, color: "#333333", zIndex: 19 },
-      { id: "t3-exp", type: "text", text: "Exp: 08/2025", x: 20, y: 310, fontSize: 10, color: "#333333", fontWeight: "bold", zIndex: 20 },
-      { id: "t3-mfg", type: "text", text: "Mfd by: Biogen Pharma Co.", x: 20, y: 330, fontSize: 9, fontWeight: "bold", zIndex: 21 },
-      { id: "t3-qr", type: "qrcode", text: "HI-99812-7B", x: 210, y: 280, width: 75, height: 75, zIndex: 22 }
+      { id: "t3-brand", type: "text", subtype: "brand", text: "HUMAN INSULIN", x: 20, y: 30, fontSize: 32, fontWeight: "bold", color: "#006600", tracking: 1, zIndex: 11 },
+      { id: "t3-strength", type: "text", text: "100 Units/mL (U-100)", x: 20, y: 70, fontSize: 24, fontWeight: "bold", color: "#111111", zIndex: 12 },
+      { id: "t3-cat", type: "text", text: "10 mL Multi-Dose Vial", x: 20, y: 110, fontSize: 18, color: "#333333", zIndex: 13 },
+      { id: "t3-route", type: "text", text: "For Subcutaneous Use", x: 20, y: 150, fontSize: 18, fontWeight: "bold", color: "#cc0000", zIndex: 14 },
+      
+      { id: "t3-warning-box", type: "shape", subtype: "rect", x: 20, y: 190, width: 280, height: 50, bgColor: "#003366", zIndex: 1 },
+      { id: "t3-warning", type: "text", text: "REFRIGERATE", x: 45, y: 202, fontSize: 18, fontWeight: "bold", color: "#ffffff", tracking: 1, zIndex: 15 },
+      
+      { id: "t3-batch", type: "text", text: "Lot: INS-98Q", x: 20, y: 270, fontSize: 18, fontWeight: "bold", color: "#111111", zIndex: 16 },
+      { id: "t3-exp", type: "text", text: "Exp: 08/25", x: 20, y: 300, fontSize: 18, fontWeight: "bold", color: "#111111", zIndex: 17 },
+      { id: "t3-ndc", type: "text", text: "NDC 0002-8215-01", x: 20, y: 340, fontSize: 16, color: "#333333", zIndex: 18 },
+      
+      // Right side rotated data matrix and barcode
+      { id: "t3-qr", type: "qrcode", text: "(01)00300028215018(17)250831(10)INS-98Q", x: 440, y: 30, width: 120, height: 120, zIndex: 19 },
+      { id: "t3-barcode", type: "barcode", text: "0002821501", x: 380, y: 170, width: 200, height: 70, zIndex: 20 },
+      { id: "t3-mfg", type: "text", text: "Biogen Pharma", x: 430, y: 300, fontSize: 14, color: "#333333", zIndex: 21 }
     ]
   },
   {
     id: 'tpl-ointment-std',
-    name: 'Standard Ointment Label',
-    brand: 'DERMACARE HC',
+    name: 'Topical Ointment Tube Label',
+    brand: 'DERMA-HEAL 2%',
     category: 'Ointments',
-    size: '80x120mm',
-    imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCGjtinBEWI-g2GwomdCjmEYpnRA3ym4GS_NZHl1bq9wT6spPZhVgpjMHAV91jduHsQDJszDvAoMyeSVYr5zYbzpoFprKtX9yls5xrdWVJD55wvgjS84ojO3oan9anGJSAG2PtKQMSbh16o04vaQduwP-TfRpHRB7lA85jrY4pELGQnmCJKLWnauFzVTXC_5KdOxodthtwCQh-Yz4qVmo6sYN9S9GCzrTRrUqemI5SY0vbGJu8GCfqhM9oB_QWn6yIstWYTfsccC6A7',
+    size: '90x35mm',
+    imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAtY9Yf8yXjXvR1E1T1W1Q1P1S1W1R1U1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1',
     elementsData: [
-      { id: "t4-rx", type: "text", text: "Rx", x: 20, y: 20, fontSize: 18, fontWeight: "bold", zIndex: 10 },
-      { id: "t4-brand", type: "text", subtype: "brand", text: "DERMACARE HC", x: 55, y: 20, fontSize: 20, fontWeight: "bold", color: "#800080", zIndex: 11 },
-      { id: "t4-strength", type: "text", text: "Strength: 10mg HA per 1g (1%)", x: 55, y: 45, fontSize: 12, fontWeight: "bold", color: "#000000", zIndex: 12 },
-      { id: "t4-category", type: "text", text: "Net Weight: 30g Tube", x: 55, y: 65, fontSize: 10, color: "#555555", zIndex: 13 },
-      { id: "t4-active", type: "text", text: "Active: Hydrocortisone USP", x: 20, y: 100, fontSize: 9, color: "#444444", zIndex: 14 },
-      { id: "t4-dosage", type: "text", text: "Use: Apply to affected area thin layer", x: 20, y: 120, fontSize: 10, color: "#000000", fontWeight: "bold", zIndex: 15 },
-      { id: "t4-warning", type: "warnings", text: "FOR EXTERNAL USE ONLY", x: 20, y: 155, fontSize: 13, color: "#ff0000", fontWeight: "bold", zIndex: 16 },
-      { id: "t4-storage", type: "text", text: "Store below 30°C. Keep from reach.", x: 20, y: 180, fontSize: 9, color: "#555555", zIndex: 17 },
-      { id: "t4-barcode", type: "barcode", text: "7766554433", x: 25, y: 215, width: 250, height: 50, zIndex: 18 },
-      { id: "t4-batch", type: "text", text: "Lot: HC-O012", x: 20, y: 290, fontSize: 9, color: "#333333", zIndex: 19 },
-      { id: "t4-exp", type: "text", text: "Exp: 12/2026", x: 20, y: 310, fontSize: 10, color: "#333333", fontWeight: "bold", zIndex: 20 },
-      { id: "t4-mfg", type: "text", text: "Mfd by: SkinCare Labs, Berlin", x: 20, y: 330, fontSize: 9, fontWeight: "bold", color: "#002244", zIndex: 21 },
-      { id: "t4-qr", type: "qrcode", text: "HC-OINT-30", x: 210, y: 280, width: 75, height: 75, zIndex: 22 }
+      { id: "t4-header-bg", type: "shape", subtype: "rect", x: 0, y: 0, width: 600, height: 60, bgColor: "#6b21a8", zIndex: 1 },
+      { id: "t4-brand", type: "text", subtype: "brand", text: "DERMA-HEAL 2%", x: 20, y: 15, fontSize: 24, fontWeight: "bold", color: "#ffffff", tracking: 1, zIndex: 11 },
+      { id: "t4-strength", type: "text", text: "Hydrocortisone Valerate Ointment, USP 0.2%", x: 20, y: 80, fontSize: 16, fontWeight: "bold", color: "#4b5563", zIndex: 12 },
+      { id: "t4-size", type: "text", text: "NET WT 45g", x: 480, y: 80, fontSize: 14, fontWeight: "bold", color: "#374151", zIndex: 13 },
+      { id: "t4-use", type: "text", text: "FOR EXTERNAL USE ONLY. NOT FOR OPHTHALMIC USE.", x: 20, y: 115, fontSize: 13, fontWeight: "black", color: "#dc2626", zIndex: 14 },
+      { id: "t4-dosage", type: "text", text: "Apply to affected area 2-3 times daily or as directed by physician.", x: 20, y: 145, fontSize: 11, color: "#4b5563", zIndex: 15 },
+      { id: "t4-barcode", type: "barcode", text: "1234567890123", x: 20, y: 180, width: 200, height: 50, zIndex: 20 },
+      { id: "t4-mfg", type: "text", text: "Mfd by: DermaLife Pharma, NJ", x: 20, y: 250, fontSize: 10, color: "#9ca3af", zIndex: 21 }
     ]
   },
   {
-    id: 'tpl-generic-std',
-    name: 'Standard Generic Label',
-    brand: 'VITA-C FORTE',
+    id: 'tpl-case-label',
+    name: 'Industrial Case / Shipping Label',
+    brand: 'BULK LOGISTICS SPEC',
     category: 'Generic Labels',
-    size: '80x120mm',
-    imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAxHcv-jzXgoRhjFZTF5oBUqLwbXU0mZq0SBkb6LlxiMHwVlS3fZQbaw3B88pSXukdltThAANfKB2AFOs1B8Kb3-qmYIBIBLgMSDRXczHJ7PmJBP4S5ZUWmmg7OI8T6aaSBgNT92E-WbUe68HELI1Zh1p7pUW9McaE3JbYZ3Nhl2jX0Nz5Lbn0QX5Ltch13GcER0OOK2nW9yhppB60-ORoTj2QOrZ0gPa5--Sw-THgvIAeb2GaKWSActPVFqeo0AvPa4djax0H-0VDW',
+    size: '150x100mm',
+    imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD1E1T1W1Q1P1S1W1R1U1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T1T',
     elementsData: [
-      { id: "t5-rx", type: "text", text: "OTC", x: 20, y: 20, fontSize: 18, fontWeight: "bold", zIndex: 10 },
-      { id: "t5-brand", type: "text", subtype: "brand", text: "VITA-C FORTE", x: 65, y: 20, fontSize: 20, fontWeight: "bold", color: "#ff6600", zIndex: 11 },
-      { id: "t5-strength", type: "text", text: "Strength: 1000 mg tablet", x: 65, y: 45, fontSize: 12, fontWeight: "bold", color: "#000000", zIndex: 12 },
-      { id: "t5-category", type: "text", text: "Source: High potency Ascorbic Acid", x: 65, y: 65, fontSize: 10, color: "#555555", zIndex: 13 },
-      { id: "t5-active", type: "text", text: "Each tablet contains: 1000mg Vit C", x: 20, y: 100, fontSize: 9, color: "#444444", zIndex: 14 },
-      { id: "t5-dosage", type: "text", text: "Take 1 tablet daily with water.", x: 20, y: 120, fontSize: 10, color: "#000000", fontWeight: "bold", zIndex: 15 },
-      { id: "t5-warning", type: "warnings", text: "Do not exceed stated daily dose.", x: 20, y: 155, fontSize: 12, color: "#880000", fontWeight: "bold", zIndex: 16 },
-      { id: "t5-storage", type: "text", text: "FSSAI LIC: 100293884766", x: 20, y: 180, fontSize: 9, color: "#444444", zIndex: 17 },
-      { id: "t5-barcode", type: "barcode", text: "VITA-C-1000", x: 25, y: 215, width: 250, height: 50, zIndex: 18 },
-      { id: "t5-batch", type: "text", text: "Batch: VC-2024", x: 20, y: 290, fontSize: 9, color: "#333333", zIndex: 19 },
-      { id: "t5-exp", type: "text", text: "Exp: 09/2026", x: 20, y: 310, fontSize: 10, color: "#333333", fontWeight: "bold", zIndex: 20 },
-      { id: "t5-mfg", type: "text", text: "Mfd by: VitaNutri BioLabs", x: 20, y: 330, fontSize: 9, fontWeight: "bold", color: "#002244", zIndex: 21 },
-      { id: "t5-qr", type: "qrcode", text: "VITA-INFO-QR", x: 210, y: 280, width: 75, height: 75, zIndex: 22 }
+      { id: "t5-box", type: "shape", subtype: "rect", x: 10, y: 10, width: 580, height: 380, bgColor: "transparent", borderWidth: 4, borderColor: "#000000", zIndex: 1 },
+      { id: "t5-title", type: "text", text: "BULK SHIPMENT - PHARMA GRADE", x: 30, y: 30, fontSize: 18, fontWeight: "black", color: "#000000", zIndex: 10 },
+      { id: "t5-product", type: "text", text: "PRODUCT: AMBLIN-X POWDER", x: 30, y: 70, fontSize: 24, fontWeight: "bold", color: "#000000", zIndex: 11 },
+      { id: "t5-weight", type: "text", text: "WEIGHT: 25.00 KG", x: 30, y: 110, fontSize: 18, color: "#000000", zIndex: 12 },
+      { id: "t5-barcode-large", type: "barcode", text: "BULK-AMX-2024-001", x: 30, y: 160, width: 540, height: 120, zIndex: 13 },
+      { id: "t5-qr-large", type: "qrcode", text: "BULK-AMX-2024-001|25.00KG|EXP:2028-01", x: 450, y: 30, width: 120, height: 120, zIndex: 14 }
     ]
   }
 ];
@@ -256,10 +247,24 @@ export const LabelProvider = ({ children }) => {
           }
         }
 
-        // 3. Process Templates
+        // 3. Process Templates (Merge system labels with frontend predefined ones)
         if (templatesRes.status === 'fulfilled') {
           const systemLabels = templatesRes.value;
-          if (Array.isArray(systemLabels) && systemLabels.length > 0) setTemplates(systemLabels);
+          if (Array.isArray(systemLabels) && systemLabels.length > 0) {
+            setTemplates(prev => {
+              const merged = [...prev];
+              systemLabels.forEach(sl => {
+                const idx = merged.findIndex(m => m.id === sl.id);
+                if (idx !== -1) {
+                  // Merge: server data overrides but keeps frontend defaults if missing
+                  merged[idx] = { ...merged[idx], ...sl };
+                } else {
+                  merged.push(sl);
+                }
+              });
+              return merged;
+            });
+          }
         }
 
         // 4. Process Languages & Global Setting Synchronization
@@ -359,6 +364,7 @@ export const LabelProvider = ({ children }) => {
             bgColor: meta.bgColor,
             labelStockId: meta.labelStockId
           },
+          labelStockId: meta.labelStockId,
           notes: meta.notes
         });
         setSavedStatus('saved');
@@ -452,25 +458,61 @@ export const LabelProvider = ({ children }) => {
   const scaleElements = useCallback((newW, newH) => {
     const oldW = meta.labelSize.w;
     const oldH = meta.labelSize.h;
-    if (oldW === newW && oldH === newH) return;
+    if (!oldW || !oldH || (oldW === newW && oldH === newH)) return;
 
     const scaleX = newW / oldW;
     const scaleY = newH / oldH;
     const minScale = Math.min(scaleX, scaleY);
 
-    setElements(prev => prev.map(el => ({
-      ...el,
-      x: Math.round((el.x || 0) * scaleX),
-      y: Math.round((el.y || 0) * scaleY),
-      width: el.width ? Math.round(el.width * scaleX) : el.width,
-      height: el.height ? Math.round(el.height * scaleY) : el.height,
-      fontSize: el.fontSize ? Math.round(el.fontSize * minScale) : el.fontSize,
-      borderWidth: el.borderWidth ? Math.max(1, Math.round(el.borderWidth * minScale)) : el.borderWidth,
-      borderRadius: el.borderRadius ? Math.round(el.borderRadius * minScale) : el.borderRadius
-    })));
+    setElements(prev => {
+      const scaled = prev.map(el => {
+        // Calculate new dimensions with scaling
+        let upW = el.width ? Math.round(el.width * scaleX) : el.width;
+        let upH = el.height ? Math.round(el.height * scaleY) : el.height;
+        
+        // Font size and borders use proportional minScale to avoid stretching
+        let upFS = el.fontSize ? Math.round(el.fontSize * minScale) : el.fontSize;
+        
+        // Ensure minimum visibility
+        if (el.width && upW < 2) upW = 2;
+        if (el.height && upH < 2) upH = 2;
+        if (el.fontSize && upFS < 4) upFS = 4;
+
+        // Calculate new position
+        let upX = Math.round((el.x || 0) * scaleX);
+        let upY = Math.round((el.y || 0) * scaleY);
+
+        // CLAMPING: Ensure element stays within new canvas boundaries
+        if (upX < 0) upX = 0;
+        if (upY < 0) upY = 0;
+        
+        const finalW = upW || 0;
+        const finalH = upH || 0;
+        
+        if (upX + finalW > newW) {
+          upX = Math.max(0, newW - finalW);
+        }
+        if (upY + finalH > newH) {
+          upY = Math.max(0, newH - finalH);
+        }
+
+        return {
+          ...el,
+          x: upX,
+          y: upY,
+          width: upW,
+          height: upH,
+          fontSize: upFS,
+          borderWidth: el.borderWidth ? Math.max(1, Math.round(el.borderWidth * minScale)) : el.borderWidth,
+          borderRadius: el.borderRadius ? Math.round(el.borderRadius * minScale) : el.borderRadius
+        };
+      });
+      return scaled;
+    });
   }, [meta.labelSize, setElements]);
 
   const setLabelSize = (w, h) => {
+    if (w < 10 || h < 10) return; // Prevent invalid sizes
     scaleElements(w, h);
     setMeta(prev => ({ ...prev, labelSize: { w, h } }));
   };
@@ -519,6 +561,7 @@ export const LabelProvider = ({ children }) => {
           bgColor: meta.bgColor,
           labelStockId: meta.labelStockId
         },
+        labelStockId: meta.labelStockId,
         notes: meta.notes
       });
       setSavedStatus('saved');
@@ -555,6 +598,7 @@ export const LabelProvider = ({ children }) => {
       setMeta({
         fileId: newLabel.id,
         fileName: newName,
+        labelStockId: meta.labelStockId || stockId,
         labelSize: meta.labelSize,
         bgColor: meta.bgColor,
         notes: meta.notes
@@ -633,6 +677,7 @@ export const LabelProvider = ({ children }) => {
         setMeta({
           fileId: null, // New file ID will be created when saved
           fileName: data.meta.fileName || 'Imported Label',
+          labelStockId: data.meta.labelStockId || null,
           labelSize: data.meta.labelSize || { w: 600, h: 400 },
           bgColor: data.meta.bgColor || '#FFFFFF',
           notes: data.meta.notes || ''
@@ -701,33 +746,49 @@ export const LabelProvider = ({ children }) => {
     const rawElements = fullTemplate.elementsData || fullTemplate.elements_data || [];
 
     const MM_TO_PX = 3.7795275591;
-    let targetW = 600, targetH = 400;
-    let designW = 600, designH = 400; // Default design basis if not specified
+    let targetW = 600, targetH = 400; // Calculated physical canvas (px)
+    let designW = 600; // Coordinate space basis for scaling (predefined templates use 600px)
+    let designH = 400;
 
-    // Determine Design Size (what it was built for in DB)
-    if (fullTemplate.size && fullTemplate.size.toLowerCase().includes('x')) {
-      const parts = fullTemplate.size.toLowerCase().split('x');
-      const val1 = parseFloat(parts[0]);
-      const val2 = parseFloat(parts[1]);
-      if (!isNaN(val1) && !isNaN(val2)) {
-        designW = Math.round(val1 * MM_TO_PX);
-        designH = Math.round(val2 * MM_TO_PX);
+    // 1. Attempt to find a matching physical stock for this template
+    let matchedStockId = null;
+    if (fullTemplate.size && labelStocks.length > 0) {
+      const sizeStr = fullTemplate.size.toLowerCase();
+      const parts = sizeStr.includes('x') ? sizeStr.split('x') : [];
+      if (parts.length >= 2) {
+        const tw = parseFloat(parts[0]);
+        const th = parseFloat(parts[1]);
+        
+        // Use template specified size as baseline
+        targetW = Math.round(tw * MM_TO_PX);
+        targetH = Math.round(th * MM_TO_PX);
+
+        const match = labelStocks.find(s => 
+          (Math.abs(s.breadth - tw) < 2 && Math.abs(s.height - th) < 2) ||
+          (Math.abs(s.breadth - th) < 2 && Math.abs(s.height - tw) < 2)
+        );
+        
+        if (match) {
+          matchedStockId = match.id;
+          targetW = Math.round(match.breadth * MM_TO_PX);
+          targetH = Math.round(match.height * MM_TO_PX);
+        }
       }
     }
 
-    // Determine Target Size (what we will set the canvas to)
-    if (fullTemplate.labelSize) {
-      targetW = fullTemplate.labelSize.w;
-      targetH = fullTemplate.labelSize.h;
-    } else {
-      targetW = designW;
-      targetH = designH;
+    // 2. Fallback to template size if still using defaults
+    if (targetW === 600 && targetH === 400 && fullTemplate.size) {
+       const parts = fullTemplate.size.split('x');
+       if (parts.length >= 2) {
+         targetW = Math.round(parseFloat(parts[0]) * MM_TO_PX);
+         targetH = Math.round(parseFloat(parts[1]) * MM_TO_PX);
+       }
     }
 
-    // Calculate scale factors to ensure everything fits the new proportions
+    // 3. Scale elements to fit the current physical target from the standard design basis (600px)
     const scaleX = targetW / designW;
     const scaleY = targetH / designH;
-    const minScale = Math.min(scaleX, scaleY); // Used for font sizes/dimensions to prevent stretching
+    const minScale = Math.min(scaleX, scaleY);
 
     const enriched = rawElements.map((el, i) => {
       const up = {
@@ -735,13 +796,12 @@ export const LabelProvider = ({ children }) => {
         id: el.id || uuidv4(),
         x: Math.round((el.x || 0) * scaleX),
         y: Math.round((el.y || 0) * scaleY),
-        width: el.width ? Math.round(el.width * minScale) : el.width,
-        height: el.height ? Math.round(el.height * minScale) : el.height,
-        fontSize: el.fontSize ? Math.round(el.fontSize * minScale) : el.fontSize,
+        width: el.width ? Math.round(el.width * scaleX) : el.width, // Non-proportional width (stretch to fill)
+        height: el.height ? Math.round(el.height * scaleY) : el.height, // Non-proportional height
+        fontSize: el.fontSize ? Math.round(el.fontSize * minScale) : el.fontSize, // Proportional font
         zIndex: el.zIndex || (i + 10)
       };
 
-      // Proportional border/stroke scaling for shapes
       if (el.type === 'shape') {
         if (el.borderWidth) up.borderWidth = Math.max(1, Math.round(el.borderWidth * minScale));
         if (el.borderRadius) up.borderRadius = Math.round(el.borderRadius * minScale);
@@ -750,15 +810,15 @@ export const LabelProvider = ({ children }) => {
       return up;
     });
 
-    console.log(`[LabelContext] Auto-scaling complete (Ratio ${scaleX.toFixed(2)}x${scaleY.toFixed(2)}). Elements:`, enriched.length);
-
     setMeta({
       fileId: null,
-      fileName: fullTemplate.name || null,
+      fileName: fullTemplate.name || 'New Label',
+      labelStockId: matchedStockId || defaultStockIdRef.current,
       labelSize: { w: targetW, h: targetH },
       bgColor: fullTemplate.bgColor || '#FFFFFF',
       notes: fullTemplate.notes || ''
     });
+
     setActiveTemplate(fullTemplate);
     setElements(enriched);
     setHistory([enriched]);
@@ -767,6 +827,10 @@ export const LabelProvider = ({ children }) => {
     setZoomLevel(1);
     setSavedStatus('unsaved');
     setLoading(false);
+    
+    if (matchedStockId) {
+      showToast(`Matched stock for "${fullTemplate.name}" automatically`, 'info');
+    }
   };
 
   // ── Element CRUD ──

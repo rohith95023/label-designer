@@ -417,14 +417,23 @@ export default function LabelEditor() {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (sidebarRef.current && !sidebarRef.current.contains(event.target)) {
+      // 1. Check if click is inside sidebar
+      const isSidebar = sidebarRef.current && sidebarRef.current.contains(event.target);
+      
+      // 2. Check if click is inside the label/artboard
+      const isArtboard = artboardRef.current && artboardRef.current.contains(event.target);
+      
+      // 3. Check if click is inside a modal/portal (usually has Z-index > 1000)
+      const isModal = event.target.closest('.fixed.z-\\[3000\\]') || event.target.closest('.fixed.z-\\[9999\\]');
+
+      if (!isSidebar && !isArtboard && !isModal) {
         setLockedIcon(null);
         setHoveredIcon(null);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [selectedIds]); // Added selectedIds dependency to be safe
 
   // --- Placeholder & Object Logic ---
   const [placeholders, setPlaceholders] = useState([]);
@@ -781,9 +790,29 @@ export default function LabelEditor() {
   // ── Artboard element clamp ───────────────────────────────────────────────────
   // Strictly enforce bounds based on rotated bounding box
   const clampPos = (x, y, elW, elH, rot = 0) => {
-    // Restriction removed per user request to allow movement across entire canvas.
-    // Coordinates are now unconstrained.
-    return { x, y };
+    const W = meta.labelSize.w;
+    const H = meta.labelSize.h;
+    
+    // Boundary check for Pharma Designer
+    let cx = x;
+    let cy = y;
+
+    // Basic containment for unrotated elements
+    if (rot === 0) {
+      if (cx < 0) cx = 0;
+      if (cy < 0) cy = 0;
+      if (cx + elW > W) cx = Math.max(0, W - elW);
+      if (cy + elH > H) cy = Math.max(0, H - elH);
+    } else {
+      // For rotated elements, we use a simpler conservative box check
+      // or just keep original x/y if it's within a safe margin
+      if (cx < -elW/2) cx = -elW/2;
+      if (cy < -elH/2) cy = -elH/2;
+      if (cx > W) cx = W - elW/2;
+      if (cy > H) cy = H - elH/2;
+    }
+
+    return { x: cx, y: cy };
   };
 
   const statusColor = savedStatus === 'saved' ? 'text-green-600' : savedStatus === 'saving' ? 'text-amber-500' : 'text-slate-400';
@@ -854,7 +883,7 @@ export default function LabelEditor() {
       {/* Bulk Delete Dialog */}
       {showBulkDeleteModal && createPortal(
         <div className="fixed inset-0 z-[1002] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm animate-fade-in">
-          <div className="glass-card bg-white rounded-2xl shadow-float w-[360px] p-6 flex flex-col gap-4 border border-white/20">
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-xl w-[360px] p-6 flex flex-col gap-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-600 shrink-0">
                 <span className="material-symbols-outlined text-xl">delete_sweep</span>
@@ -1533,9 +1562,9 @@ export default function LabelEditor() {
                             {basicShapes.map(s => (
                               <motion.button
                                 key={s.id}
-                                onClick={() => setShapeDrawingTool(s.payload.shapeType)}
+                                onClick={() => setShapeDrawingTool(s.id)}
                                 className={`flex flex-col items-center p-4 rounded-2xl border transition-all ${
-                                  shapeDrawingTool === s.payload.shapeType 
+                                  shapeDrawingTool === s.id 
                                     ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-white shadow-lg' 
                                     : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'
                                 }`}
@@ -1621,7 +1650,16 @@ export default function LabelEditor() {
 
                       {/* STOCKS */}
                       {activeTab === 'stocks' && (() => {
-                        const activeStocks = labelStocks.filter(s => s.status === 'ACTIVE');
+                        const activeStocks = labelStocks.filter(s => {
+                          if (s.status !== 'ACTIVE') return false;
+                          const stockId = s.stockId?.toLowerCase() || '';
+                          const isPredefined = [
+                            'bottle', 'vial', 'blister', 'a5', 'a4',
+                            'tablet-std', 'syrup-std', 'injection-std', 'ointment-std', 'generic-std',
+                            'standard tablet', 'standard syrup', 'standard injection', 'standard ointment', 'standard generic'
+                          ].includes(stockId);
+                          return !isPredefined;
+                        });
                         const selectedStock = activeStocks.find(s => s.id === meta.labelStockId);
                         return (
                           <div className="flex flex-col gap-3">
@@ -1873,12 +1911,14 @@ export default function LabelEditor() {
               <div className="flex items-center gap-3 bg-[var(--color-primary)] p-2.5 rounded-2xl shadow-2xl border border-blue-400 pointer-events-auto animate-in fade-in slide-in-from-top-4 duration-300">
                 <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-white">
                   <span className="material-symbols-outlined text-xl">
-                    {shapeDrawingTool === 'rectangle' ? 'crop_square' : shapeDrawingTool === 'circle' ? 'radio_button_unchecked' : 'horizontal_rule'}
+                    {basicShapes.find(s => s.id === shapeDrawingTool)?.render || 'crop_square'}
                   </span>
                 </div>
                 <div className="flex flex-col pr-2">
-                  <span className="text-white text-[11px] font-black uppercase tracking-widest leading-none">Drafting: {shapeDrawingTool}</span>
-                  <span className="text-[var(--color-primary)]/10 text-[10px] font-bold mt-0.5">Click and drag on canvas to draw</span>
+                  <span className="text-white text-[11px] font-black uppercase tracking-widest leading-none">
+                    Drafting: {basicShapes.find(s => s.id === shapeDrawingTool)?.name || shapeDrawingTool}
+                  </span>
+                  <span className="text-white/60 text-[10px] font-bold mt-0.5">Click and drag on canvas to draw</span>
                 </div>
                 <button
                   onClick={() => setShapeDrawingTool(null)}
@@ -1889,32 +1929,41 @@ export default function LabelEditor() {
               </div>
             </div>
           )}
-          {/* ── Premium Artboard Container ──────────────────────────────────────── */}
-          <div className="flex items-center justify-center min-h-full p-12">
-            <motion.div
-              ref={artboardRef}
-              id="pharma-artboard"
-              className="label-shadow relative pharma-artboard border border-outline-variant/30 rounded-lg cursor-crosshair"
-              onMouseMove={e => {
-                const rect = artboardRef.current.getBoundingClientRect();
-                setArtboardCursor({
-                  x: (e.clientX - rect.left) / zoomLevel,
-                  y: (e.clientY - rect.top) / zoomLevel
-                });
+          <div className="flex flex-col items-center justify-start min-h-full min-w-max p-[100px]">
+            <div 
+              style={{ 
+                width: `${AW * zoomLevel}px`, 
+                height: `${AH * zoomLevel}px`, 
+                position: 'relative',
+                transition: 'width 0.1s ease, height 0.1s ease'
               }}
-              onMouseLeave={() => setArtboardCursor({ x: null, y: null })}
-              style={{
-                width: `${AW}px`,
-                height: `${AH}px`,
-                backgroundColor: meta.bgColor || '#ffffff',
-                transform: `scale(${zoomLevel})`,
-                transformOrigin: 'center top',
-                marginBottom: `${Math.max(0, (zoomLevel - 1) * AH)}px`,
-                overflow: 'visible',
-              }}
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.5, type: "spring", stiffness: 300, damping: 30 }}
+            >
+              <motion.div
+                ref={artboardRef}
+                id="pharma-artboard"
+                className="label-shadow relative pharma-artboard border border-outline-variant/30 rounded-lg cursor-crosshair"
+                onMouseMove={e => {
+                  const rect = artboardRef.current.getBoundingClientRect();
+                  setArtboardCursor({
+                    x: (e.clientX - rect.left) / zoomLevel,
+                    y: (e.clientY - rect.top) / zoomLevel
+                  });
+                }}
+                onMouseLeave={() => setArtboardCursor({ x: null, y: null })}
+                style={{
+                  width: `${AW}px`,
+                  height: `${AH}px`,
+                  backgroundColor: meta.bgColor || '#ffffff',
+                  transform: `scale(${zoomLevel})`,
+                  transformOrigin: 'top left',
+                  overflow: 'visible',
+                  position: 'absolute',
+                  top: 0,
+                  left: 0
+                }}
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.5, type: "spring", stiffness: 300, damping: 30 }}
               onClick={e => {
                 // If we click the artboard itself (not an element), deselect
                 if (e.target.id === 'pharma-artboard') {
@@ -1931,14 +1980,14 @@ export default function LabelEditor() {
                 className="absolute top-[-75px] right-0 flex items-center gap-3 pointer-events-none z-50 animate-fade-in"
                 style={{ transform: `scale(${1 / zoomLevel})`, transformOrigin: 'right bottom' }}
               >
-                <div className="flex items-center gap-2 px-3 py-1.5 glass bg-white/90 rounded-xl border border-primary/20 shadow-lg">
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-xl border border-slate-200 shadow-sm">
                   <span className="material-symbols-outlined text-[14px] text-primary">aspect_ratio</span>
                   <span className="text-[10px] font-black font-mono text-slate-800">
                     {fromPx(AW, meta.unit).toFixed(1)} × {fromPx(AH, meta.unit).toFixed(1)} {meta.unit}
                   </span>
                 </div>
                 {artboardCursor.x !== null && (
-                  <div className="flex items-center gap-2 px-3 py-1.5 glass bg-[var(--color-primary)] text-white rounded-xl shadow-lg shadow-[var(--color-primary)]/50/20 border border-blue-400/30">
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-[var(--color-primary)] text-white rounded-xl shadow-sm border border-blue-600">
                     <span className="material-symbols-outlined text-[14px]">near_me</span>
                     <span className="text-[10px] font-black font-mono">
                       {fromPx(artboardCursor.x, meta.unit).toFixed(1)}, {fromPx(artboardCursor.y, meta.unit).toFixed(1)} {meta.unit}
@@ -2120,6 +2169,7 @@ export default function LabelEditor() {
                     const top = Math.min(y1, y2);
 
                     if (width > 2 || height > 2) {
+                      const selectedShape = basicShapes.find(s => s.id === shapeDrawingTool);
                       if (shapeDrawingTool === 'line') {
                         const dist = Math.hypot(x2 - x1, y2 - y1);
                         const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
@@ -2136,15 +2186,14 @@ export default function LabelEditor() {
                           borderWidth: 0,
                           borderRadius: 0
                         });
-                      } else {
+                      } else if (selectedShape) {
                         addElement({
                           type: 'shape',
-                          shapeType: shapeDrawingTool,
+                          shapeType: selectedShape.payload.shapeType,
                           x: Math.round(left),
                           y: Math.round(top),
                           width: Math.round(width),
                           height: Math.round(height),
-                          bgColor: '#f1f5f9',
                           borderColor: '#94a3b8',
                           borderWidth: 2,
                           borderRadius: shapeDrawingTool === 'circle' ? 50 : 0
@@ -2193,6 +2242,7 @@ export default function LabelEditor() {
                   return (
                     <Rnd
                       key={el.id}
+                      scale={zoomLevel}
                       size={{ width: elW, height: elH }}
                       position={{ x: el.x, y: el.y }}
                       bounds={undefined}
@@ -2609,7 +2659,8 @@ export default function LabelEditor() {
                     </Rnd>
                   );
                 })}
-            </motion.div>
+              </motion.div>
+            </div>
           </div>
         </motion.section>
 
@@ -3542,7 +3593,47 @@ export default function LabelEditor() {
                     <p className="text-[11px] text-slate-500 mt-1.5 leading-tight">Configure global properties for the entire label surface</p>
                   </div>
 
-                  <div className="space-y-6">
+                    <div className="space-y-6">
+                      {/* Display Stock Information Card - AC 13.9, 13.3 */}
+                      {labelStocks?.filter(s => s.id === meta.labelStockId).filter(s => {
+                        const sId = s.stockId?.toLowerCase() || '';
+                        return ![
+                          'bottle', 'vial', 'blister', 'a5', 'a4',
+                          'tablet-std', 'syrup-std', 'injection-std', 'ointment-std', 'generic-std',
+                          'standard tablet', 'standard syrup', 'standard injection', 'standard ointment', 'standard generic'
+                        ].includes(sId);
+                      }).map(selectedStock => (
+                        <motion.div 
+                          key={selectedStock.id}
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-5 shadow-sm shadow-blue-100/50"
+                        >
+                          <label className="text-[11px] font-extrabold uppercase text-blue-700 mb-4 flex items-center gap-2">
+                            <span className="material-symbols-outlined text-[18px]">inventory_2</span>
+                            Linked Physical Stock
+                          </label>
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center border border-blue-100 text-blue-600 shadow-sm shrink-0">
+                              <span className="material-symbols-outlined text-[24px]">label</span>
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-[14px] font-black text-blue-900 truncate tracking-tight">
+                                {selectedStock.description || selectedStock.name || 'Matching Stock'}
+                              </p>
+                              <div className="flex items-center gap-1.5 mt-1">
+                                <span className="px-1.5 py-0.5 bg-blue-100 rounded text-[9px] font-bold text-blue-700 uppercase tracking-tighter">
+                                  {selectedStock.stockId}
+                                </span>
+                                <span className="text-[10px] font-bold text-blue-700/60 uppercase tracking-widest leading-none">
+                                  {selectedStock.length}x{selectedStock.breadth}mm
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))}
+
                     <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
                       <label className="text-[11px] font-extrabold uppercase text-slate-700 mb-4 flex items-center gap-2">
                         <span className="material-symbols-outlined text-[16px]">palette</span>
@@ -3589,6 +3680,21 @@ export default function LabelEditor() {
           )}
         </motion.aside>
       </motion.main>
+      {/* Hidden file inputs for upload actions */}
+      <input 
+        ref={fileInputRef} 
+        type="file" 
+        accept="image/*" 
+        className="hidden" 
+        onChange={handleImageUpload} 
+      />
+      <input 
+        ref={jsonInputRef} 
+        type="file" 
+        accept=".json" 
+        className="hidden" 
+        onChange={handleJSONOpen} 
+      />
     </div>
   );
 }

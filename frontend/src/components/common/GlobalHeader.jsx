@@ -26,7 +26,7 @@ export default function GlobalHeader({
       {/* ── Left Section: Identity & Contextual Menus ── */}
       <div className="flex items-center gap-6">
         <Link to="/" className="flex items-center gap-2 group">
-          <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center backdrop-blur-sm group-hover:bg-white/30 transition-all border border-white/10 shadow-inner">
+          <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-all border border-white/10 shadow-sm">
             <span className="material-symbols-outlined text-white text-[22px]" style={{ fontVariationSettings: "'FILL' 1" }}>medical_services</span>
           </div>
           <span className="text-[15px] font-black tracking-tight text-white uppercase translate-y-[1px] hidden lg:block">PharmaPrecise</span>
@@ -63,7 +63,7 @@ export default function GlobalHeader({
                   to={link.to}
                   className={`px-5 py-2 rounded-xl text-[13px] font-bold transition-all ${
                     isActive 
-                      ? 'bg-white/15 text-white shadow-inner border border-white/5' 
+                      ? 'bg-white/10 text-white border border-white/10' 
                       : 'text-white/60 hover:text-white hover:bg-white/5'
                   }`}
                 >

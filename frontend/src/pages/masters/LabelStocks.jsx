@@ -60,6 +60,18 @@ const LabelStocks = () => {
     }
   }, [fetchData]);
 
+  // Lock body scroll when modal is open to prevent clumsiness
+  useEffect(() => {
+    if (showModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, [showModal]);
+
   const [fieldErrors, setFieldErrors] = useState({});
 
   const handleInputChange = (e) => {
@@ -161,11 +173,22 @@ const LabelStocks = () => {
     }
   };
 
-  const filteredStocks = stocks.filter(s => 
-    (s.name && s.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-    (s.stockId && s.stockId.toLowerCase().includes(searchQuery.toLowerCase())) ||
-    (s.description && s.description.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  const filteredStocks = stocks.filter(s => {
+    const stockId = s.stockId?.toLowerCase() || '';
+    const isPredefined = [
+      'bottle', 'vial', 'blister', 'a5', 'a4',
+      'tablet-std', 'syrup-std', 'injection-std', 'ointment-std', 'generic-std',
+      'standard tablet', 'standard syrup', 'standard injection', 'standard ointment', 'standard generic'
+    ].includes(stockId);
+    
+    if (isPredefined) return false;
+    
+    return (
+      (s.name && s.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (stockId.includes(searchQuery.toLowerCase())) ||
+      (s.description && s.description.toLowerCase().includes(searchQuery.toLowerCase()))
+    );
+  });
 
   return (
     <AppLayout activePage="masters">
@@ -180,7 +203,7 @@ const LabelStocks = () => {
               <span className="material-symbols-outlined text-[28px] !text-white">inventory_2</span>
             </div>
             <div>
-              <p className="text-[var(--color-primary)] font-black text-[10px] uppercase tracking-[0.3em] mb-1 opacity-60">Physical Inventory Master</p>
+              <p className="text-[var(--color-primary)] font-black text-[10px] uppercase tracking-[0.3em] mb-1">Physical Inventory Master</p>
               <h1 className="text-3xl font-black text-[var(--color-primary-dark)] tracking-tighter">Label Stocks</h1>
             </div>
           </div>
@@ -191,7 +214,7 @@ const LabelStocks = () => {
         </motion.div>
 
         <motion.div 
-          className="um-filter-bar bg-white/40 backdrop-blur-md p-4 rounded-2xl border border-[var(--color-primary-dark)]/5"
+          className="um-filter-bar bg-white p-4 rounded-2xl border border-slate-200 shadow-sm"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
@@ -232,7 +255,7 @@ const LabelStocks = () => {
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: idx * 0.03 + 0.3 }}
-                      className={`um-row ${isLowStock ? 'bg-[var(--color-error)]/5' : ''} ${isPredefined ? 'bg-[var(--color-primary-light)]/20' : ''}`}
+                      className={`um-row ${isLowStock ? 'bg-red-50' : ''}`}
                     >
                       <td>
                         <div className="flex flex-col">
@@ -242,8 +265,8 @@ const LabelStocks = () => {
                               <span className="bg-[var(--color-primary-dark)] text-white text-[8px] font-black uppercase px-2 py-0.5 rounded-full tracking-widest">SYSTEM SPEC</span>
                             )}
                           </div>
-                          <span className="text-[10px] text-[var(--color-primary)] font-black tracking-widest uppercase opacity-60 mt-0.5">{stock.stockId}</span>
-                          <p className="text-[var(--color-primary-dark)]/50 text-[11px] mt-2 font-bold line-clamp-1 italic">
+                          <span className="text-[10px] text-slate-500 font-black tracking-widest uppercase mt-0.5">{stock.stockId}</span>
+                          <p className="text-slate-500 text-[11px] mt-2 font-bold line-clamp-1 italic">
                             {stock.description || 'No material specifications provided.'}
                           </p>
                         </div>
@@ -264,7 +287,7 @@ const LabelStocks = () => {
                       <td>
                         <div className="flex flex-col gap-2">
                           <div className="flex items-center gap-3">
-                             <div className={`px-3 py-1 rounded-lg text-[12px] font-black tracking-tight ${isLowStock ? 'bg-[var(--color-error)] text-white shadow-lg shadow-[var(--color-error)]/20' : 'bg-[var(--color-success)]/10 text-[var(--color-success)]'}`}>
+                             <div className={`px-3 py-1 rounded-lg text-[12px] font-black tracking-tight ${isLowStock ? 'bg-red-600 text-white shadow-lg shadow-red-200' : 'bg-slate-100 text-slate-700 border border-slate-200'}`}>
                                {stock.quantityOnHand} {stock.unitOfMeasure}
                              </div>
                              {isLowStock && (
@@ -328,11 +351,11 @@ const LabelStocks = () => {
                       <span className="material-symbols-outlined text-[32px]">{isEditing ? 'inventory' : 'add_to_photos'}</span>
                    </div>
                    <div>
-                     <p className="text-[var(--color-primary)] font-black text-[11px] uppercase tracking-[0.4em] mb-1 opacity-60">Inventory Specification Master</p>
+                      <p className="text-[var(--color-primary)] font-black text-[11px] uppercase tracking-[0.4em] mb-1">Inventory Specification Master</p>
                      <h2 className="text-3xl font-black text-[var(--color-primary-dark)] tracking-tighter">{isEditing ? 'Refine Stock Configuration' : 'Initialize Physical Asset'}</h2>
                    </div>
                 </div>
-                <button className="w-12 h-12 rounded-2xl flex items-center justify-center text-[var(--color-primary-dark)]/30 hover:bg-[var(--color-primary-dark)]/5 hover:text-[var(--color-primary-dark)] transition-all" onClick={closeModal}>
+                <button className="w-12 h-12 rounded-2xl flex items-center justify-center text-slate-500 hover:bg-slate-200 hover:text-slate-900 transition-all" onClick={closeModal}>
                   <span className="material-symbols-outlined">close</span>
                 </button>
               </div>
@@ -429,7 +452,7 @@ const LabelStocks = () => {
                 </div>
               </div>
               <div className="modal-actions !p-10 !bg-transparent !border-none">
-                <button type="button" className="h-16 px-8 rounded-2xl font-black uppercase tracking-widest text-[11px] text-[var(--color-primary-dark)]/40 hover:bg-[var(--color-primary-dark)]/5 transition-all" onClick={closeModal}>Discard Transaction</button>
+                <button type="button" className="h-16 px-8 rounded-2xl font-black uppercase tracking-widest text-[11px] text-slate-500 hover:bg-[var(--color-primary-dark)]/5 transition-all" onClick={closeModal}>Discard Transaction</button>
                 <button 
                   type="submit" 
                   className="h-16 px-10 bg-[var(--color-primary-dark)] hover:bg-[var(--color-primary)] text-white rounded-[24px] shadow-2xl shadow-[var(--color-primary-dark)]/20 flex items-center justify-center gap-4 transition-all font-black uppercase tracking-[0.2em] text-[12px] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none group"

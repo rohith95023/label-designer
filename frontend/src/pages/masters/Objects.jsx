@@ -207,7 +207,7 @@ const Objects = () => {
   });
 
   return (
-    <AppLayout activePage="masters">
+    <AppLayout activePage="visual-assets">
       <div className="p-8 max-w-7xl mx-auto h-full flex flex-col gap-6 animate-fade-in font-inter">
         
         {/* Clinical Header */}

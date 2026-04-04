@@ -164,11 +164,11 @@ export default function SavedTemplates() {
               <table className="w-full text-left border-collapse">
                 <thead className="bg-[var(--color-primary-dark)]">
                   <tr>
-                    <th className="px-8 py-5 text-[10px] font-black text-white/50 uppercase tracking-[0.2em]">Clinical Asset Name</th>
-                    {isAdmin && <th className="px-8 py-5 text-[10px] font-black text-white/50 uppercase tracking-[0.2em]">Custodian</th>}
-                    <th className="px-8 py-5 text-[10px] font-black text-white/50 uppercase tracking-[0.2em]">Label Dimensions</th>
-                    <th className="px-8 py-5 text-[10px] font-black text-white/50 uppercase tracking-[0.2em]">Modified Integrity</th>
-                    <th className="px-8 py-5 text-[10px] font-black text-white/50 uppercase tracking-[0.2em] text-right">Deployment</th>
+                    <th className="px-8 py-5 text-[10px] font-black text-white uppercase tracking-[0.2em]">Clinical Asset Name</th>
+                    {isAdmin && <th className="px-8 py-5 text-[10px] font-black text-white uppercase tracking-[0.2em]">Custodian</th>}
+                    <th className="px-8 py-5 text-[10px] font-black text-white uppercase tracking-[0.2em]">Label Dimensions</th>
+                    <th className="px-8 py-5 text-[10px] font-black text-white uppercase tracking-[0.2em]">Modified Integrity</th>
+                    <th className="px-8 py-5 text-[10px] font-black text-white uppercase tracking-[0.2em] text-right">Deployment</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[var(--color-secondary)]/5">
@@ -188,8 +188,8 @@ export default function SavedTemplates() {
                           <div>
                             <p className="text-[14px] font-black text-[var(--color-primary-dark)] group-hover:text-[var(--color-primary)] transition-colors mb-0.5">{file.name}</p>
                             <div className="flex items-center gap-2">
-                              <span className="px-1.5 py-0.5 bg-[var(--color-secondary)]/5 text-[9px] font-black uppercase text-[var(--color-on-surface-variant)]/60 rounded">PHMA-{file.id.slice(0, 4)}</span>
-                              <span className="text-[9px] font-bold text-[var(--color-on-surface-variant)]/40 uppercase tracking-tighter">v{file.id.length % 5}.0</span>
+                              <span className="px-1.5 py-0.5 bg-[var(--color-secondary)]/10 text-[9px] font-black uppercase text-slate-600 rounded">PHMA-{file.id.slice(0, 4)}</span>
+                              <span className="text-[9px] font-bold text-slate-500 uppercase tracking-tighter">v{file.id.length % 5}.0</span>
                             </div>
                           </div>
                         </div>
@@ -200,21 +200,21 @@ export default function SavedTemplates() {
                             <div className="w-8 h-8 rounded-full bg-[var(--color-secondary)]/5 flex items-center justify-center text-[var(--color-primary-dark)] text-xs font-black">
                               {(file.createdByUsername || 'G')[0].toUpperCase()}
                             </div>
-                            <span className="text-xs font-black text-[var(--color-primary-dark)] opacity-70">
+                            <span className="text-xs font-black text-slate-700">
                               {file.createdByUsername || 'Guest Account'}
                             </span>
                           </div>
                         </td>
                       )}
                       <td className="px-8 py-6">
-                        <span className="text-xs font-black text-[var(--color-primary-dark)] opacity-70">
+                        <span className="text-xs font-black text-slate-700">
                           {file.latestVersionDesign?.labelSize ? `${file.latestVersionDesign.labelSize.w} \u00D7 ${file.latestVersionDesign.labelSize.h} px` : 'Custom Adaptive'}
                         </span>
                       </td>
                       <td className="px-8 py-6">
                         <div className="flex flex-col">
-                          <p className="text-[12px] font-black text-[var(--color-primary-dark)] opacity-70">{formatDate(file.updatedAt).split(',')[0]}</p>
-                          <p className="text-[10px] font-bold text-[var(--color-on-surface-variant)] opacity-40 uppercase">{formatDate(file.updatedAt).split(',')[1]}</p>
+                          <p className="text-[12px] font-black text-slate-800">{formatDate(file.updatedAt).split(',')[0]}</p>
+                          <p className="text-[10px] font-bold text-slate-500 uppercase">{formatDate(file.updatedAt).split(',')[1]}</p>
                         </div>
                       </td>
                       <td className="px-8 py-6 text-right">

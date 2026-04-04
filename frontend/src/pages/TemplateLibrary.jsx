@@ -53,7 +53,7 @@ export default function TemplateLibrary() {
       <input
         value={searchQuery}
         onChange={e => setSearchQuery(e.target.value)}
-        className="w-full bg-white/80 hover:bg-white/90 focus:bg-white backdrop-blur-sm pl-11 pr-10 py-2 rounded-xl text-[12px] font-bold text-[var(--color-primary-dark)] placeholder:text-[var(--color-primary-dark)] placeholder:opacity-50 border border-white focus:border-[var(--color-primary-dark)]/20 focus:ring-4 focus:ring-[var(--color-primary-dark)]/10 transition-all outline-none shadow-[0_2px_10px_rgba(0,0,0,0.03)]"
+        className="w-full bg-slate-50 hover:bg-slate-100 focus:bg-white pl-11 pr-10 py-2 rounded-xl text-[12px] font-bold text-[var(--color-primary-dark)] placeholder:text-[var(--color-primary-dark)] placeholder:opacity-50 border border-slate-200 focus:border-[var(--color-primary)] transition-all outline-none shadow-sm"
         placeholder="Search clinical assets, templates, or files..."
         type="text"
       />
@@ -111,8 +111,7 @@ export default function TemplateLibrary() {
 
         {/* Filters */}
         <motion.div 
-          className="sticky top-0 z-10 py-3 -mx-6 px-6 mb-8 border-b border-[var(--color-secondary)]/5 shadow-sm bg-[var(--color-background)]/80" 
-          style={{ backdropFilter: 'blur(24px)' }}
+          className="sticky top-0 z-10 py-3 -mx-6 px-6 mb-8 border-b border-slate-200 shadow-sm bg-white" 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
@@ -125,7 +124,7 @@ export default function TemplateLibrary() {
                 className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-black uppercase tracking-widest whitespace-nowrap transition-all duration-300 ${
                   activeCategory === cat
                     ? 'bg-[var(--color-primary-dark)] text-white shadow-xl shadow-black/10 scale-105'
-                    : 'bg-white/40 text-[var(--color-on-surface-variant)]/60 hover:bg-white hover:text-[var(--color-primary-dark)] border border-[var(--color-secondary)]/10'
+                    : 'bg-white text-[var(--color-on-surface-variant)] hover:bg-slate-50 hover:text-[var(--color-primary-dark)] border border-slate-200 shadow-sm'
                 }`}
               >
                 <span className="material-symbols-outlined text-[16px]"
@@ -135,11 +134,11 @@ export default function TemplateLibrary() {
                 {cat === 'All' ? 'All Templates' : cat}
               </button>
             ))}
-            <div className="h-6 w-px bg-[var(--color-secondary)]/10 mx-2" />
+            <div className="h-6 w-px bg-slate-200 mx-2" />
             <select
               value={activeSize}
               onChange={e => setActiveSize(e.target.value)}
-              className="bg-white/40 border border-[var(--color-secondary)]/10 rounded-full px-5 py-2.5 text-xs font-black uppercase tracking-widest text-[var(--color-on-surface-variant)]/60 focus:bg-white focus:text-[var(--color-primary-dark)] outline-none transition-all cursor-pointer"
+              className="bg-white border border-slate-200 shadow-sm rounded-full px-5 py-2.5 text-xs font-black uppercase tracking-widest text-[var(--color-on-surface-variant)] focus:bg-slate-50 focus:text-[var(--color-primary-dark)] outline-none transition-all cursor-pointer"
             >
               {SIZES.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
@@ -148,9 +147,9 @@ export default function TemplateLibrary() {
 
         {/* Empty state */}
         {filteredTemplates.length === 0 && (
-          <div className="glass-card rounded-2xl py-24 flex flex-col items-center gap-4 text-center animate-scale-in">
-            <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-primary/10 to-tertiary/10 flex items-center justify-center">
-              <span className="material-symbols-outlined text-primary/40 text-3xl">search_off</span>
+          <div className="bg-white border border-slate-200 shadow-sm rounded-2xl py-24 flex flex-col items-center gap-4 text-center animate-scale-in">
+            <div className="w-16 h-16 rounded-3xl bg-slate-50 border border-slate-100 flex items-center justify-center">
+              <span className="material-symbols-outlined text-slate-300 text-3xl">search_off</span>
             </div>
             <div>
               <p className="font-bold text-on-surface mb-1">No templates found</p>
@@ -189,7 +188,7 @@ export default function TemplateLibrary() {
                       }}
                     />
                     {/* Compliant badge */}
-                    <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md rounded-full px-3 py-1.5 flex items-center gap-1.5 shadow-sm border border-black/5">
+                    <div className="absolute top-4 right-4 bg-white rounded-full px-3 py-1.5 flex items-center gap-1.5 shadow-sm border border-slate-200">
                       <span className="material-symbols-outlined text-[var(--color-primary)] text-[14px]"
                         style={{ fontVariationSettings: "'FILL' 1" }}>
                         verified
@@ -212,14 +211,14 @@ export default function TemplateLibrary() {
                   <div className="p-6 flex flex-col flex-1">
                     <div className="flex items-center justify-between mb-3">
                       <span className="px-3 py-1 bg-[var(--color-primary)]/10 text-[var(--color-primary)] text-[9px] font-black uppercase tracking-widest rounded-full">{template.category}</span>
-                      <span className="text-[10px] text-[var(--color-on-surface-variant)] font-bold opacity-40">v2.4.0</span>
+                      <span className="text-[10px] text-slate-500 font-bold">v2.4.0</span>
                     </div>
                     <h3 className="text-lg font-black text-[var(--color-primary-dark)] tracking-tight mb-1 group-hover:text-[var(--color-primary)] transition-colors line-clamp-1">{template.name}</h3>
                     <p className="text-xs text-[var(--color-on-surface-variant)] font-medium mb-6">{template.brand}</p>
                     
                     <div className="mt-auto pt-5 flex items-center justify-between border-t border-[var(--color-secondary)]/5">
                       <div>
-                        <p className="text-[9px] text-[var(--color-on-surface-variant)] uppercase font-black tracking-widest opacity-40 mb-1">Dimensions</p>
+                        <p className="text-[9px] text-slate-500 uppercase font-black tracking-widest mb-1">Dimensions</p>
                         <p className="text-[12px] font-black text-[var(--color-primary-dark)]">{template.size}</p>
                       </div>
                       <button
@@ -238,7 +237,7 @@ export default function TemplateLibrary() {
 
         {/* List view */}
         {viewMode === 'list' && filteredTemplates.length > 0 && (
-          <div className="glass-card rounded-2xl overflow-hidden">
+          <div className="bg-white border border-slate-200 shadow-sm rounded-2xl overflow-hidden">
             {filteredTemplates.map((template, idx) => (
               <div
                 key={template.id}

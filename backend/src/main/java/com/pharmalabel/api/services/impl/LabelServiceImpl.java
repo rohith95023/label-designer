@@ -4,6 +4,7 @@ import com.pharmalabel.api.models.Label;
 import com.pharmalabel.api.models.LabelVersion;
 import com.pharmalabel.api.models.User;
 import com.pharmalabel.api.repositories.LabelRepository;
+import com.pharmalabel.api.repositories.LabelStockRepository;
 import com.pharmalabel.api.repositories.LabelVersionRepository;
 import com.pharmalabel.api.services.LabelService;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,7 @@ public class LabelServiceImpl implements LabelService {
 
     private final LabelRepository labelRepository;
     private final LabelVersionRepository labelVersionRepository;
+    private final LabelStockRepository labelStockRepository;
 
     @Override
     @Transactional
@@ -48,12 +50,23 @@ public class LabelServiceImpl implements LabelService {
 
     @Override
     @Transactional
-    public synchronized LabelVersion saveNewVersion(UUID labelId, Object designJson, String notes, User user) {
+    public synchronized LabelVersion saveNewVersion(UUID labelId, Object designJson, String notes, UUID labelStockId, User user) {
         Label label = labelRepository.findById(labelId)
                 .orElseThrow(() -> new RuntimeException("Label not found with id: " + labelId));
 
+        boolean labelUpdated = false;
+
         if (notes != null) {
             label.setNotes(notes);
+            labelUpdated = true;
+        }
+
+        if (labelStockId != null && (label.getLabelStock() == null || !label.getLabelStock().getId().equals(labelStockId))) {
+            labelStockRepository.findById(labelStockId).ifPresent(label::setLabelStock);
+            labelUpdated = true;
+        }
+
+        if (labelUpdated) {
             labelRepository.save(label);
         }
 

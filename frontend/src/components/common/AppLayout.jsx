@@ -56,10 +56,10 @@ export default function AppLayout({ children, activePage = '', searchBar = null 
   const filteredNavItems = NAV_ITEMS.filter(hasPermission);
 
   return (
-    <div className={`bg-[var(--color-background)] text-[var(--color-on-surface)] min-h-screen ${direction === 'rtl' ? 'rtl-mode' : ''}`} dir={direction}>
+    <div className={`bg-[var(--color-background)] text-[var(--color-on-surface)] h-screen flex flex-col ${direction === 'rtl' ? 'rtl-mode' : ''}`} dir={direction}>
       {/* Logout Animation Overlay */}
       {logoutLoading && (
-        <div className="fixed inset-0 z-[10000] flex flex-col items-center justify-center bg-[var(--color-primary-dark)]/90 backdrop-blur-2xl animate-in fade-in duration-500">
+        <div className="fixed inset-0 z-[10000] flex flex-col items-center justify-center bg-[var(--color-primary-dark)] animate-in fade-in duration-500">
           <div className="relative flex flex-col items-center text-white">
             <div className="w-24 h-24 mb-8 relative">
               <div className="absolute inset-0 rounded-full border-4 border-white/10"></div>
@@ -100,7 +100,7 @@ export default function AppLayout({ children, activePage = '', searchBar = null 
       
       <GlobalSecondaryToolbar>
         {/* Left: Section Identity / Breadcrumbs */}
-        <div className="flex items-center gap-2 px-3 py-1 bg-white/20 rounded-xl border border-white/40 shadow-sm backdrop-blur-sm">
+        <div className="flex items-center gap-2 px-3 py-1 bg-white rounded-xl border border-slate-200 shadow-sm">
           <span className="material-symbols-outlined text-[18px] text-[var(--color-primary-dark)]/60">
             {NAV_ITEMS.find(n => n.key === activePage)?.icon || 'explore'}
           </span>
@@ -123,7 +123,7 @@ export default function AppLayout({ children, activePage = '', searchBar = null 
         {/* Right: Page Actions Slot */}
         <div className="flex items-center gap-2">
           <button 
-            className="h-8 px-4 bg-white/40 border border-white/60 rounded-xl text-[10px] font-black uppercase tracking-widest text-[var(--color-primary-dark)] hover:bg-white/60 transition-all shadow-sm"
+            className="h-8 px-4 bg-white/20 border border-white/30 rounded-xl text-[10px] font-black uppercase tracking-widest text-white hover:bg-white/30 transition-all shadow-sm"
           >
             Refresh
           </button>
@@ -131,7 +131,7 @@ export default function AppLayout({ children, activePage = '', searchBar = null 
       </GlobalSecondaryToolbar>
 
       {/* ── Body ───────────────────────────────────────────────────────── */}
-      <div className="flex pt-16 h-screen overflow-hidden">
+      <div className="flex flex-1 overflow-hidden min-h-0 min-w-0">
 
         {/* ── Sidebar ──────────────────────────────────────────────────── */}
         <aside
@@ -139,7 +139,7 @@ export default function AppLayout({ children, activePage = '', searchBar = null 
             }`}
         >
           {/* Logo area inside sidebar */}
-          <div className={`flex items-center h-16 border-b border-[var(--color-secondary)]/5 px-4 shrink-0 ${collapsed ? 'justify-center' : 'gap-3'}`}>
+          <div className={`flex items-center h-16 border-b border-slate-100 bg-white px-4 shrink-0 ${collapsed ? 'justify-center' : 'gap-3'}`}>
             <div className="w-7 h-7 rounded-lg bg-[var(--color-primary-dark)] flex items-center justify-center shrink-0">
               <span className="material-symbols-outlined text-white text-base"
                 style={{ fontVariationSettings: "'FILL' 1, 'wght' 700" }}>
@@ -192,7 +192,7 @@ export default function AppLayout({ children, activePage = '', searchBar = null 
                     {item.icon}
                   </span>
                   <span className="truncate">{item.label}</span>
-                  {isActive && (
+                  {!collapsed && isActive && (
                     <span className="ml-auto w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
                   )}
                 </Link>

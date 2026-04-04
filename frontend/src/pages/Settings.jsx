@@ -42,7 +42,8 @@ function Toggle({ label, desc, value, onChange }) {
 }
 
 export default function Settings() {
-  const [profileName, setProfileName] = useState(settings.profileName || 'Pharma Designer');
+  const { settings, updateSettings, userFiles } = useLabel();
+  const [profileName, setProfileName] = useState(settings?.profileName || 'Pharma Designer');
   const [confirmClear, setConfirmClear] = useState(false);
   const [saved, setSaved] = useState(false);
   const [languages, setLanguages] = useState([]);
@@ -80,7 +81,7 @@ export default function Settings() {
   };
 
   const handleExportAll = () => {
-    const allFiles = getAllFiles();
+    const allFiles = userFiles || [];
     const fullData = {};
     allFiles.forEach(f => {
       fullData[f.id] = {
