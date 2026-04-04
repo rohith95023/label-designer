@@ -12,14 +12,13 @@ export default function Ruler({
   unit = UNITS.MM,
   cursorPos = null, 
   selection = null,
-  isDark = false,
   onAddGuide
 }) {
   const isHorizontal = orientation === 'horizontal';
-  const strokeColor = isDark ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.3)';
-  const textColor = isDark ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)';
-  const highlightColor = isDark ? 'rgba(37, 99, 235, 0.5)' : 'rgba(37, 99, 235, 0.25)';
-  const cursorColor = isDark ? '#60a5fa' : '#2563eb';
+  const strokeColor = 'rgba(0, 0, 0, 0.3)';
+  const textColor = 'rgba(0, 0, 0, 0.6)';
+  const highlightColor = 'rgba(37, 99, 235, 0.25)';
+  const cursorColor = '#2563eb';
 
   const pxFactor = PX_PER_UNIT[unit] || 1;
   const { major, medium, minor } = getTickIntervals(unit);
@@ -68,7 +67,7 @@ export default function Ruler({
           pointerEvents: 'auto',
           cursor: 'crosshair',
           userSelect: 'none',
-          backgroundColor: isDark ? 'rgba(15, 23, 42, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+          backgroundColor: 'rgba(255, 255, 255, 0.95)',
           backdropFilter: 'blur(8px)',
           borderTopLeftRadius: '4px',
           borderTopRightRadius: isHorizontal ? '4px' : '0px',

@@ -8,16 +8,15 @@ import { motion, AnimatePresence } from 'framer-motion';
 export default function SmartGuides({ 
   activeGuides = [], 
   zoomLevel = 1, 
-  isDark = false,
   canvasWidth,
   canvasHeight,
   onRemoveManualCenter
 }) {
   if (!activeGuides || activeGuides.length === 0) return null;
 
-  const guideColor = isDark ? '#a78bfa' : '#6366f1'; // Purple/Blue glow
-  const labelBg = isDark ? 'rgba(30, 41, 59, 0.8)' : 'rgba(255, 255, 255, 0.8)';
-  const labelTextColor = isDark ? '#e2e8f0' : '#1e293b';
+  const guideColor = '#6366f1'; // Blue glow
+  const labelBg = 'rgba(255, 255, 255, 0.8)';
+  const labelTextColor = '#1e293b';
 
   return (
     <div className="absolute inset-0 pointer-events-none z-[80] overflow-visible">

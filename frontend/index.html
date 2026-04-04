@@ -7,22 +7,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Pharma Label Design</title>
   
-  <script>
-    // Critical: Initialize theme and background immediately
-    (function () {
-      const theme = localStorage.getItem('pharma-theme') || 'light';
-      document.documentElement.classList.toggle('dark', theme === 'dark');
-      document.documentElement.style.backgroundColor = theme === 'dark' ? '#0d1117' : '#ffffff';
-    })();
-  </script>
-
   <style>
     /* Absolute Zero-Latency Loader Styles */
     #static-loader-overlay {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       z-index: 100000; transition: opacity 0.4s ease, visibility 0.4s ease;
-      background-color: inherit;
+      background-color: #ffffff;
     }
     .loader-icon-box {
       width: 72px; height: 72px;
@@ -36,7 +27,6 @@
       font-size: 20px; font-weight: 900; letter-spacing: -0.5px; margin-bottom: 12px;
       color: #1a1d2e;
     }
-    .dark .loader-title { color: #e4eaf5; }
     .loader-line-container {
       width: 120px; height: 3px; background: rgba(37,99,235,0.1); border-radius: 8px; overflow: hidden;
     }
@@ -65,7 +55,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet" />
 </head>
 
-<body class="bg-gray-50 text-slate-800 dark:bg-slate-900 dark:text-slate-200 antialiased">
+<body class="bg-gray-50 text-slate-800 antialiased">
   
   <!-- Zero-latency static loader (OUTSIDE root) -->
   <div id="static-loader-overlay">

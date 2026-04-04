@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { useTheme } from '../../context/ThemeContext';
-
 import { useLabel } from '../../context/LabelContext';
 
 const NAV_ITEMS = [
@@ -23,7 +21,6 @@ const NAV_ITEMS = [
 ];
 
 export default function AppLayout({ children, activePage = '', searchBar = null }) {
-  const { theme, toggleTheme } = useTheme();
   const { user, logout, logoutLoading } = useAuth();
   const { settings } = useLabel();
   const navigate = useNavigate();
@@ -59,7 +56,7 @@ export default function AppLayout({ children, activePage = '', searchBar = null 
     <div className={`bg-mesh text-on-surface min-h-screen ${direction === 'rtl' ? 'rtl-mode' : ''}`} dir={direction}>
       {/* Logout Animation Overlay */}
       {logoutLoading && (
-        <div className="fixed inset-0 z-[10000] flex flex-col items-center justify-center bg-mesh/80 dark:bg-[#0D1117]/90 backdrop-blur-2xl animate-in fade-in duration-500">
+        <div className="fixed inset-0 z-[10000] flex flex-col items-center justify-center bg-mesh/80 backdrop-blur-2xl animate-in fade-in duration-500">
           <div className="relative flex flex-col items-center">
             <div className="w-24 h-24 mb-8 relative">
               <div className="absolute inset-0 rounded-full border-4 border-primary/10"></div>
@@ -113,14 +110,14 @@ export default function AppLayout({ children, activePage = '', searchBar = null 
           </button>
         </div>
 
-        <div className="hidden md:flex flex-1 items-center justify-center gap-1 bg-surface-container-low/60 dark:bg-slate-900/40 backdrop-blur-md px-1.5 py-1.5 border border-outline-variant/10 rounded-full max-w-xl mx-auto">
+        <div className="hidden md:flex flex-1 items-center justify-center gap-1 bg-surface-container-low/60 backdrop-blur-md px-1.5 py-1.5 border border-outline-variant/10 rounded-full max-w-xl mx-auto">
           {filteredNavItems.filter(n => ['dashboard', 'assets', 'editor', 'translation'].includes(n.key)).map(item => (
             <Link
               key={item.key}
               to={item.to}
               className={`px-4 py-1.5 rounded-full text-[13px] font-semibold tracking-tight transition-all duration-200 ${activePage === item.key
                   ? 'bg-primary text-on-primary shadow-glow-sm'
-                  : 'text-slate-600 hover:text-slate-900 dark:text-blue-100 hover:bg-slate-100 dark:hover:bg-white/10 dark:hover:text-white'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                 }`}
             >
               {item.label}
@@ -135,25 +132,12 @@ export default function AppLayout({ children, activePage = '', searchBar = null 
               {searchBar}
             </div>
           )}
-          
-          <button
-            onClick={toggleTheme}
-            title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
-            className="p-2 rounded-xl text-slate-500 dark:text-white/60 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-all active:scale-90 group"
-          >
-            <span
-              className="material-symbols-outlined text-xl transition-transform duration-300 group-hover:rotate-12"
-              style={{ fontVariationSettings: theme === 'dark' ? "'FILL' 1" : "'FILL' 0" }}
-            >
-              {theme === 'dark' ? 'light_mode' : 'dark_mode'}
-            </span>
-          </button>
 
           {/* User Profile Dropdown */}
           <div className="relative">
             <button 
               onClick={() => setUserMenuOpen(!userMenuOpen)}
-              className="flex items-center gap-2 p-1 pl-3 rounded-full hover:bg-surface-container dark:hover:bg-white/10 transition-all"
+              className="flex items-center gap-2 p-1 pl-3 rounded-full hover:bg-surface-container transition-all"
             >
               <div className="flex flex-col items-end text-right hidden sm:flex">
                 <span className="text-[12px] font-bold leading-none">{user?.username}</span>
@@ -172,14 +156,14 @@ export default function AppLayout({ children, activePage = '', searchBar = null 
                 </div>
                 <button 
                   onClick={() => navigate('/settings')}
-                  className="w-full flex items-center gap-3 px-3 py-2 text-[13px] font-medium hover:bg-surface-container dark:hover:bg-white/10 rounded-xl transition-colors"
+                  className="w-full flex items-center gap-3 px-3 py-2 text-[13px] font-medium hover:bg-surface-container rounded-xl transition-colors"
                 >
                   <span className="material-symbols-outlined text-lg">account_circle</span>
                   Security Profile
                 </button>
                 <button 
                   onClick={logout}
-                  className="w-full flex items-center gap-3 px-3 py-2 text-[13px] font-medium text-error hover:bg-error/10 dark:hover:bg-error/20 rounded-xl transition-colors"
+                  className="w-full flex items-center gap-3 px-3 py-2 text-[13px] font-medium text-error hover:bg-error/10 rounded-xl transition-colors"
                 >
                   <span className="material-symbols-outlined text-lg">logout</span>
                   Logout
@@ -195,11 +179,11 @@ export default function AppLayout({ children, activePage = '', searchBar = null 
 
         {/* ── Sidebar ──────────────────────────────────────────────────── */}
         <aside
-          className={`hidden lg:flex flex-col h-full bg-white dark:bg-[#0F1420] border-r border-outline-variant/30 dark:border-white/5 shrink-0 overflow-hidden transition-all duration-350 ease-out-expo ${collapsed ? 'w-[68px]' : 'w-64'
+          className={`hidden lg:flex flex-col h-full bg-white border-r border-outline-variant/30 shrink-0 overflow-hidden transition-all duration-350 ease-out-expo ${collapsed ? 'w-[68px]' : 'w-64'
             }`}
         >
           {/* Logo area inside sidebar */}
-          <div className={`flex items-center h-16 border-b border-outline-variant/20 dark:border-white/5 px-4 shrink-0 ${collapsed ? 'justify-center' : 'gap-3'}`}>
+          <div className={`flex items-center h-16 border-b border-outline-variant/20 px-4 shrink-0 ${collapsed ? 'justify-center' : 'gap-3'}`}>
             <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary to-tertiary flex items-center justify-center shrink-0">
               <span className="material-symbols-outlined text-white text-base"
                 style={{ fontVariationSettings: "'FILL' 1, 'wght' 700" }}>

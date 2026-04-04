@@ -15,17 +15,17 @@ function timeAgo(ts) {
 }
 
 const LOG_STYLE_MAP = {
-  'Created new label':    { icon: 'add_circle',     grad: 'from-blue-500 to-blue-700',    bg: 'bg-blue-50 dark:bg-blue-950/40',    text: 'text-blue-600' },
-  'Opened file':          { icon: 'folder_open',     grad: 'from-violet-500 to-purple-700', bg: 'bg-violet-50 dark:bg-violet-950/40', text: 'text-violet-600' },
-  'Added new element':    { icon: 'add_box',         grad: 'from-emerald-500 to-teal-700', bg: 'bg-emerald-50 dark:bg-emerald-950/40', text: 'text-emerald-600' },
-  'Deleted element':      { icon: 'delete',          grad: 'from-red-500 to-red-700',      bg: 'bg-red-50 dark:bg-red-950/40',      text: 'text-red-500' },
-  'Exported JSON':        { icon: 'download',        grad: 'from-orange-500 to-amber-600', bg: 'bg-orange-50 dark:bg-orange-950/40', text: 'text-orange-500' },
-  'Duplicated file as':   { icon: 'file_copy',       grad: 'from-teal-500 to-cyan-600',   bg: 'bg-teal-50 dark:bg-teal-950/40',    text: 'text-teal-500' },
-  'Started from template':{ icon: 'auto_awesome',    grad: 'from-yellow-400 to-amber-500', bg: 'bg-yellow-50 dark:bg-yellow-950/40', text: 'text-yellow-600' },
+  'Created new label':    { icon: 'add_circle',     grad: 'from-blue-500 to-blue-700',    bg: 'bg-blue-50',    text: 'text-blue-600' },
+  'Opened file':          { icon: 'folder_open',     grad: 'from-violet-500 to-purple-700', bg: 'bg-violet-50', text: 'text-violet-600' },
+  'Added new element':    { icon: 'add_box',         grad: 'from-emerald-500 to-teal-700', bg: 'bg-emerald-50', text: 'text-emerald-600' },
+  'Deleted element':      { icon: 'delete',          grad: 'from-red-500 to-red-700',      bg: 'bg-red-50',      text: 'text-red-500' },
+  'Exported JSON':        { icon: 'download',        grad: 'from-orange-500 to-amber-600', bg: 'bg-orange-50', text: 'text-orange-500' },
+  'Duplicated file as':   { icon: 'file_copy',       grad: 'from-teal-500 to-cyan-600',   bg: 'bg-teal-50',    text: 'text-teal-500' },
+  'Started from template':{ icon: 'auto_awesome',    grad: 'from-yellow-400 to-amber-500', bg: 'bg-yellow-50', text: 'text-yellow-600' },
 };
 const getLogStyle = (action) => {
   const key = Object.keys(LOG_STYLE_MAP).find(k => action.startsWith(k));
-  return key ? LOG_STYLE_MAP[key] : { icon: 'info', grad: 'from-slate-400 to-slate-600', bg: 'bg-slate-100 dark:bg-slate-800', text: 'text-slate-500' };
+  return key ? LOG_STYLE_MAP[key] : { icon: 'info', grad: 'from-slate-400 to-slate-600', bg: 'bg-slate-100', text: 'text-slate-500' };
 };
 
 const TABS = [
@@ -125,7 +125,7 @@ export default function History() {
                       <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 relative z-10 ${
                         selectedFile?.id === file.id
                           ? 'bg-primary/10'
-                          : 'bg-surface-container-low dark:bg-slate-800'
+                          : 'bg-surface-container-low'
                       }`}>
                         <span className="material-symbols-outlined text-base text-primary"
                           style={{ fontVariationSettings: "'FILL' 1" }}>
@@ -145,7 +145,7 @@ export default function History() {
                             const data = await getTemplateById(file.id);
                             if (data) setPreviewData({ elements: data.elementsData, meta: { labelSize: data.labelSize, fileName: data.name }, title: data.name });
                           }}
-                          className="w-8 h-8 rounded-lg flex items-center justify-center bg-white dark:bg-slate-800 text-slate-500 hover:text-blue-600 transition-all shadow-sm border border-slate-100 dark:border-white/10 hover:scale-110"
+                          className="w-8 h-8 rounded-lg flex items-center justify-center bg-white text-slate-500 hover:text-blue-600 transition-all shadow-sm border border-slate-100 hover:scale-110"
                           title="Quick Preview"
                         >
                           <span className="material-symbols-outlined text-[16px]">visibility</span>
@@ -155,7 +155,7 @@ export default function History() {
                             e.stopPropagation();
                             setConfirmGoToEditor(file);
                           }}
-                          className="w-8 h-8 rounded-lg flex items-center justify-center bg-white dark:bg-slate-800 text-slate-500 hover:text-emerald-500 transition-all shadow-sm border border-slate-100 dark:border-white/10 hover:scale-110"
+                          className="w-8 h-8 rounded-lg flex items-center justify-center bg-white text-slate-500 hover:text-emerald-500 transition-all shadow-sm border border-slate-100 hover:scale-110"
                           title="Open in Editor"
                         >
                           <span className="material-symbols-outlined text-[16px]">edit_square</span>
@@ -320,14 +320,14 @@ export default function History() {
       {/* Confirm Restore Modal */}
       {confirmRestore && createPortal(
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[2005] flex items-center justify-center p-8 animate-fade-in">
-          <div className="glass-card bg-white dark:bg-slate-800 rounded-3xl shadow-float p-8 max-w-sm w-full animate-scale-in">
+          <div className="glass-card bg-white rounded-3xl shadow-float p-8 max-w-sm w-full animate-scale-in">
             <div className="w-12 h-12 rounded-2xl bg-orange-100 text-orange-600 flex items-center justify-center mb-4">
               <span className="material-symbols-outlined text-2xl"
                 style={{ fontVariationSettings: "'FILL' 1" }}>
                 published_with_changes
               </span>
             </div>
-            <h3 className="text-lg font-bold mb-2 text-slate-800 dark:text-white">Restore Version?</h3>
+            <h3 className="text-lg font-bold mb-2 text-slate-800">Restore Version?</h3>
             <p className="text-sm text-slate-500 mb-6">
               This will replace the current canvas with the snapshot from{' '}
               <strong>{new Date(confirmRestore.createdAt).toLocaleString()}</strong>.
@@ -335,7 +335,7 @@ export default function History() {
             <div className="flex gap-3">
               <button
                 onClick={() => setConfirmRestore(null)}
-                className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 transition-colors"
+                className="flex-1 py-2.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors"
               >
                 Cancel
               </button>
@@ -354,21 +354,21 @@ export default function History() {
       {/* Confirm Go To Editor Modal */}
       {confirmGoToEditor && createPortal(
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[3000] flex items-center justify-center p-8 animate-fade-in">
-          <div className="glass-card bg-white dark:bg-slate-800 rounded-3xl shadow-float p-8 max-w-sm w-full animate-scale-in">
+          <div className="glass-card bg-white rounded-3xl shadow-float p-8 max-w-sm w-full animate-scale-in">
             <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center mb-4">
               <span className="material-symbols-outlined text-2xl"
                 style={{ fontVariationSettings: "'FILL' 1" }}>
                 edit_square
               </span>
             </div>
-            <h3 className="text-lg font-bold mb-2 text-slate-800 dark:text-white">Switch to Editor?</h3>
+            <h3 className="text-lg font-bold mb-2 text-slate-800">Switch to Editor?</h3>
             <p className="text-sm text-slate-500 mb-6 font-medium italic">
               selected one will be moving to active log
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setConfirmGoToEditor(null)}
-                className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 transition-colors"
+                className="flex-1 py-2.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors"
               >
                 Not now
               </button>

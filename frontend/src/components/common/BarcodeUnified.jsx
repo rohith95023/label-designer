@@ -66,12 +66,12 @@ const BarcodeUnified = ({
 
   if (renderError) {
     return (
-      <div className="w-full h-full flex flex-col items-center justify-center bg-red-50/50 dark:bg-red-900/10 border border-red-200 dark:border-red-900/30 rounded-lg p-2 overflow-hidden">
-        <span className="material-symbols-outlined text-red-600 dark:text-red-400 text-xl mb-1">warning</span>
-        <span className="text-[9px] font-black uppercase text-red-600 dark:text-red-400 text-center leading-tight">
-          QR Render Error
+      <div className="w-full h-full flex flex-col items-center justify-center bg-red-50/50 border border-red-200 rounded-lg p-2 overflow-hidden">
+        <span className="material-symbols-outlined text-red-600 text-xl mb-1">warning</span>
+        <span className="text-[9px] font-black uppercase text-red-600 text-center leading-tight">
+          Barcode Render Error
         </span>
-        <span className="text-[7px] font-medium text-red-500 dark:text-red-400/70 text-center mt-1">
+        <span className="text-[7px] font-medium text-red-500 text-center mt-1">
           {renderError}
         </span>
       </div>

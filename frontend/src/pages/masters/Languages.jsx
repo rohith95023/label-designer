@@ -223,7 +223,7 @@ const Languages = () => {
                           {variants.length > 0 && (
                             <button
                               onClick={() => toggleBaseGroup(base.id)}
-                              className={`p-1 rounded hover:bg-black/5 dark:hover:bg-white/10 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+                              className={`p-1 rounded hover:bg-black/5 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
                             >
                               <span className="material-symbols-outlined text-[18px]">chevron_right</span>
                             </button>
@@ -238,10 +238,10 @@ const Languages = () => {
                             {variants.length > 0 && <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">{variants.length} variants</span>}
                           </div>
                         </td>
-                        <td><code className="text-blue-600 px-2 py-0.5 bg-blue-50 dark:bg-blue-900/30 rounded font-mono text-xs">{base.code}</code></td>
+                        <td><code className="text-blue-600 px-2 py-0.5 bg-blue-50 rounded font-mono text-xs">{base.code}</code></td>
                         <td className="text-xs text-outline">{base.dateFormat} • {base.currencySymbol}</td>
                         <td>
-                          <span className="text-[10px] bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 px-2 py-1 rounded-full font-bold">
+                          <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-1 rounded-full font-bold">
                             {base.direction}
                           </span>
                         </td>
@@ -265,7 +265,7 @@ const Languages = () => {
                         </td>
                       </tr>
                       {isExpanded && variants.map(v => (
-                        <tr key={v.id} className="bg-slate-50/50 dark:bg-white/2 border-l-2 border-primary/20">
+                        <tr key={v.id} className="bg-slate-50/50 border-l-2 border-primary/20">
                           <td />
                           <td className="pl-10">
                             <div className="flex items-center gap-2">
@@ -278,7 +278,7 @@ const Languages = () => {
                           </td>
                           <td>
                             <div className="flex items-center gap-1">
-                              <code className="text-blue-600 px-2 py-0.5 bg-blue-50 dark:bg-blue-900/30 rounded font-mono text-xs">{v.code}</code>
+                              <code className="text-blue-600 px-2 py-0.5 bg-blue-50 rounded font-mono text-xs">{v.code}</code>
                               {v.countryCode && <code className="text-tertiary px-2 py-0.5 bg-tertiary/10 rounded font-mono text-xs">{v.countryCode}</code>}
                             </div>
                           </td>

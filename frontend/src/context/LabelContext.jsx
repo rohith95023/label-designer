@@ -435,7 +435,31 @@ export const LabelProvider = ({ children }) => {
     }
   };
 
-  const setLabelSize = (w, h) => setMeta(m => ({ ...m, labelSize: { w, h } }));
+  const scaleElements = useCallback((newW, newH) => {
+    const oldW = meta.labelSize.w;
+    const oldH = meta.labelSize.h;
+    if (oldW === newW && oldH === newH) return;
+
+    const scaleX = newW / oldW;
+    const scaleY = newH / oldH;
+    const minScale = Math.min(scaleX, scaleY);
+
+    setElements(prev => prev.map(el => ({
+      ...el,
+      x: Math.round((el.x || 0) * scaleX),
+      y: Math.round((el.y || 0) * scaleY),
+      width: el.width ? Math.round(el.width * scaleX) : el.width,
+      height: el.height ? Math.round(el.height * scaleY) : el.height,
+      fontSize: el.fontSize ? Math.round(el.fontSize * minScale) : el.fontSize,
+      borderWidth: el.borderWidth ? Math.max(1, Math.round(el.borderWidth * minScale)) : el.borderWidth,
+      borderRadius: el.borderRadius ? Math.round(el.borderRadius * minScale) : el.borderRadius
+    })));
+  }, [meta.labelSize, setElements]);
+
+  const setLabelSize = (w, h) => {
+    scaleElements(w, h);
+    setMeta(prev => ({ ...prev, labelSize: { w, h } }));
+  };
 
   const setLabelStock = (stockId) => {
     const stock = labelStocks.find(s => s.id === stockId);
@@ -443,6 +467,7 @@ export const LabelProvider = ({ children }) => {
       const MM_TO_PX = 3.7795;
       const w = Math.round(stock.breadth * MM_TO_PX);
       const h = Math.round(stock.height * MM_TO_PX);
+      scaleElements(w, h);
       setMeta(prev => ({
         ...prev,
         labelStockId: stockId,
@@ -453,6 +478,16 @@ export const LabelProvider = ({ children }) => {
   };
 
   const setUnit = (unit) => setMeta(m => ({ ...m, unit }));
+
+  const toggleOrientation = () => {
+    const newW = meta.labelSize.h;
+    const newH = meta.labelSize.w;
+    scaleElements(newW, newH);
+    setMeta(prev => ({
+      ...prev,
+      labelSize: { w: newW, h: newH }
+    }));
+  };
 
   const saveFile = async () => {
     if (!meta.fileId) {
@@ -747,13 +782,6 @@ export const LabelProvider = ({ children }) => {
 
   const commitUpdate = () => {
     setElements(prev => { saveToHistory(prev); return prev; });
-  };
-
-  const toggleOrientation = () => {
-    setMeta(prev => ({
-      ...prev,
-      labelSize: { w: prev.labelSize.h, h: prev.labelSize.w }
-    }));
   };
 
   const saveAsTemplate = async (name) => {

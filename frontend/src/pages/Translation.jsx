@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useLabel } from '../context/LabelContext';
 import { useToast } from '../components/common/ToastContext';
-import { useTheme } from '../context/ThemeContext';
 import { GEO_LANGUAGE_DATA, ELEMENT_TYPE_LABELS, TRANSLATABLE_TYPES } from '../data/geoLanguages';
 import { translateBatch } from '../services/translation.service';
 import { calcAutoFitFontSize } from '../utils/autoFitFont';
@@ -20,7 +19,6 @@ const TYPE_COLORS = {
 export default function Translation() {
   const { activeTemplate, elements, updateElement, commitUpdate, meta } = useLabel();
   const { success, error } = useToast();
-  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
 
   // ── Geo / Language selectors ────────────────────────────────────────────────
@@ -133,10 +131,10 @@ export default function Translation() {
   }, [draftTranslations, translatableElements, selectedLang]);
 
   return (
-    <div className="bg-[#F1F3F6] dark:bg-slate-950 text-on-surface antialiased min-h-screen transition-colors">
+    <div className="bg-[#F1F3F6] text-on-surface antialiased min-h-screen transition-colors">
 
       {/* ── Top Nav ─────────────────────────────────────────────────────────── */}
-      <header className="fixed top-0 w-full z-50 bg-[#F8FAFC] dark:bg-slate-900 border-b border-black/5 h-14 flex items-center justify-between px-6">
+      <header className="fixed top-0 w-full z-50 bg-[#F8FAFC] border-b border-black/5 h-14 flex items-center justify-between px-6">
         <div className="flex items-center gap-3">
           <Link to="/" className="text-lg font-extrabold tracking-tighter text-blue-900">Pharma Label Design</Link>
           <div className="w-[1px] h-5 bg-slate-200 mx-1" />
@@ -154,28 +152,19 @@ export default function Translation() {
             <span className="material-symbols-outlined text-[14px]">edit_document</span>
             {projectName}
           </div>
-          <button
-            onClick={toggleTheme}
-            title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-            className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-all"
-          >
-            <span className="material-symbols-outlined text-[18px]">
-              {theme === 'dark' ? 'light_mode' : 'dark_mode'}
-            </span>
-          </button>
         </div>
       </header>
 
       <div className="pt-14 flex min-h-screen">
 
         {/* ── Left Sidebar: Source ─────────────────────────────────────────── */}
-        <aside className="w-[340px] shrink-0 bg-[#F8FAFC] dark:bg-slate-900 border-r border-black/5 flex flex-col overflow-hidden sticky top-14 h-[calc(100vh-56px)]">
+        <aside className="w-[340px] shrink-0 bg-[#F8FAFC] border-r border-black/5 flex flex-col overflow-hidden sticky top-14 h-[calc(100vh-56px)]">
           {/* Header */}
-          <div className="px-5 py-4 border-b border-black/5 dark:border-white/5 bg-slate-50/80 dark:bg-slate-800/50 shrink-0">
+          <div className="px-5 py-4 border-b border-black/5 bg-slate-50/80 shrink-0">
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-700 dark:text-slate-300">Source Text</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-700">Source Text</span>
               </div>
               <span className="text-[9px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">ENGLISH (SOURCE)</span>
             </div>
@@ -219,7 +208,7 @@ export default function Translation() {
                   <div
                     key={el.id}
                     onClick={() => toggleCheck(el.id)}
-                    className={`rounded-xl border p-3 cursor-pointer transition-all ${isChecked ? 'border-blue-300 dark:border-blue-500 bg-blue-50/40 dark:bg-blue-900/20 ring-1 ring-blue-400/30' : 'border-slate-200 dark:border-white/5 bg-white dark:bg-slate-800 hover:border-slate-300 dark:hover:border-white/20'}`}
+                    className={`rounded-xl border p-3 cursor-pointer transition-all ${isChecked ? 'border-blue-300 bg-blue-50/40 ring-1 ring-blue-400/30' : 'border-slate-200 bg-white hover:border-slate-300'}`}
                   >
                     <div className="flex items-start gap-2.5">
                       <input
@@ -235,8 +224,8 @@ export default function Translation() {
                             {el.heading || typeLabel}
                           </span>
                         </div>
-                        <p className="text-[11px] text-slate-700 dark:text-slate-300 font-medium leading-snug whitespace-pre-wrap">
-                          {el.text || <span className="text-slate-300 dark:text-slate-600 italic">Empty</span>}
+                        <p className="text-[11px] text-slate-700 font-medium leading-snug whitespace-pre-wrap">
+                          {el.text || <span className="text-slate-300 italic">Empty</span>}
                         </p>
                       </div>
                     </div>
@@ -251,10 +240,10 @@ export default function Translation() {
         <main className="flex-1 flex flex-col overflow-hidden">
 
           {/* ── Controls Bar ── */}
-          <div className="bg-[#F8FAFC] dark:bg-slate-900 border-b border-black/5 dark:border-white/5 px-6 py-4 shrink-0">
+          <div className="bg-[#F8FAFC] border-b border-black/5 px-6 py-4 shrink-0">
             <div className="flex items-end gap-4 flex-wrap">
               <div className="flex-1 min-w-[680px]">
-                <p className="text-[9px] font-bold uppercase tracking-widest text-slate-600 dark:text-slate-400 mb-2">Translate To</p>
+                <p className="text-[9px] font-bold uppercase tracking-widest text-slate-600 mb-2">Translate To</p>
                 <div className="flex items-center gap-3">
 
                   {/* Country */}
@@ -300,14 +289,14 @@ export default function Translation() {
 
                   {/* Language */}
                   <div className="flex flex-col gap-1 flex-1">
-                    <label className="text-[9px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Language</label>
+                    <label className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider">Language</label>
                     <div className="relative">
-                      <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-[14px] text-slate-500 dark:text-slate-400">translate</span>
+                      <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-[14px] text-slate-500">translate</span>
                       <select
                         value={selectedLang?.code || ''}
                         onChange={e => setSelectedLang(availableLangs.find(l => l.code === e.target.value) || null)}
                         disabled={!selectedState}
-                        className="w-full pl-8 pr-3 py-2 text-[11px] font-medium bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-lg outline-none focus:border-blue-400 dark:text-white cursor-pointer disabled:opacity-40 appearance-none"
+                        className="w-full pl-8 pr-3 py-2 text-[11px] font-medium bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-blue-400 cursor-pointer disabled:opacity-40 appearance-none"
                       >
                         <option value="">Select Language…</option>
                         {/* Always show English as a global option */}
@@ -415,7 +404,7 @@ export default function Translation() {
                     return (
                       <div
                         key={`target-${el.id}`}
-                        className={`bg-white dark:bg-slate-800 rounded-xl border transition-all ${isChecked ? 'border-green-200 dark:border-green-900 shadow-sm' : 'border-slate-100 dark:border-white/5 opacity-50'}`}
+                        className={`bg-white rounded-xl border transition-all ${isChecked ? 'border-green-200 shadow-sm' : 'border-slate-100 opacity-50'}`}
                       >
                         <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-100">
                           <input
@@ -438,18 +427,18 @@ export default function Translation() {
                         <div className="grid grid-cols-2 divide-x divide-slate-100">
                           {/* Source preview */}
                           <div className="p-3">
-                            <p className="text-[9px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">English (Source)</p>
-                            <p className="text-[11px] text-slate-700 dark:text-slate-200 leading-snug whitespace-pre-wrap">{el.text || <span className="italic text-slate-400 dark:text-slate-600">empty</span>}</p>
+                            <p className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider mb-1.5">English (Source)</p>
+                            <p className="text-[11px] text-slate-700 leading-snug whitespace-pre-wrap">{el.text || <span className="italic text-slate-400">empty</span>}</p>
                           </div>
 
                           {/* Translation textarea */}
                           <div className="p-3">
-                            <p className="text-[9px] font-semibold text-green-700 dark:text-green-400 uppercase tracking-wider mb-1.5">
+                            <p className="text-[9px] font-semibold text-green-700 uppercase tracking-wider mb-1.5">
                               {selectedLang ? selectedLang.name : 'Target Language'}
                             </p>
                             {isChecked ? (
                               <textarea
-                                className="w-full text-[11px] text-slate-800 dark:text-white font-medium leading-snug bg-transparent outline-none resize-none min-h-[48px] border-none"
+                                className="w-full text-[11px] text-slate-800 font-medium leading-snug bg-transparent outline-none resize-none min-h-[48px] border-none"
                                 placeholder={
                                   translating
                                     ? 'Translating…'
@@ -478,21 +467,21 @@ export default function Translation() {
 
                 {/* Bottom stats */}
                 <div className="mt-6 grid grid-cols-3 gap-4">
-                  <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-white/5 p-4 text-center shadow-sm">
-                    <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1">Selected</p>
-                    <p className="text-2xl font-extrabold text-blue-600 dark:text-blue-400">{checkedIds.size}</p>
-                    <p className="text-[9px] text-slate-400 dark:text-slate-500">of {translatableElements.length} elements</p>
+                  <div className="bg-white rounded-xl border border-slate-100 p-4 text-center shadow-sm">
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-1">Selected</p>
+                    <p className="text-2xl font-extrabold text-blue-600 font-bold">{checkedIds.size}</p>
+                    <p className="text-[9px] text-slate-400">of {translatableElements.length} elements</p>
                   </div>
-                  <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-white/5 p-4 text-center shadow-sm">
-                    <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1">Translated</p>
-                    <p className="text-2xl font-extrabold text-green-600 dark:text-green-400">
+                  <div className="bg-white rounded-xl border border-slate-100 p-4 text-center shadow-sm">
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-1">Translated</p>
+                    <p className="text-2xl font-extrabold text-green-600">
                       {translatableElements.filter(el => draftTranslations[el.id]).length}
                     </p>
-                    <p className="text-[9px] text-slate-400 dark:text-slate-500">elements with drafts</p>
+                    <p className="text-[9px] text-slate-400">elements with drafts</p>
                   </div>
-                  <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-white/5 p-4 text-center shadow-sm">
-                    <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1">Target</p>
-                    <p className="text-2xl font-extrabold text-slate-700 dark:text-slate-200">
+                  <div className="bg-white rounded-xl border border-slate-100 p-4 text-center shadow-sm">
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-1">Target</p>
+                    <p className="text-2xl font-extrabold text-slate-700">
                       {selectedLang ? selectedLang.code.toUpperCase() : '—'}
                     </p>
                     <p className="text-[9px] text-slate-400">{selectedLang?.name || 'Not selected'}</p>

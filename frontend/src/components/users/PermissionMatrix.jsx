@@ -155,11 +155,11 @@ const PermissionMatrix = ({ permissions, onChange }) => {
       </div>
 
       {/* Admin Warning for restricted modules */}
-      <div className="mt-6 p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200/50 dark:border-amber-900/30 flex items-start gap-4">
+      <div className="mt-6 p-4 rounded-2xl bg-amber-50 border border-amber-200/50 flex items-start gap-4">
         <span className="material-symbols-outlined text-amber-500 text-xl">warning</span>
         <div className="flex-1">
-          <p className="text-xs font-bold text-amber-800 dark:text-amber-200 mb-1 tracking-tight">Segregation of Duties (SoD) Note</p>
-          <p className="text-[10px] text-amber-700/80 dark:text-amber-300/60 leading-relaxed">
+          <p className="text-xs font-bold text-amber-800 mb-1 tracking-tight">Segregation of Duties (SoD) Note</p>
+          <p className="text-[10px] text-amber-700/80 leading-relaxed">
             Changing these permissions will take effect upon the user's next session initialization. 
             All modifications to the access matrix are captured in the System Integrity Audit Log.
           </p>

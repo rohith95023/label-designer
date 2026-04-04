@@ -63,7 +63,7 @@ const Login = () => {
       <div className="absolute inset-0 z-[1] bg-black/40 backdrop-blur-[1px]"></div>
 
       {/* Premium Glass Login Card */}
-      <div className="relative z-10 w-full max-w-lg glass-card rounded-[2.5rem] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-1000 bg-white/30 dark:bg-black/40 backdrop-blur-2xl border-white/20">
+      <div className="relative z-10 w-full max-w-lg glass-card rounded-[2.5rem] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-1000 bg-white/30 backdrop-blur-2xl border-white/20">
 
         <div className="p-8 lg:p-14 flex flex-col justify-center">
           {/* Logo */}

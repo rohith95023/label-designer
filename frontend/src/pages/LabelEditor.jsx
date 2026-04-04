@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../services/api';
 import { Link, useNavigate } from 'react-router-dom';
 import { useLabel } from '../context/LabelContext';
-import { useTheme } from '../context/ThemeContext';
 import { Rnd } from 'react-rnd';
 import html2canvas from 'html2canvas';
 import { basicShapes, allIcons } from '../data/shapesLibrary';
@@ -64,22 +63,22 @@ function TableSetupModal({ onConfirm, onCancel }) {
 
   return createPortal(
     <div className="fixed inset-0 z-[3000] flex items-center justify-center bg-slate-900/60 backdrop-blur-md animate-fade-in p-4">
-      <div className="bg-white dark:bg-slate-900 w-full max-w-[540px] max-h-[90vh] flex flex-col rounded-[24px] shadow-3xl shadow-blue-900/10 relative overflow-hidden border border-white/50 dark:border-white/10">
+      <div className="bg-white w-full max-w-[540px] max-h-[90vh] flex flex-col rounded-[24px] shadow-3xl shadow-blue-900/10 relative overflow-hidden border border-white/50">
 
         {/* Subtle Accent Bar */}
         <div className="absolute top-0 left-0 w-full h-[4px] bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-600"></div>
 
-        <div className="px-7 py-5 border-b border-slate-100 dark:border-slate-800/50 flex items-center justify-between bg-white dark:bg-slate-900">
+        <div className="px-7 py-5 border-b border-slate-100 flex items-center justify-between bg-white">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-[16px] bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/40 dark:to-indigo-900/40 shadow-inner flex items-center justify-center text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800/50">
+            <div className="w-12 h-12 rounded-[16px] bg-gradient-to-br from-blue-50 to-indigo-50 shadow-inner flex items-center justify-center text-blue-600 border border-blue-100">
               <span className="material-symbols-outlined text-[24px]">table_view</span>
             </div>
             <div>
-              <h3 className="font-extrabold text-[18px] text-slate-800 dark:text-white leading-tight">Insert Data Table</h3>
-              <p className="text-[12px] font-medium text-slate-500 dark:text-slate-400 mt-0.5">Choose a preset or customize grid dimensions</p>
+              <h3 className="font-extrabold text-[18px] text-slate-800 leading-tight">Insert Data Table</h3>
+              <p className="text-[12px] font-medium text-slate-500 mt-0.5">Choose a preset or customize grid dimensions</p>
             </div>
           </div>
-          <button onClick={onCancel} className="w-8 h-8 rounded-full flex items-center justify-center bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 transition-colors">
+          <button onClick={onCancel} className="w-8 h-8 rounded-full flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-500 transition-colors">
             <span className="material-symbols-outlined text-[18px]">close</span>
           </button>
         </div>
@@ -87,7 +86,7 @@ function TableSetupModal({ onConfirm, onCancel }) {
         <div className="p-7 flex flex-col gap-8 overflow-y-auto custom-scrollbar">
 
           <section>
-            <label className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-4">
+            <label className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-4">
               <span className="material-symbols-outlined text-[14px] text-indigo-500">grid_guides</span> Table Template
             </label>
             <div className="grid grid-cols-2 gap-3">
@@ -101,61 +100,61 @@ function TableSetupModal({ onConfirm, onCancel }) {
                   key={t.id}
                   onClick={() => setTemplate(t.id)}
                   className={`relative flex items-center gap-3 p-3.5 rounded-2xl border-2 text-left transition-all overflow-hidden group ${template === t.id
-                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 focus:outline-none'
-                      : 'border-slate-100 hover:border-slate-300 dark:border-white/5 dark:hover:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                      ? 'border-blue-500 bg-blue-50 focus:outline-none'
+                      : 'border-slate-100 hover:border-slate-300 text-slate-600 hover:bg-slate-50'
                     }`}
                 >
-                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-colors ${template === t.id ? 'bg-blue-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 group-hover:bg-white group-hover:text-blue-500 group-hover:shadow-sm'}`}>
+                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-colors ${template === t.id ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-500 group-hover:bg-white group-hover:text-blue-500 group-hover:shadow-sm'}`}>
                     <span className="material-symbols-outlined text-[20px]">{t.icon}</span>
                   </div>
                   <div>
-                    <div className={`text-[13px] font-extrabold leading-none mb-1.5 ${template === t.id ? 'text-blue-800 dark:text-blue-300' : 'text-slate-700 dark:text-slate-200'}`}>{t.label}</div>
-                    <div className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">{t.desc}</div>
+                    <div className={`text-[13px] font-extrabold leading-none mb-1.5 ${template === t.id ? 'text-blue-800' : 'text-slate-700'}`}>{t.label}</div>
+                    <div className="text-[10px] font-semibold text-slate-500">{t.desc}</div>
                   </div>
                 </button>
               ))}
             </div>
           </section>
 
-          <section className="bg-slate-50/70 dark:bg-slate-800/30 rounded-[20px] p-5 border border-slate-100 dark:border-slate-800/50 flex gap-6">
+          <section className="bg-slate-50/70 rounded-[20px] p-5 border border-slate-100 flex gap-6">
             <div className="flex-1">
-              <label className="text-[10px] font-bold uppercase tracking-widest flex justify-between items-center text-slate-500 dark:text-slate-400 mb-3">
+              <label className="text-[10px] font-bold uppercase tracking-widest flex justify-between items-center text-slate-500 mb-3">
                 <span className="flex items-center gap-1.5"><span className="material-symbols-outlined text-[14px]">table_rows</span> Rows</span>
-                <span className="text-blue-600 dark:text-blue-400 font-mono text-[11px] bg-blue-100 dark:bg-blue-900/40 px-2 py-0.5 rounded-md leading-none">{rows}</span>
+                <span className="text-blue-600 font-mono text-[11px] bg-blue-100 px-2 py-0.5 rounded-md leading-none">{rows}</span>
               </label>
               <div className="flex items-center gap-3">
                 <input type="range" min="1" max="50" className="flex-1 accent-blue-600" value={rows} onChange={e => setRows(Number(e.target.value))} />
-                <input type="number" min="1" max="100" className="w-14 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-2 py-1 text-sm font-mono font-bold outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-center dark:text-white" value={rows} onChange={e => setRows(Math.max(1, Number(e.target.value)))} />
+                <input type="number" min="1" max="100" className="w-14 bg-white border border-slate-200 rounded-xl px-2 py-1 text-sm font-mono font-bold outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-center" value={rows} onChange={e => setRows(Math.max(1, Number(e.target.value)))} />
               </div>
             </div>
 
             {/* Divider */}
-            <div className="w-[1px] bg-slate-200 dark:bg-slate-700 h-10 self-end mb-2"></div>
+            <div className="w-[1px] bg-slate-200 h-10 self-end mb-2"></div>
 
             <div className={`flex-1 transition-opacity duration-300 ${template !== 'blank' ? 'opacity-30 pointer-events-none grayscale' : ''}`}>
-              <label className="text-[10px] font-bold uppercase tracking-widest flex justify-between items-center text-slate-500 dark:text-slate-400 mb-3">
+              <label className="text-[10px] font-bold uppercase tracking-widest flex justify-between items-center text-slate-500 mb-3">
                 <span className="flex items-center gap-1.5"><span className="material-symbols-outlined text-[14px]">view_column</span> Columns</span>
-                <span className="text-blue-600 dark:text-blue-400 font-mono text-[11px] bg-blue-100 dark:bg-blue-900/40 px-2 py-0.5 rounded-md leading-none">{cols}</span>
+                <span className="text-blue-600 font-mono text-[11px] bg-blue-100 px-2 py-0.5 rounded-md leading-none">{cols}</span>
               </label>
               <div className="flex items-center gap-3">
                 <input type="range" min="1" max="12" className="flex-1 accent-blue-600" value={cols} onChange={e => updateColCount(Number(e.target.value))} />
-                <input type="number" min="1" max="20" className="w-14 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-2 py-1 text-sm font-mono font-bold outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-center dark:text-white" value={cols} onChange={e => updateColCount(Math.max(1, Number(e.target.value)))} />
+                <input type="number" min="1" max="20" className="w-14 bg-white border border-slate-200 rounded-xl px-2 py-1 text-sm font-mono font-bold outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-center" value={cols} onChange={e => updateColCount(Math.max(1, Number(e.target.value)))} />
               </div>
             </div>
           </section>
 
           {template === 'blank' && (
             <section className="animate-fade-in pb-2">
-              <label className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-4">
+              <label className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-4">
                 <span className="material-symbols-outlined text-[14px]">title</span> Column Headers
               </label>
               <div className="grid grid-cols-2 gap-4">
                 {Array.from({ length: cols }).map((_, i) => (
                   <div key={i} className="flex flex-col gap-1.5 relative">
-                    <span className="text-[10px] font-extrabold uppercase text-slate-400 dark:text-slate-500 absolute left-3.5 top-2.5 pointer-events-none">Col {i + 1}</span>
+                    <span className="text-[10px] font-extrabold uppercase text-slate-400 absolute left-3.5 top-2.5 pointer-events-none">Col {i + 1}</span>
                     <input
                       type="text"
-                      className="w-full bg-slate-50 hover:bg-white border-2 border-slate-100 dark:bg-slate-800/50 dark:border-slate-700 text-sm font-semibold text-slate-800 dark:text-white px-3.5 pt-7 pb-2.5 rounded-xl outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 transition-all placeholder-slate-300 dark:placeholder-slate-600"
+                      className="w-full bg-slate-50 hover:bg-white border-2 border-slate-100 text-sm font-semibold text-slate-800 px-3.5 pt-7 pb-2.5 rounded-xl outline-none focus:border-blue-500 focus:bg-white transition-all placeholder-slate-300"
                       value={colHeaders[i] || ''}
                       placeholder={`Enter name...`}
                       onChange={e => {
@@ -172,8 +171,8 @@ function TableSetupModal({ onConfirm, onCancel }) {
 
         </div>
 
-        <div className="px-7 py-5 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3 bg-slate-50/30 dark:bg-slate-900/50">
-          <button onClick={onCancel} className="px-6 py-2.5 text-[13px] font-bold text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 hover:bg-slate-50 hover:border-slate-300 dark:hover:bg-slate-700 rounded-xl transition-all shadow-sm">Cancel</button>
+        <div className="px-7 py-5 border-t border-slate-100 flex justify-end gap-3 bg-slate-50/30">
+          <button onClick={onCancel} className="px-6 py-2.5 text-[13px] font-bold text-slate-600 bg-white border-2 border-slate-200 hover:bg-slate-50 hover:border-slate-300 rounded-xl transition-all shadow-sm">Cancel</button>
           <button onClick={handleConfirm} className="px-7 py-2.5 text-[13px] font-bold text-white btn-gradient rounded-xl shadow-md hover:shadow-lg hover:-translate-y-0.5 active:scale-95 transition-all flex items-center gap-2">
             <span className="material-symbols-outlined text-[18px]">add</span> Insert Table
           </button>
@@ -214,22 +213,22 @@ function AssetUploadModal({ onConfirm, onCancel, labelId }) {
 
   return createPortal(
     <div className="fixed inset-0 z-[3000] flex items-center justify-center bg-slate-900/60 backdrop-blur-md animate-fade-in p-4">
-      <div className="bg-white dark:bg-slate-900 w-full max-w-[420px] rounded-[24px] shadow-3xl border border-white/50 dark:border-white/10 overflow-hidden">
-        <div className="px-7 py-5 border-b border-slate-100 dark:border-slate-800/50 flex items-center justify-between">
-          <h3 className="font-extrabold text-[16px] text-slate-800 dark:text-white uppercase tracking-tight">Upload New Asset</h3>
-          <button onClick={onCancel} className="w-8 h-8 rounded-full flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-700 transition-colors">
+      <div className="bg-white w-full max-w-[420px] rounded-[24px] shadow-3xl border border-white/50 overflow-hidden">
+        <div className="px-7 py-5 border-b border-slate-100 flex items-center justify-between">
+          <h3 className="font-extrabold text-[16px] text-slate-800 uppercase tracking-tight">Upload New Asset</h3>
+          <button onClick={onCancel} className="w-8 h-8 rounded-full flex items-center justify-center bg-slate-100 text-slate-500 hover:text-slate-700 transition-colors">
             <span className="material-symbols-outlined text-[20px]">close</span>
           </button>
         </div>
         <div className="p-7 flex flex-col gap-5">
           <div className="flex flex-col gap-1.5">
             <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Asset Name</label>
-            <input value={name} onChange={e => setName(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 px-4 py-2.5 rounded-xl text-sm font-bold outline-none focus:border-blue-500 dark:text-white" placeholder="e.g. Pfizer Logo" />
+            <input value={name} onChange={e => setName(e.target.value)} className="w-full bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl text-sm font-bold outline-none focus:border-blue-500" placeholder="e.g. Pfizer Logo" />
           </div>
           <div className="flex flex-col gap-1.5">
             <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Object Type</label>
             <div className="relative">
-              <select value={type} onChange={e => setType(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 px-4 py-2.5 rounded-xl text-sm font-bold outline-none focus:border-blue-500 appearance-none dark:text-white">
+              <select value={type} onChange={e => setType(e.target.value)} className="w-full bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl text-sm font-bold outline-none focus:border-blue-500 appearance-none">
                 <option value="LOGO">LOGO / IMAGE</option>
                 <option value="ICON">UI ICON</option>
                 <option value="QR_SPEC">QR CODE SPEC</option>
@@ -240,7 +239,7 @@ function AssetUploadModal({ onConfirm, onCancel, labelId }) {
           </div>
           <div className="flex flex-col gap-1.5">
             <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Source File</label>
-            <div className="p-4 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl bg-slate-50/50 dark:bg-slate-800/30 flex flex-col items-center gap-2">
+            <div className="p-4 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50 flex flex-col items-center gap-2">
               <span className="material-symbols-outlined text-[32px] text-slate-300">cloud_upload</span>
               <input type="file" onChange={e => setFile(e.target.files[0])} className="text-[12px] font-bold text-slate-500 file:hidden" id="asset-upload-input" />
               <label htmlFor="asset-upload-input" className="cursor-pointer text-[11px] font-black text-blue-600 uppercase hover:underline">
@@ -249,7 +248,7 @@ function AssetUploadModal({ onConfirm, onCancel, labelId }) {
             </div>
           </div>
         </div>
-        <div className="px-7 py-5 bg-slate-50/50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3">
+        <div className="px-7 py-5 bg-slate-50/50 border-t border-slate-100 flex justify-end gap-3">
           <button onClick={onCancel} className="px-5 py-2.5 text-[13px] font-bold text-slate-500 hover:text-slate-700 transition-colors">Cancel</button>
           <button
             onClick={handleUpload}
@@ -267,7 +266,6 @@ function AssetUploadModal({ onConfirm, onCancel, labelId }) {
 }
 
 export default function LabelEditor() {
-  const { theme, toggleTheme } = useTheme();
   const {
     meta, setMeta, setFileName, setLabelSize, newFile,
     elements, setElements, selectedIds, setSelectedIds,
@@ -349,7 +347,6 @@ export default function LabelEditor() {
     setZoomLevel(Math.min(zoomW, zoomH, 2.0));
   }, [AW, AH, setZoomLevel]);
 
-  const [activeTab, setActiveTab] = useState('elements');
   const [showFileMenu, setShowFileMenu] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [showViewMenu, setShowViewMenu] = useState(false);
@@ -392,13 +389,39 @@ export default function LabelEditor() {
   const [snapToGrid, setSnapToGrid] = useState(false);
   const [manualGuidelines, setManualGuidelines] = useState([]); // [{ orientation, pos }]
   const [gridSize, setGridSize] = useState(10);
-  const [navCollapsed, setNavCollapsed] = useState(false);
-  const [panelCollapsed, setPanelCollapsed] = useState(false);
-  const [rightSidebarCollapsed, setRightSidebarCollapsed] = useState(false);
-  const [navWidth, setNavWidth] = useState(200);
-  const [panelWidth, setPanelWidth] = useState(280);
   const [rightWidth, setRightWidth] = useState(300);
+  const [rightSidebarCollapsed, setRightSidebarCollapsed] = useState(false);
   const [sidebarSearch, setSidebarSearch] = useState('');
+
+  // ── Canva-style Sidebar State ──
+  const [hoveredIcon, setHoveredIcon] = useState(null);
+  const [lockedIcon, setLockedIcon] = useState(null);
+  const activeTab = lockedIcon || hoveredIcon;
+
+  const ICON_RAIL_ITEMS = [
+    { id: 'elements', icon: 'add_circle', label: 'Elements' },
+    { id: 'shapes', icon: 'category', label: 'Shapes' },
+    { id: 'Icons', icon: 'medical_services', label: 'Icons' },
+    { id: 'templates', icon: 'auto_awesome_motion', label: 'Templates' },
+    { id: 'Variables', icon: 'database', label: 'Variables' },
+    { id: 'Objects', icon: 'image', label: 'Objects' },
+    { id: 'stocks', icon: 'inventory', label: 'Stocks' },
+    { id: 'layers', icon: 'layers', label: 'Layers' },
+    { id: 'notes', icon: 'description', label: 'Notes' },
+  ];
+
+  const sidebarRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (sidebarRef.current && !sidebarRef.current.contains(event.target)) {
+        setLockedIcon(null);
+        setHoveredIcon(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // --- Placeholder & Object Logic ---
   const [placeholders, setPlaceholders] = useState([]);
@@ -817,35 +840,35 @@ export default function LabelEditor() {
       {/* WordArt Modal */}
       {showWordArtModal && createPortal(
         <div className="fixed inset-0 z-[1001] flex items-center justify-center bg-slate-900/60 backdrop-blur-md animate-fade-in p-6">
-          <div className="glass-card bg-white dark:bg-slate-800 rounded-3xl shadow-glow w-[700px] h-[75vh] flex flex-col overflow-hidden">
-            <div className="p-6 border-b border-white/20 dark:border-white/10 flex items-center justify-between bg-slate-50/50 dark:bg-white/5">
+          <div className="glass-card bg-white rounded-3xl shadow-glow w-[700px] h-[75vh] flex flex-col overflow-hidden">
+            <div className="p-6 border-b border-white/20 flex items-center justify-between bg-slate-50/50">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-lg">
                   <span className="material-symbols-outlined">abc</span>
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-slate-800 dark:text-white">WordArt Gallery</h3>
+                  <h3 className="text-lg font-bold text-slate-800">WordArt Gallery</h3>
                   <p className="text-[11px] text-slate-500">Stylized branding typography</p>
                 </div>
               </div>
-              <button onClick={() => setShowWordArtModal(false)} className="w-8 h-8 rounded-full hover:bg-slate-200 dark:hover:bg-white/10 flex items-center justify-center text-slate-500 transition-colors"><span className="material-symbols-outlined text-xl">close</span></button>
+              <button onClick={() => setShowWordArtModal(false)} className="w-8 h-8 rounded-full hover:bg-slate-200 flex items-center justify-center text-slate-500 transition-colors"><span className="material-symbols-outlined text-xl">close</span></button>
             </div>
 
-            <div className="flex border-b border-white/20 dark:border-white/10 bg-[#F8FAFC] dark:bg-slate-900 px-4 pt-2 shrink-0">
+            <div className="flex border-b border-white/20 bg-[#F8FAFC] px-4 pt-2 shrink-0">
               {WORDART_CATEGORIES.map(t => (
                 <button key={t} onClick={() => setWordArtTab(t)}
-                  className={`px-4 py-3 text-[11px] font-bold uppercase tracking-widest transition-all border-b-2 ${wordArtTab === t ? 'text-primary border-primary bg-white dark:bg-slate-800' : 'text-slate-400 border-transparent hover:text-slate-600 dark:hover:text-slate-200'}`}
+                  className={`px-4 py-3 text-[11px] font-bold uppercase tracking-widest transition-all border-b-2 ${wordArtTab === t ? 'text-primary border-primary bg-white' : 'text-slate-400 border-transparent hover:text-slate-600'}`}
                 >{t}</button>
               ))}
             </div>
 
-            <div className="p-6 grid grid-cols-2 gap-4 overflow-y-auto bg-slate-50/30 dark:bg-transparent custom-scrollbar flex-1">
+            <div className="p-6 grid grid-cols-2 gap-4 overflow-y-auto bg-slate-50/30 custom-scrollbar flex-1">
               {(WORDART_STYLES[wordArtTab] || []).map((art, idx) => (
                 <button key={idx} onClick={() => {
                   addElement({ type: 'text', text: art.name, ...art.style, width: 220, height: 40, fontFamily: 'Outfit, sans-serif' });
                   setShowWordArtModal(false);
                   commitUpdate();
-                }} className="flex flex-col items-center justify-center p-8 border border-slate-200 dark:border-white/10 rounded-2xl bg-white dark:bg-slate-900/50 hover:border-blue-500 hover:shadow-2xl transition-all group active:scale-95 overflow-hidden min-h-[140px]">
+                }} className="flex flex-col items-center justify-center p-8 border border-slate-200 rounded-2xl bg-white hover:border-blue-500 hover:shadow-2xl transition-all group active:scale-95 overflow-hidden min-h-[140px]">
                   <span style={art.style} className="mb-3 block text-center leading-normal break-words w-full">{art.name}</span>
                   <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400 group-hover:text-blue-500 transition-colors">Apply Style</span>
                 </button>
@@ -858,20 +881,20 @@ export default function LabelEditor() {
       {/* Bulk Delete Dialog */}
       {showBulkDeleteModal && createPortal(
         <div className="fixed inset-0 z-[1002] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm animate-fade-in">
-          <div className="glass-card bg-white dark:bg-slate-800 rounded-2xl shadow-float w-[360px] p-6 flex flex-col gap-4 border border-white/20">
+          <div className="glass-card bg-white rounded-2xl shadow-float w-[360px] p-6 flex flex-col gap-4 border border-white/20">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-600 shrink-0">
                 <span className="material-symbols-outlined text-xl">delete_sweep</span>
               </div>
               <div className="flex flex-col">
-                <h3 className="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-tight">Delete {selectedIds.length} Elements?</h3>
+                <h3 className="text-sm font-bold text-slate-800 uppercase tracking-tight">Delete {selectedIds.length} Elements?</h3>
                 <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">This action cannot be undone.</p>
               </div>
             </div>
             <div className="flex gap-3 mt-4">
               <button
                 onClick={() => setShowBulkDeleteModal(false)}
-                className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 transition-all"
+                className="flex-1 py-2.5 rounded-xl border border-slate-200 text-[11px] font-black uppercase tracking-wider text-slate-600 hover:bg-slate-50 transition-all"
               >
                 Cancel
               </button>
@@ -982,7 +1005,7 @@ export default function LabelEditor() {
           <div className="relative" onClick={e => e.stopPropagation()}>
             <button
               onClick={() => setShowFileMenu(v => !v)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-semibold text-slate-700 hover:bg-slate-100 transition-colors"
             >
               <span className="material-symbols-outlined text-[16px]">folder_open</span>
               File
@@ -1015,7 +1038,7 @@ export default function LabelEditor() {
           <div className="w-[1px] h-5 bg-outline-variant/30 mx-1"></div>
 
           <div className="flex items-center gap-2">
-            <span className="text-sm font-black text-slate-900 dark:text-slate-100 tracking-tight truncate max-w-[200px]">{meta.fileName || 'Untitled Label'}</span>
+            <span className="text-sm font-black text-slate-900 tracking-tight truncate max-w-[200px]">{meta.fileName || 'Untitled Label'}</span>
             <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full ${savedStatus === 'saved' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'} text-[10px] font-black uppercase tracking-wider shadow-sm`}>
               <span className={`material-symbols-outlined text-[14px] ${savedStatus === 'saving' ? 'animate-spin' : ''}`}>{statusIcon}</span>
               {statusLabel}
@@ -1024,29 +1047,19 @@ export default function LabelEditor() {
         </div>
 
         {/* Center: Nav links */}
-        <nav className="hidden xl:flex absolute left-1/2 -translate-x-1/2 items-center gap-1 bg-slate-100/80 dark:bg-white/5 p-1 rounded-xl border border-slate-200/50 dark:border-white/10 shadow-sm">
-          <Link to="/" className="px-5 py-1.5 rounded-lg text-[12px] font-bold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/90 dark:hover:bg-white/10 transition-all">Dashboard</Link>
-          <Link to="/assets" className="px-5 py-1.5 rounded-lg text-[12px] font-bold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/90 dark:hover:bg-white/10 transition-all">Templates</Link>
-          <Link to="/editor" className="px-5 py-1.5 rounded-lg text-[12px] font-bold bg-white dark:bg-white/15 text-primary shadow-sm border border-slate-200/50 dark:border-white/10 forced-active">Label Editor</Link>
-          <Link to="/translation" className="px-5 py-1.5 rounded-lg text-[12px] font-bold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/90 dark:hover:bg-white/10 transition-all">Translation</Link>
+        <nav className="hidden xl:flex absolute left-1/2 -translate-x-1/2 items-center gap-1 bg-slate-100/80 p-1 rounded-xl border border-slate-200/50 shadow-sm">
+          <Link to="/" className="px-5 py-1.5 rounded-lg text-[12px] font-bold text-slate-500 hover:text-slate-900 hover:bg-white/90 transition-all">Dashboard</Link>
+          <Link to="/assets" className="px-5 py-1.5 rounded-lg text-[12px] font-bold text-slate-500 hover:text-slate-900 hover:bg-white/90 transition-all">Templates</Link>
+          <Link to="/editor" className="px-5 py-1.5 rounded-lg text-[12px] font-bold bg-white text-primary shadow-sm border border-slate-200/50 forced-active">Label Editor</Link>
+          <Link to="/translation" className="px-5 py-1.5 rounded-lg text-[12px] font-bold text-slate-500 hover:text-slate-900 hover:bg-white/90 transition-all">Translation</Link>
         </nav>
 
         {/* Right: Toolset */}
         <div className="flex items-center gap-3">
-          {/* Theme Toggle */}
-          <button
-            onClick={toggleTheme}
-            className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10 transition-all"
-          >
-            <span className="material-symbols-outlined text-[20px]">
-              {theme === 'dark' ? 'light_mode' : 'dark_mode'}
-            </span>
-          </button>
-
           <div className="relative">
             <button
               onClick={(e) => { e.stopPropagation(); setShowExportMenu(!showExportMenu); setShowFileMenu(false); }}
-              className="h-9 px-5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl text-[11px] font-black uppercase tracking-[0.05em] shadow-sm flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all"
+              className="h-9 px-5 bg-slate-900 text-white rounded-xl text-[11px] font-black uppercase tracking-[0.05em] shadow-sm flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all"
             >
               Export
               <span className="material-symbols-outlined text-[18px]">{showExportMenu ? 'arrow_drop_up' : 'arrow_drop_down'}</span>
@@ -1082,19 +1095,19 @@ export default function LabelEditor() {
 
       {/* ── Premium Secondary Toolbar ────────────────────────────────────────── */}
       <motion.div
-        className="h-14 glass-header border-b border-white/20 dark:border-white/10 flex items-center px-4 gap-4 shrink-0 relative z-[100] shadow-sm select-none"
+        className="h-14 glass-header border-b border-white/20 flex items-center px-4 gap-4 shrink-0 relative z-[100] shadow-sm select-none"
         initial={{ y: -10, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.1, type: "spring", stiffness: 300, damping: 30 }}
       >
         {/* Column 1: Precision Controls (Left) */}
         <div className="flex-1 flex items-center justify-start">
-          <div className="flex items-center gap-1.5 bg-slate-100/80 dark:bg-white/5 p-1 rounded-xl border border-slate-200/50 dark:border-white/10 shadow-sm h-10">
+          <div className="flex items-center gap-1.5 bg-slate-100/80 p-1 rounded-xl border border-slate-200/50 shadow-sm h-10">
             <motion.button
               onClick={undo}
               disabled={historyIndex <= 0}
               title="Undo (Ctrl+Z)"
-              className="w-8 h-8 rounded-lg hover:bg-white dark:hover:bg-white/10 disabled:opacity-20 text-slate-600 dark:text-slate-400 transition-all flex items-center justify-center shadow-sm"
+              className="w-8 h-8 rounded-lg hover:bg-white disabled:opacity-20 text-slate-600 transition-all flex items-center justify-center shadow-sm"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -1104,25 +1117,25 @@ export default function LabelEditor() {
               onClick={redo}
               disabled={historyIndex >= historyLength - 1}
               title="Redo (Ctrl+Y)"
-              className="w-8 h-8 rounded-lg hover:bg-white dark:hover:bg-white/10 disabled:opacity-20 text-slate-600 dark:text-slate-400 transition-all flex items-center justify-center shadow-sm"
+              className="w-8 h-8 rounded-lg hover:bg-white disabled:opacity-20 text-slate-600 transition-all flex items-center justify-center shadow-sm"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 7v6h-6" /><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13" /></svg>
             </motion.button>
 
-            <div className="w-[1px] h-4 bg-slate-300 dark:bg-white/10 mx-1"></div>
+            <div className="w-[1px] h-4 bg-slate-300 mx-1"></div>
 
-            <button onClick={() => setZoomLevel(z => Math.max(0.1, +(z - 0.1).toFixed(2)))} className="w-8 h-8 rounded-lg hover:bg-white dark:hover:bg-white/10 text-slate-500 flex items-center justify-center transition-colors">
+            <button onClick={() => setZoomLevel(z => Math.max(0.1, +(z - 0.1).toFixed(2)))} className="w-8 h-8 rounded-lg hover:bg-white text-slate-500 flex items-center justify-center transition-colors">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /><line x1="8" y1="11" x2="14" y2="11" /></svg>
             </button>
             <button
               onClick={handleFitToScreen}
-              className="text-[10px] font-black font-mono text-slate-700 dark:text-slate-200 min-w-12 text-center select-none py-1.5 hover:bg-white/10 rounded-md transition-colors"
+              className="text-[10px] font-black font-mono text-slate-700 min-w-12 text-center select-none py-1.5 hover:bg-white/10 rounded-md transition-colors"
             >
               {Math.round(zoomLevel * 100)}%
             </button>
-            <button onClick={() => setZoomLevel(z => Math.min(4, +(z + 0.1).toFixed(2)))} className="w-8 h-8 rounded-lg hover:bg-white dark:hover:bg-white/10 text-slate-500 flex items-center justify-center transition-colors">
+            <button onClick={() => setZoomLevel(z => Math.min(4, +(z + 0.1).toFixed(2)))} className="w-8 h-8 rounded-lg hover:bg-white text-slate-500 flex items-center justify-center transition-colors">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /><line x1="11" y1="8" x2="11" y2="14" /><line x1="8" y1="11" x2="14" y2="11" /></svg>
             </button>
           </div>
@@ -1133,7 +1146,7 @@ export default function LabelEditor() {
           <div className="flex items-center gap-4">
             {/* Quick Alignment Toolbar */}
             {selectedIds.length > 0 && (
-              <div className="flex items-center gap-1 bg-slate-100/80 dark:bg-white/5 p-1 rounded-xl border border-slate-200/50 dark:border-white/10 shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <div className="flex items-center gap-1 bg-slate-100/80 p-1 rounded-xl border border-slate-200/50 shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-300">
                 {[
                   { id: 'left', icon: 'align_horizontal_left', title: 'Align Left' },
                   { id: 'centerH', icon: 'align_horizontal_center', title: 'Align Center Horizontal' },
@@ -1143,12 +1156,12 @@ export default function LabelEditor() {
                   { id: 'centerV', icon: 'align_vertical_center', title: 'Align Center Vertical' },
                   { id: 'bottom', icon: 'align_vertical_bottom', title: 'Align Bottom' },
                 ].map((btn) => btn.type === 'sep' ? (
-                  <div key={btn.id} className="w-[1px] h-5 bg-slate-200 dark:bg-white/10 mx-1" />
+                  <div key={btn.id} className="w-[1px] h-5 bg-slate-200 mx-1" />
                 ) : (
                   <button
                     key={btn.id}
                     onClick={() => alignElements(btn.id)}
-                    className="w-8 h-8 rounded-lg hover:bg-white dark:hover:bg-white/10 text-slate-500 hover:text-primary transition-all flex items-center justify-center"
+                    className="w-8 h-8 rounded-lg hover:bg-white text-slate-500 hover:text-primary transition-all flex items-center justify-center"
                     title={btn.title}
                   >
                     <span className="material-symbols-outlined text-[18px]">{btn.icon}</span>
@@ -1157,12 +1170,12 @@ export default function LabelEditor() {
               </div>
             )}
 
-            <div className="w-[1px] h-4 bg-slate-200 dark:bg-white/10 mx-1 hidden md:block"></div>
+            <div className="w-[1px] h-4 bg-slate-200 mx-1 hidden md:block"></div>
 
             <div className="relative">
               <button
                 onClick={(e) => { e.stopPropagation(); setShowEditorViewSettings(!showEditorViewSettings); }}
-                className={`h-10 px-4 rounded-xl text-[10px] font-black uppercase tracking-[0.05em] transition-all flex items-center gap-2 border shadow-sm ${showEditorViewSettings ? 'bg-primary/5 border-primary/30 text-primary' : 'bg-slate-100/80 dark:bg-white/5 border-slate-200/50 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:border-primary/40'}`}
+                className={`h-10 px-4 rounded-xl text-[10px] font-black uppercase tracking-[0.05em] transition-all flex items-center gap-2 border shadow-sm ${showEditorViewSettings ? 'bg-primary/5 border-primary/30 text-primary' : 'bg-slate-100/80 border-slate-200/50 text-slate-600 hover:border-primary/40'}`}
               >
                 <span className="material-symbols-outlined text-[18px]">grid_guides</span>
                 View Options
@@ -1172,7 +1185,7 @@ export default function LabelEditor() {
               {showEditorViewSettings && (
                 <div
                   onClick={(e) => e.stopPropagation()}
-                  className="absolute top-11 left-1/2 -translate-x-1/2 w-64 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-2xl p-2 z-[9999] animate-in fade-in slide-in-from-top-2 duration-300"
+                  className="absolute top-11 left-1/2 -translate-x-1/2 w-64 bg-white/95 backdrop-blur-xl border border-slate-200 shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-2xl p-2 z-[9999] animate-in fade-in slide-in-from-top-2 duration-300"
                 >
                   <div className="px-3 py-2 mb-1">
                     <p className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-400">Environment & Snapping</p>
@@ -1187,10 +1200,10 @@ export default function LabelEditor() {
                     <button
                       key={item.id}
                       onClick={(e) => { e.stopPropagation(); item.toggle(); }}
-                      className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-all group"
+                      className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 transition-all group"
                     >
                       <div className="flex items-center gap-3">
-                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${item.active ? 'bg-primary/10 text-primary' : 'bg-slate-100 text-slate-400 dark:bg-white/5'}`}>
+                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${item.active ? 'bg-primary/10 text-primary' : 'bg-slate-100 text-slate-400'}`}>
                           {item.isSVG ? (
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 10v4a7 7 0 0 0 14 0v-4" /><path d="M15 10V5a3 3 0 0 0-6 0v5" /><path d="M12 2v3" /></svg>
                           ) : (
@@ -1198,11 +1211,11 @@ export default function LabelEditor() {
                           )}
                         </div>
                         <div className="flex flex-col items-start gap-0.5">
-                          <span className={`text-[12px] font-bold ${item.active ? 'text-slate-900 dark:text-white' : 'text-slate-500'}`}>{item.label}</span>
+                          <span className={`text-[12px] font-bold ${item.active ? 'text-slate-900' : 'text-slate-500'}`}>{item.label}</span>
                           <span className="text-[10px] text-slate-400 font-medium">{item.desc}</span>
                         </div>
                       </div>
-                      <div className={`w-9 h-5 rounded-full relative transition-all duration-300 border shadow-inner ${item.active ? 'bg-primary border-primary shadow-indigo-600/20' : 'bg-slate-200 dark:bg-slate-700 border-slate-300 dark:border-slate-600'}`}>
+                      <div className={`w-9 h-5 rounded-full relative transition-all duration-300 border shadow-inner ${item.active ? 'bg-primary border-primary shadow-indigo-600/20' : 'bg-slate-200 border-slate-300'}`}>
                         <div className={`absolute top-0.5 w-3.5 h-3.5 rounded-full bg-white shadow-md transition-all duration-300 ${item.active ? 'right-1' : 'left-1'}`} />
                       </div>
                     </button>
@@ -1220,20 +1233,20 @@ export default function LabelEditor() {
                       step="5"
                       value={gridSize}
                       onChange={(e) => setGridSize(Number(e.target.value))}
-                      className="w-full h-1 bg-slate-200 dark:bg-slate-700 rounded-lg accent-primary"
+                      className="w-full h-1 bg-slate-200 rounded-lg accent-primary"
                     />
                   </div>
 
-                  <div className="h-[1px] bg-slate-100 dark:bg-white/5 my-2 mx-2" />
+                  <div className="h-[1px] bg-slate-100 my-2 mx-2" />
 
                   <div className="px-3 py-2">
                     <p className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-400">Display Units</p>
-                    <div className="flex bg-slate-100 dark:bg-white/5 p-1 rounded-xl gap-1">
+                    <div className="flex bg-slate-100 p-1 rounded-xl gap-1">
                       {[UNITS.MM, UNITS.CM, UNITS.IN, UNITS.PX].map(u => (
                         <button
                           key={u}
                           onClick={(e) => { e.stopPropagation(); setUnit(u); }}
-                          className={`flex-1 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all ${meta.unit === u ? 'bg-white dark:bg-slate-800 text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                          className={`flex-1 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all ${meta.unit === u ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                         >
                           {u}
                         </button>
@@ -1241,13 +1254,13 @@ export default function LabelEditor() {
                     </div>
                   </div>
 
-                  <div className="h-[1px] bg-slate-100 dark:bg-white/5 my-2 mx-2" />
+                  <div className="h-[1px] bg-slate-100 my-2 mx-2" />
 
                   <button
                     onClick={(e) => { e.stopPropagation(); setManualGuidelines([]); setShowEditorViewSettings(false); }}
-                    className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/10 text-red-500 transition-all group"
+                    className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-red-50 text-red-500 transition-all group"
                   >
-                    <div className="w-9 h-9 rounded-xl bg-red-100/50 dark:bg-red-900/20 flex items-center justify-center group-hover:bg-red-500 group-hover:text-white transition-colors">
+                    <div className="w-9 h-9 rounded-xl bg-red-100/50 flex items-center justify-center group-hover:bg-red-500 group-hover:text-white transition-colors">
                       <span className="material-symbols-outlined text-[18px]">delete_sweep</span>
                     </div>
                     <span className="text-[12px] font-bold">Purge Manual Guides</span>
@@ -1262,7 +1275,7 @@ export default function LabelEditor() {
             <div className="relative">
               <button
                 onClick={(e) => { e.stopPropagation(); setShowToolsMenu(!showToolsMenu); }}
-                className={`h-10 px-4 rounded-xl text-[10px] font-black uppercase tracking-[0.05em] transition-all flex items-center gap-2 border shadow-sm ${showToolsMenu ? 'bg-indigo-50 dark:bg-indigo-900/10 border-indigo-200 text-indigo-700' : 'bg-slate-100/80 dark:bg-white/5 border-slate-200/50 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:border-indigo-400'}`}
+                className={`h-10 px-4 rounded-xl text-[10px] font-black uppercase tracking-[0.05em] transition-all flex items-center gap-2 border shadow-sm ${showToolsMenu ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-slate-100/80 border-slate-200/50 text-slate-600 hover:border-indigo-400'}`}
               >
                 <span className="material-symbols-outlined text-[18px]">build</span>
                 Editor Tools
@@ -1272,25 +1285,25 @@ export default function LabelEditor() {
               {showToolsMenu && (
                 <div
                   onClick={(e) => e.stopPropagation()}
-                  className="absolute top-11 left-1/2 -translate-x-1/2 w-72 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-2xl p-2 z-[9999] animate-in fade-in slide-in-from-top-2 duration-300"
+                  className="absolute top-11 left-1/2 -translate-x-1/2 w-72 bg-white/95 backdrop-blur-xl border border-slate-200 shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-2xl p-2 z-[9999] animate-in fade-in slide-in-from-top-2 duration-300"
                 >
                   <div className="px-3 py-2 mb-1">
                     <p className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-400">Content & Interaction</p>
                   </div>
 
-                  <button onClick={() => { setShowWordArtModal(true); setShowToolsMenu(false); }} className="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-all group">
+                  <button onClick={() => { setShowWordArtModal(true); setShowToolsMenu(false); }} className="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-slate-50 transition-all group">
                     <div className="w-11 h-11 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform"><span className="material-symbols-outlined text-[24px]">abc</span></div>
-                    <div className="flex flex-col items-start gap-0.5"><span className="text-[13px] font-bold text-slate-900 dark:text-white uppercase tracking-tight">WordArt</span><span className="text-[10px] text-slate-400 font-medium">Add stylized decorative text</span></div>
+                    <div className="flex flex-col items-start gap-0.5"><span className="text-[13px] font-bold text-slate-900 uppercase tracking-tight">WordArt</span><span className="text-[10px] text-slate-400 font-medium">Add stylized decorative text</span></div>
                   </button>
 
-                  <button onClick={() => { setIsDrawingMode(!isDrawingMode); setShowToolsMenu(false); }} className={`w-full flex items-center gap-4 p-3 rounded-xl transition-all group ${isDrawingMode ? 'bg-indigo-50 dark:bg-indigo-900/10' : 'hover:bg-slate-50 dark:hover:bg-white/5'}`}>
+                  <button onClick={() => { setIsDrawingMode(!isDrawingMode); setShowToolsMenu(false); }} className={`w-full flex items-center gap-4 p-3 rounded-xl transition-all group ${isDrawingMode ? 'bg-indigo-50' : 'hover:bg-slate-50'}`}>
                     <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform ${isDrawingMode ? 'bg-indigo-600 text-white shadow-glow' : 'bg-slate-100 text-slate-400'}`}><span className="material-symbols-outlined text-[24px]">edit_note</span></div>
-                    <div className="flex flex-col items-start gap-0.5"><span className={`text-[13px] font-bold uppercase tracking-tight ${isDrawingMode ? 'text-indigo-700 dark:text-indigo-400' : 'text-slate-900 dark:text-white'}`}>Freehand</span><span className="text-[10px] text-slate-400 font-medium text-left">Draw or write on the label</span></div>
+                    <div className="flex flex-col items-start gap-0.5"><span className={`text-[13px] font-bold uppercase tracking-tight ${isDrawingMode ? 'text-indigo-700' : 'text-slate-900'}`}>Freehand</span><span className="text-[10px] text-slate-400 font-medium text-left">Draw or write on the label</span></div>
                   </button>
 
-                  <div className="h-[1px] bg-slate-100 dark:bg-white/5 my-2 mx-2" />
+                  <div className="h-[1px] bg-slate-100 my-2 mx-2" />
 
-                  <button onClick={() => { handleValidate(); setShowToolsMenu(false); }} className="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-900/10 transition-all group">
+                  <button onClick={() => { handleValidate(); setShowToolsMenu(false); }} className="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-indigo-50 transition-all group">
                     <div className="w-11 h-11 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform"><span className="material-symbols-outlined text-[24px]">fact_check</span></div>
                     <div className="flex flex-col items-start gap-0.5"><span className="text-[13px] font-bold text-indigo-700 uppercase tracking-tight">Validate</span><span className="text-[10px] text-slate-400 font-medium">Check for compliance errors</span></div>
                   </button>
@@ -1303,10 +1316,10 @@ export default function LabelEditor() {
         {/* Column 3: Design Review (Right) */}
         <div className="flex-1 flex items-center justify-end gap-2 pr-1">
           {/* Label Size Info */}
-          <div className="flex bg-slate-100/80 dark:bg-white/5 border border-slate-200/50 dark:border-white/10 rounded-xl p-0.5 shadow-sm">
+          <div className="flex bg-slate-100/80 border border-slate-200/50 rounded-xl p-0.5 shadow-sm">
             <button
               onClick={() => setModalStep('labelsize')}
-              className="flex items-center gap-2 h-9 px-3 rounded-lg text-[10px] font-black text-slate-500 dark:text-slate-400 hover:text-primary hover:bg-white/50 transition-all"
+              className="flex items-center gap-2 h-9 px-3 rounded-lg text-[10px] font-black text-slate-500 hover:text-primary hover:bg-white/50 transition-all"
               title="Edit label dimensions"
             >
               <span className="material-symbols-outlined text-[16px]">aspect_ratio</span>
@@ -1317,7 +1330,7 @@ export default function LabelEditor() {
             <div className="w-[1px] h-4 bg-slate-200 self-center mx-0.5" />
             <button
               onClick={toggleOrientation}
-              className="flex items-center gap-2 h-9 px-3 rounded-lg text-[10px] font-black text-slate-500 dark:text-slate-400 hover:text-blue-600 hover:bg-blue-50/50 transition-all"
+              className="flex items-center gap-2 h-9 px-3 rounded-lg text-[10px] font-black text-slate-500 hover:text-blue-600 hover:bg-blue-50/50 transition-all"
               title="Toggle Portrait/Landscape"
             >
               <span className="material-symbols-outlined text-[16px]">screen_rotation</span>
@@ -1325,20 +1338,20 @@ export default function LabelEditor() {
           </div>
 
           {/* Live Review Group */}
-          <div className="flex items-center gap-1.5 px-1.5 py-1 bg-slate-100/50 dark:bg-white/5 rounded-xl border border-slate-200/50 dark:border-white/10 shadow-sm h-10">
+          <div className="flex items-center gap-1.5 px-1.5 py-1 bg-slate-100/50 rounded-xl border border-slate-200/50 shadow-sm h-10">
             <button
               onClick={() => setPreviewMode(!previewMode)}
               title={previewMode ? "Show Raw Placeholders" : "Show Live Trial Data"}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all h-8 ${previewMode ? 'bg-blue-600 text-white shadow-lg' : 'bg-white dark:bg-white/10 text-slate-500 shadow-sm border border-slate-200 dark:border-white/10'}`}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all h-8 ${previewMode ? 'bg-blue-600 text-white shadow-lg' : 'bg-white text-slate-500 shadow-sm border border-slate-200'}`}
             >
               <span className="material-symbols-outlined text-[16px]">{previewMode ? 'database' : 'toll'}</span>
               {previewMode ? 'Live Data' : 'Tokens'}
             </button>
-            <div className="w-[1px] h-3 bg-slate-300 dark:bg-white/10"></div>
+            <div className="w-[1px] h-3 bg-slate-300"></div>
             <button
               onClick={() => setShowPreviewModal(true)}
               title="Print Preview"
-              className="flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider text-slate-500 hover:bg-white dark:hover:bg-white/10 transition-all h-8"
+              className="flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider text-slate-500 hover:bg-white transition-all h-8"
             >
               <span className="material-symbols-outlined text-[16px]">visibility</span>
               Preview
@@ -1355,794 +1368,381 @@ export default function LabelEditor() {
         transition={{ delay: 0.3 }}
       >
 
-        <motion.aside
-          className="bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-white/5 flex flex-col overflow-hidden shrink-0 relative z-[998] shadow-sm"
-          initial={false}
-          animate={{ width: navCollapsed ? 56 : navWidth }}
-          transition={{ type: "spring", stiffness: 400, damping: 40 }}
+        {/* ── Canva-style Sidebar System ────────────────────────────────────────── */}
+          <div 
+          ref={sidebarRef} 
+          className="flex h-full relative z-[999] bg-white border-r border-slate-200" 
+          onMouseLeave={() => setHoveredIcon(null)}
         >
-          {/* Resizer Handle for Nav Rail */}
-          {!navCollapsed && (
-            <div
-              className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-blue-500/30 active:bg-blue-500 z-50 transition-colors"
-              onMouseDown={(e) => {
-                const startX = e.clientX;
-                const startW = navWidth;
-                const handleMove = (em) => {
-                  const diff = em.clientX - startX;
-                  setNavWidth(Math.max(160, Math.min(320, startW + diff)));
-                };
-                const handleUp = () => {
-                  document.removeEventListener('mousemove', handleMove);
-                  document.removeEventListener('mouseup', handleUp);
-                };
-                document.addEventListener('mousemove', handleMove);
-                document.addEventListener('mouseup', handleUp);
-              }}
-            />
-          )}
-          {/* Header & Search */}
-          {!navCollapsed && (
-            <div className="p-4 space-y-4 border-b border-slate-200 dark:border-white/5 shrink-0 bg-slate-50/30 dark:bg-transparent">
-              <div className="flex items-center justify-between">
-                <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Workspace</h2>
-              </div>
-              <div className="relative group">
-                <span className="material-symbols-outlined absolute left-2.5 top-1.5 text-[16px] text-slate-500 group-focus-within:text-blue-500 transition-colors">search</span>
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  value={sidebarSearch}
-                  onChange={e => setSidebarSearch(e.target.value)}
-                  className="w-full bg-slate-100/50 dark:bg-slate-800/50 border border-slate-200 dark:border-white/5 text-[11px] font-medium text-slate-700 dark:text-slate-300 pl-9 pr-3 py-1.5 rounded-md outline-none focus:border-blue-500/50 focus:bg-white dark:focus:bg-slate-800 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600"
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Navigation & Groups */}
-          <div className="flex-1 overflow-y-auto custom-scrollbar-thin flex flex-col py-2 px-2 gap-1 select-none">
-            {[
-              {
-                group: 'Nodes',
-                items: [
-                  { id: 'elements', icon: 'add_circle', label: 'Elements' },
-                  { id: 'shapes', icon: 'category', label: 'Shapes' },
-                  { id: 'Icons', icon: 'medical_services', label: 'Icons' },
-                ]
-              },
-              {
-                group: 'Assets',
-                items: [
-                  { id: 'Objects', icon: 'image', label: 'Objects' },
-                  { id: 'templates', icon: 'auto_awesome_motion', label: 'Templates' },
-                  { id: 'stocks', icon: 'inventory', label: 'Label Stocks' },
-                  { id: 'Variables', icon: 'database', label: 'Variables' },
-                ]
-              },
-              {
-                group: 'Layers',
-                items: [
-                  { id: 'layers', icon: 'layers', label: 'Element Tree', badge: elements.length },
-                ]
-              },
-              {
-                group: 'Collaboration',
-                items: [
-                  { id: 'notes', icon: 'description', label: 'Label Notes' },
-                ]
-              }
-            ].map((section, idx) => {
-              const filteredItems = section.items.filter(it => it.label.toLowerCase().includes(sidebarSearch.toLowerCase()));
-              if (filteredItems.length === 0 && sidebarSearch) return null;
-
+          {/* 1. Icon Rail (Fixed width: 72px) */}
+          <aside className="w-[72px] bg-slate-50 border-r border-slate-200 flex flex-col items-center py-4 gap-2 flex-shrink-0">
+            {ICON_RAIL_ITEMS.map((item) => {
+              const isActive = activeTab === item.id;
+              const isLocked = lockedIcon === item.id;
               return (
-                <div key={idx} className="flex flex-col mb-4">
-                  {!navCollapsed && (
-                    <div className="px-3 mb-1.5 flex items-center gap-2">
-                      <span className="text-[8px] font-black uppercase tracking-[0.1em] text-slate-600 whitespace-nowrap">{section.group}</span>
-                      <div className="h-[1px] w-full bg-slate-200 dark:bg-white/5" />
-                    </div>
+                <button
+                  key={item.id}
+                  onMouseEnter={() => setHoveredIcon(item.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setLockedIcon(isLocked ? null : item.id);
+                  }}
+                  className={`group relative w-full flex flex-col items-center py-3 px-1 transition-all duration-200 ${
+                    isActive ? 'text-primary' : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                  title={item.label}
+                >
+                  {/* Lock Indicator (Blue Bar) */}
+                  {isLocked && (
+                    <motion.div
+                      layoutId="railIndicator"
+                      className="absolute left-0 top-2 bottom-2 w-[3px] bg-[#3B82F6] rounded-r shadow-[0_0_12px_rgba(59,130,246,0.6)]"
+                    />
                   )}
-                  <div className="flex flex-col gap-0.5">
-                    {filteredItems.map(t => (
-                      <motion.button
-                        key={t.id}
-                        onClick={() => { setActiveTab(t.id); if (panelCollapsed) setPanelCollapsed(false); }}
-                        className={`group flex items-center gap-3 transition-all relative ${navCollapsed ? 'w-10 h-10 justify-center rounded-lg mx-auto' : 'w-full px-3 py-2 rounded-md'} ${activeTab === t.id ? 'bg-blue-500/10 text-blue-400' : 'text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-600 dark:hover:text-slate-200'}`}
-                        whileTap={{ scale: 0.98 }}
-                        title={navCollapsed ? t.label : ''}
-                      >
-                        {activeTab === t.id && (
-                          <motion.div
-                            layoutId="sidebarActiveLine"
-                            className="absolute left-0 top-1 bottom-1 w-[2px] bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)] rounded-full"
-                          />
-                        )}
-                        <span className={`material-symbols-outlined text-[18px] transition-transform ${activeTab === t.id ? 'scale-110' : 'group-hover:scale-105'}`}>{t.icon}</span>
-                        {!navCollapsed && (
-                          <div className="flex items-center justify-between flex-1 min-w-0">
-                            <span className="text-[11px] font-bold tracking-tight truncate">{t.label}</span>
-                            {t.badge > 0 && <span className={`text-[8px] font-black px-1.5 py-0.5 rounded border border-slate-200 dark:border-white/5 bg-slate-100 dark:bg-white/5 opacity-50`}>{t.badge}</span>}
-                          </div>
-                        )}
-                      </motion.button>
-                    ))}
-                  </div>
-                </div>
+                  
+                  {/* Active/Hover Background */}
+                  {isActive && (
+                    <div className="absolute inset-x-1.5 inset-y-1 bg-primary/5 rounded-xl border border-primary/10 shadow-sm -z-10" />
+                  )}
+
+                  <span className={`material-symbols-outlined text-[24px] mb-1 transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-105'}`}>
+                    {item.icon}
+                  </span>
+                  <span className="text-[9px] font-bold uppercase tracking-tighter text-center leading-none opacity-80">
+                    {item.label}
+                  </span>
+                </button>
               );
             })}
-          </div>
+          </aside>
 
-          {/* Bottom Controls */}
-          <div className="p-3 border-t border-slate-200 dark:border-white/5 flex flex-col gap-1 shrink-0 bg-slate-50/50 dark:bg-transparent">
-            <button onClick={() => setNavCollapsed(!navCollapsed)} className="flex items-center gap-3 text-slate-600 hover:text-slate-400 p-2 transition-all group" title={navCollapsed ? "Expand Rail" : "Collapse Rail"}>
-              <span className="material-symbols-outlined text-[18px] transition-transform duration-500" style={{ transform: navCollapsed ? 'rotate(180deg)' : 'none' }}>side_navigation</span>
-              {!navCollapsed && <span className="text-[9px] uppercase tracking-widest font-black">Collapse Rail</span>}
-            </button>
-            <button onClick={() => setPanelCollapsed(!panelCollapsed)} className="flex items-center gap-3 text-slate-600 hover:text-slate-400 p-2 transition-all group" title={panelCollapsed ? "Show Asset Panel" : "Hide Asset Panel"}>
-              <span className="material-symbols-outlined text-[18px]">{panelCollapsed ? 'dock_to_right' : 'dock_to_left'}</span>
-              {!navCollapsed && <span className="text-[9px] uppercase tracking-widest font-black">{panelCollapsed ? 'Open Panel' : 'Close Panel'}</span>}
-            </button>
-          </div>
-        </motion.aside>
-
-        {/* Content Area for Asset Managers */}
-        <div
-          className={`transition-all duration-300 overflow-hidden shrink-0 border-r border-slate-200 dark:border-white/5 flex flex-col bg-white dark:bg-slate-900/50 relative`}
-          style={{ width: panelCollapsed ? 0 : panelWidth }}
-        >
-          {/* Resizer Handle for Asset Panel */}
-          {!panelCollapsed && (
-            <div
-              className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-blue-500/30 active:bg-blue-500 z-50 transition-colors"
-              onMouseDown={(e) => {
-                const startX = e.clientX;
-                const startW = panelWidth;
-                const handleMove = (em) => {
-                  const diff = em.clientX - startX;
-                  setPanelWidth(Math.max(220, Math.min(480, startW + diff)));
-                };
-                const handleUp = () => {
-                  document.removeEventListener('mousemove', handleMove);
-                  document.removeEventListener('mouseup', handleUp);
-                };
-                document.addEventListener('mousemove', handleMove);
-                document.addEventListener('mouseup', handleUp);
-              }}
-            />
-          )}
-          {/* Tiny internal panel toggle when rail is collapsed but panel is open */}
-          {navCollapsed && !panelCollapsed && (
-            <button onClick={() => setPanelCollapsed(true)} className="absolute top-2 right-2 p-1 text-slate-400 hover:text-slate-600 z-50">
-              <span className="material-symbols-outlined text-[16px]">close</span>
-            </button>
-          )}
-          {!panelCollapsed && (
-            <div className="flex-1 overflow-y-auto custom-scrollbar-thin p-6 animate-fade-in">
-
-              {/* LABEL STOCKS TAB */}
-              {activeTab === 'stocks' && (
-                <div className="animate-fade-in flex flex-col gap-6">
-                  <div className="flex flex-col gap-1 mb-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Pharma Inventory</span>
-                      <button onClick={() => navigate('/masters/label-stocks')} className="text-[9px] font-black text-blue-600 hover:underline">Manage</button>
-                    </div>
-                    <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest leading-none">Select Physical Media</p>
+          {/* 2. Expandable Content Panel (Width: 320px) */}
+          <AnimatePresence mode="wait">
+            {activeTab && (
+              <motion.div
+                key={activeTab}
+                initial={{ x: -12, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: -12, opacity: 0 }}
+                transition={{ duration: 0.15, ease: "easeOut" }}
+                className="w-[320px] bg-white border-r border-slate-200 flex flex-col overflow-hidden shadow-2xl h-full"
+              >
+                {/* Panel Header */}
+                <div className="p-5 border-b border-slate-100 flex items-center justify-between shrink-0">
+                  <div className="flex flex-col">
+                    <h2 className="text-[14px] font-black uppercase tracking-widest text-slate-800 leading-tight">
+                      {ICON_RAIL_ITEMS.find(it => it.id === activeTab)?.label}
+                    </h2>
+                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Management Tool</p>
                   </div>
-
-                  <div className="flex flex-col gap-3">
-                    {labelStocks.filter(s => s.status === 'ACTIVE').map(stock => {
-                      const isSelected = meta.labelStockId === stock.id;
-                      const isLowStock = stock.quantityOnHand <= stock.reorderLevel;
-
-                      return (
-                        <motion.button
-                          key={stock.id}
-                          onClick={() => setLabelStock(stock.id)}
-                          className={`group relative flex flex-col p-4 rounded-2xl border-2 text-left transition-all ${isSelected
-                              ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-500/20'
-                              : 'bg-white border-slate-200 dark:bg-slate-800 dark:border-white/10 hover:border-blue-500/50'
-                            }`}
-                          whileHover={{ y: -2 }}
-                          whileTap={{ scale: 0.98 }}
-                        >
-                          <div className="flex items-center justify-between mb-2">
-                            <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${isSelected ? 'bg-white/20' : 'bg-slate-100 dark:bg-slate-700'}`}>
-                              <span className="material-symbols-outlined text-[18px]">{isSelected ? 'check_circle' : 'inventory'}</span>
-                            </div>
-                            <div className="flex flex-col items-end">
-                              <span className={`text-[10px] font-mono font-bold ${isSelected ? 'text-white' : 'text-slate-500'}`}>
-                                {stock.breadth}×{stock.height}mm
-                              </span>
-                              {isLowStock && (
-                                <span className="flex items-center gap-1 text-[8px] font-black text-red-500 animate-pulse mt-0.5">
-                                  <span className="material-symbols-outlined text-[10px]">warning</span> LOW STOCK
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          <span className={`text-[12px] font-black uppercase tracking-tight truncate ${isSelected ? 'text-white' : 'text-slate-800 dark:text-white'}`}>
-                            {stock.name}
-                          </span>
-                          <div className="flex items-center gap-2 mt-1 opacity-70">
-                            <span className="text-[9px] font-bold uppercase tracking-widest">{stock.materialType || 'Paper'}</span>
-                            <div className="w-1 h-1 rounded-full bg-current opacity-30"></div>
-                            <code className="text-[9px] font-mono">{stock.stockId}</code>
-                          </div>
-                          {isSelected && (
-                            <div className="mt-3 pt-3 border-t border-white/20 grid grid-cols-2 gap-2">
-                              <div className="flex flex-col">
-                                <span className="text-[8px] font-black uppercase opacity-60">Supplier</span>
-                                <span className="text-[10px] font-bold truncate">{stock.supplier || 'N/A'}</span>
-                              </div>
-                              <div className="flex flex-col">
-                                <span className="text-[8px] font-black uppercase opacity-60">Available</span>
-                                <span className="text-[10px] font-bold">{stock.quantityOnHand} {stock.unitOfMeasure}</span>
-                              </div>
-                            </div>
-                          )}
-                        </motion.button>
-                      );
-                    })}
-                  </div>
+                  <button 
+                    onClick={() => { setLockedIcon(null); setHoveredIcon(null); }}
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition-all"
+                  >
+                    <span className="material-symbols-outlined text-lg">close</span>
+                  </button>
                 </div>
-              )}
 
-              {/* VARIABLES / PLACEHOLDERS TAB */}
-              {activeTab === 'Variables' && (
-                <div className="animate-fade-in flex flex-col gap-4">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Available Variables</h4>
-                    <button onClick={() => navigate('/masters/placeholders')} className="text-[9px] font-bold text-blue-600 hover:underline">Manage</button>
-                  </div>
-                  {placeholdersLoading ? (
-                    <div className="py-10 flex flex-col items-center opacity-30">
-                      <div className="um-spinner w-4 h-4 mb-2" />
-                      <span className="text-[10px]">Loading...</span>
-                    </div>
-                  ) : placeholders.length === 0 ? (
-                    <div className="p-4 bg-slate-100 dark:bg-slate-800 rounded-xl text-center">
-                      <p className="text-[10px] text-slate-500">No placeholders found.</p>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col gap-2">
-                      {placeholders.map(ph => {
-                        const payload = {
-                          type: 'text',
-                          text: `{{${ph.mappingKey}}}`,
-                          name: ph.name,
-                          placeholderKey: ph.mappingKey,
-                          fontSize: 14,
-                          fontFamily: 'Inter, sans-serif',
-                          fontWeight: '600',
-                          color: '#2563eb',
-                          width: 140,
-                          height: 24,
-                          isPlaceholder: true
-                        };
-                        return (
-                          <button
-                            key={ph.id}
-                            onClick={() => addPlaceholder(ph)}
-                            draggable
-                            onDragStart={e => {
-                              e.dataTransfer.setData('application/json', JSON.stringify(payload));
-                              e.dataTransfer.effectAllowed = 'copy';
-                            }}
-                            className="flex items-center gap-2 p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-lg hover:border-blue-500 hover:shadow-sm hover:translate-x-1 transition-all group text-left cursor-grab active:cursor-grabbing shadow-sm"
-                          >
-                            <div className="w-7 h-7 rounded bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-400 group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                              <span className="material-symbols-outlined text-[14px]">database</span>
-                            </div>
-                            <div className="flex flex-col gap-0.5 overflow-hidden">
-                              <span className="text-[10px] font-extrabold text-slate-700 dark:text-slate-300 truncate tracking-tight">{ph.name}</span>
-                              <code className="text-[8px] text-blue-500 font-mono font-bold">{`{{${ph.mappingKey}}}`}</code>
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {activeTab === 'Objects' && (
-                <div className="animate-fade-in flex flex-col gap-4">
-                  <div className="px-1 flex items-center justify-between mb-2">
-                    <div className="flex flex-col">
-                      <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
-                        <span className="material-symbols-outlined text-[15px]">inventory_2</span>
-                        Object Library
-                      </h3>
-                    </div>
-                    <div className="flex gap-1.5">
-                      <button
-                        onClick={() => setShowAssetModal(true)}
-                        className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 flex items-center justify-center hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors shadow-sm border border-blue-100/50 dark:border-blue-900/40"
-                        title="Upload New Asset"
-                      >
-                        <span className="material-symbols-outlined text-[18px]">upload</span>
-                      </button>
-                      <button
-                        onClick={() => saveFile()}
-                        className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:emerald-400 flex items-center justify-center hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-colors shadow-sm border border-emerald-100/50 dark:border-emerald-900/40"
-                        title="Save All Changes"
-                      >
-                        <span className="material-symbols-outlined text-[18px]">save</span>
-                      </button>
-                    </div>
-                  </div>
-                  <p className="px-1 text-[9px] text-slate-500 font-bold leading-tight -mt-4 mb-2">Pre-configured managed assets for clinical labels</p>
-
-                  {objectsLoading ? (
-                    <div className="flex flex-col items-center justify-center py-12 gap-3">
-                      <div className="w-8 h-8 rounded-full border-2 border-blue-500 border-t-transparent animate-spin"></div>
-                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Loading Assets...</span>
-                    </div>
-                  ) : objects.length === 0 ? (
-                    <div className="p-6 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-dashed border-slate-200 dark:border-white/10 text-center flex flex-col items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-900 shadow-sm flex items-center justify-center border border-slate-200 dark:border-white/10">
-                        <span className="material-symbols-outlined text-[20px] text-slate-300">image_not_supported</span>
-                      </div>
-                      <div className="flex flex-col gap-0.5">
-                        <p className="text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-tight">No Objects Found</p>
-                        <p className="text-[9px] text-slate-400 font-bold">Configure assets in settings</p>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col gap-4">
-                      {Object.entries(
-                        objects.reduce((acc, obj) => {
-                          const labelTitle = obj.label ? obj.label.name : "Global Workspace Assets";
-                          if (!acc[labelTitle]) acc[labelTitle] = [];
-                          acc[labelTitle].push(obj);
-                          return acc;
-                        }, {})
-                      ).map(([groupName, groupObjects]) => (
-                        <div key={groupName} className="flex flex-col gap-1.5">
-                          <button
-                            onClick={() => setExpandedObjectsGroups(prev => ({ ...prev, [groupName]: !prev[groupName] }))}
-                            className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-slate-100/80 dark:bg-slate-800/50 border border-slate-200 dark:border-white/10 group transition-all"
-                          >
-                            <div className="flex items-center gap-2">
-                              <span className="material-symbols-outlined text-[16px] text-blue-500 group-hover:rotate-12 transition-transform">folder_open</span>
-                              <span className="text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-tight truncate max-w-[140px]">{groupName}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-slate-200 dark:bg-white/10 text-slate-500">{groupObjects.length}</span>
-                              <span className={`material-symbols-outlined text-[16px] text-slate-400 transition-transform duration-300 ${expandedObjectsGroups[groupName] ? 'rotate-180' : ''}`}>expand_more</span>
-                            </div>
-                          </button>
-
-                          <AnimatePresence>
-                            {expandedObjectsGroups[groupName] && (
-                              <motion.div
-                                initial={{ height: 0, opacity: 0 }}
-                                animate={{ height: 'auto', opacity: 1 }}
-                                exit={{ height: 0, opacity: 0 }}
-                                className="overflow-hidden"
-                              >
-                                <div className="grid grid-cols-2 gap-3 p-1.5 pt-2">
-                                  {groupObjects.map(obj => {
-                                    const payload = {
-                                      type: obj.type === 'LOGO' ? 'image' : obj.type === 'ICON' ? 'icon' : obj.type === 'QR_SPEC' ? 'qrcode' : 'barcode',
-                                      src: obj.fileUrl,
-                                      name: obj.name,
-                                      width: obj.type === 'LOGO' ? 120 : (obj.type === 'ICON' ? 48 : (obj.type === 'QR_SPEC' ? 80 : 180)),
-                                      height: obj.type === 'LOGO' ? 120 : (obj.type === 'ICON' ? 48 : 80),
-                                      imageFit: 'contain'
-                                    };
-                                    return (
-                                      <motion.button
-                                        key={obj.id}
-                                        whileHover={{ scale: 1.02, translateY: -2 }}
-                                        whileTap={{ scale: 0.98 }}
-                                        onClick={() => addObject(obj)}
-                                        draggable
-                                        onDragStart={e => {
-                                          e.dataTransfer.setData('application/json', JSON.stringify(payload));
-                                          e.dataTransfer.effectAllowed = 'copy';
-                                        }}
-                                        className="group relative flex flex-col items-center gap-2 p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-2xl hover:border-blue-500 hover:shadow-xl transition-all cursor-grab active:cursor-grabbing shadow-sm"
-                                      >
-                                        <div className="w-full aspect-square rounded-xl bg-slate-50 dark:bg-slate-900/50 flex items-center justify-center overflow-hidden border border-slate-100 dark:border-white/5 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/10 transition-colors">
-                                          {obj.type === 'LOGO' ? (
-                                            <img src={resolveUrl(obj.fileUrl)} alt={obj.name} className="w-3/4 h-3/4 object-contain shadow-sm rounded-sm" />
-                                          ) : obj.type === 'ICON' ? (
-                                            <span className="material-symbols-outlined text-[32px] text-blue-600/70">{obj.name.toLowerCase().replace(/\s+/g, '_')}</span>
-                                          ) : (
-                                            <span className="material-symbols-outlined text-[32px] text-indigo-600/70">{obj.type === 'QR_SPEC' ? 'qr_code_2' : 'barcode_scanner'}</span>
-                                          )}
-                                        </div>
-                                        <span className="text-[9px] font-black uppercase text-slate-600 dark:text-slate-400 truncate w-full text-center px-1 group-hover:text-blue-600 transition-colors">{obj.name}</span>
-                                      </motion.button>
-                                    );
-                                  })}
-                                </div>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* TEMPLATES TAB */}
-              {activeTab === 'templates' && (
-                <div className="animate-fade-in flex flex-col gap-4">
-                  <div className="flex flex-col gap-1 mb-2">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Library</span>
-                    <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest leading-none">Industry Presets</p>
-                  </div>
-                  <div className="grid gap-4">
-                    {templates.map(tpl => (
-                      <motion.div
-                        key={tpl.id}
-                        onClick={() => {
-                          const isDirty = (elements && elements.length > 0) || (meta.fileName && meta.fileName !== 'Untitled Label') || (meta.fileId && meta.fileId !== 'new');
-                          if (isDirty) {
-                            setPendingTemplate(tpl);
-                            setShowTemplateConflictModal(true);
-                          } else {
-                            loadTemplate(tpl);
-                          }
-                        }}
-                        className="group cursor-pointer bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-white/10 overflow-hidden shadow-sm hover:shadow-xl hover:border-blue-500/50 transition-all duration-300"
-                        whileHover={{ y: -4 }}
-                        whileTap={{ scale: 0.98 }}
-                      >
-                        <div className="aspect-[1.5/1] bg-slate-50 dark:bg-slate-900 relative overflow-hidden flex items-center justify-center p-4">
-                          {tpl.imageUrl ? (
-                            <img src={resolveUrl(tpl.imageUrl)} alt={tpl.name} className="max-w-full max-h-full object-contain transition-transform duration-500 group-hover:scale-110" />
-                          ) : (
-                            <span className="material-symbols-outlined text-[48px] text-slate-200 flex flex-col items-center gap-2">
-                              <span className="material-symbols-outlined">description</span>
-                              <span className="text-[10px] font-bold">No Preview</span>
-                            </span>
-                          )}
-                          <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
-                            <span className="text-white text-[10px] font-black uppercase tracking-wider backdrop-blur-md bg-white/10 px-4 py-2 rounded-full border border-white/20">Load Template</span>
-                          </div>
-                        </div>
-                        <div className="p-3 bg-white dark:bg-slate-800 border-t border-slate-100 dark:border-white/10">
-                          <div className="flex flex-col">
-                            <span className="text-[11px] font-black text-slate-800 dark:text-white uppercase tracking-tight truncate">{tpl.name}</span>
-                            <div className="flex items-center justify-between mt-1">
-                              <span className="text-[9px] font-bold text-blue-600 dark:text-blue-400">{tpl.category || 'Standard'}</span>
-                              <span className="text-[8px] font-bold text-slate-300 uppercase">{tpl.size || 'Custom'}</span>
-                            </div>
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* ELEMENTS TAB */}
-              {activeTab === 'elements' && (
-                <div className="animate-fade-in flex flex-col gap-5">
-                  <div className="grid grid-cols-2 gap-2">
-                    {[
-                      { label: 'Text', icon: 'title', action: addTxt, payload: { type: 'text', name: 'Text Box', text: 'New Text', fontSize: 16, fontFamily: 'Inter, sans-serif', fontWeight: '500', color: '#191C1E', width: 160, height: 28 } },
-                      { label: 'Table', icon: 'table_chart', action: () => setShowTableModal(true) },
-                      { label: 'Barcode', icon: 'barcode', action: addBar, payload: { type: 'barcode', name: 'Barcode', text: '123456789012', color: '#191c1e', width: 180, height: 80 } },
-                      { label: 'QR Code', icon: 'qr_code_2', action: addQR, payload: { type: 'qrcode', name: 'QR Code', text: 'https://example.com', color: '#191c1e', width: 80, height: 80 } },
-                      { label: 'Upload Logo', icon: 'imagesmode', action: () => fileInputRef.current?.click() },
-                    ].map(item => (
-                      <motion.button
-                        key={item.label}
-                        onClick={item.action}
-                        draggable={!!item.payload}
-                        onDragStart={e => {
-                          if (item.payload) {
-                            e.dataTransfer.setData('application/json', JSON.stringify(item.payload));
-                            e.dataTransfer.effectAllowed = 'copy';
-                          }
-                        }}
-                        className="flex flex-col items-center p-4 glass-card group cursor-grab active:cursor-grabbing"
-                        whileHover={{ y: -4, scale: 1.02 }}
-                        whileTap={{ scale: 0.95 }}
-                        transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                      >
-                        <span className="material-symbols-outlined text-slate-500 group-hover:text-primary mb-2 text-2xl transition-colors">{item.icon}</span>
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600 group-hover:text-primary transition-colors">{item.label}</span>
-                      </motion.button>
-                    ))}
-                    <input ref={fileInputRef} type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
-                    <input ref={jsonInputRef} type="file" className="hidden" accept=".json" onChange={handleJSONOpen} />
-                  </div>
-
-                  <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-3 h-0.5 bg-primary rounded-full"></div>
-                      <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500">Medical Fields</p>
-                    </div>
-                    <div className="space-y-1">
-                      {[
-                        { label: 'Rx Symbol', icon: 'medical_services', payload: { type: 'text', name: 'Rx Symbol', text: 'Rx', fontSize: 32, fontFamily: 'serif', fontWeight: '900', color: '#ba1a1a', width: 60, height: 48 } },
-                        { label: 'Prominent Generic', icon: 'text_fields', payload: { type: 'text', name: 'Generic Name', text: 'GENERIC NAME IP\n(Brand Name)', fontSize: 18, fontFamily: 'Inter, sans-serif', fontWeight: '900', color: '#191C1E', width: 240, height: 72, align: 'center' } },
-                        { label: 'Schedule H Warning', icon: 'warning', payload: { type: 'text', name: 'Schedule H', heading: 'SCHEDULE H DRUG - WARNING', text: 'To be sold by retail on the prescription of a Registered Medical Practitioner only.', fontSize: 8, fontFamily: 'Inter, sans-serif', fontWeight: '700', color: '#ba1a1a', bgColor: '#fff1f0', borderColor: '#ffccc7', borderWidth: 1, borderRadius: 4, width: 260, height: 54 } },
-                        { label: 'Schedule G Warning', icon: 'g_translate', payload: { type: 'text', name: 'Schedule G', heading: 'SCHEDULE G DRUG - CAUTION', text: 'It is dangerous to take this preparation except under medical supervision.', fontSize: 8, fontFamily: 'Inter, sans-serif', fontWeight: '700', color: '#ba1a1a', bgColor: '#fff1f0', borderColor: '#ffccc7', borderWidth: 1, borderRadius: 4, width: 260, height: 54 } },
-                        { label: 'Schedule X Warning', icon: 'dangerous', payload: { type: 'text', name: 'Schedule X', heading: 'SCHEDULE X DRUG - WARNING', text: 'It is dangerous to take this preparation except under medical supervision. To be sold by retail on the prescription of a Registered Medical Practitioner only.', fontSize: 8, fontFamily: 'Inter, sans-serif', fontWeight: '700', color: '#ba1a1a', bgColor: '#fff1f0', borderColor: '#ffccc7', borderWidth: 1, borderRadius: 4, width: 260, height: 60 } },
-                        { label: 'Composition', icon: 'science', payload: { type: 'text', name: 'Composition', heading: 'Composition', text: 'Each 5ml contains:\nActive Ingredient IP 250mg\nExcipients q.s.\nColor: Tartrazine', fontSize: 10, fontFamily: 'Inter, sans-serif', fontWeight: '400', color: '#191C1E', width: 240, height: 74 } },
-                        { label: 'Batch / Mfg / Exp / MRP', icon: 'calendar_today', payload: { type: 'text', name: 'Batch Info', heading: 'Batch Information', text: 'B.No: \nMfg.Date: \nExp.Date: \nM.R.P. ₹: \n(Incl. of all taxes)', fontSize: 10, fontFamily: 'Roboto Mono, monospace', fontWeight: '700', color: '#191C1E', width: 200, height: 90 } },
-                        { label: 'Storage & Stability', icon: 'device_thermostat', payload: { type: 'text', name: 'Storage', heading: 'Storage', text: 'Store below 25°C. Protected from light and moisture. Do not freeze.', fontSize: 10, fontFamily: 'Inter, sans-serif', fontWeight: '500', color: '#191C1E', width: 240, height: 44 } },
-                        { label: 'Child Safety Warning', icon: 'child_care', payload: { type: 'text', name: 'Child Safety', text: 'KEEP OUT OF REACH OF CHILDREN', fontSize: 11, fontFamily: 'Inter, sans-serif', fontWeight: '900', color: '#191C1E', width: 240, height: 24, align: 'center' } },
-                        { label: 'Precautions/Warnings', icon: 'report_problem', payload: { type: 'text', name: 'Precautions', heading: 'Precautions', text: 'If symptoms persist, consult your doctor. Keep the container tightly closed.', fontSize: 10, fontFamily: 'Inter, sans-serif', fontWeight: '400', color: '#191C1E', width: 240, height: 48 } },
-                        { label: 'Special Warnings', icon: 'info', payload: { type: 'text', name: 'Special Warnings', heading: 'Special Warnings', text: 'Pregnancy & Lactation: Consult your physician before use.', fontSize: 9, fontFamily: 'Inter, sans-serif', fontWeight: '600', color: '#191C1E', width: 240, height: 44 } },
-                        { label: 'Sterility Warning', icon: 'clean_hands', payload: { type: 'text', name: 'Sterility', heading: 'Sterility', text: 'STRICTLY FOR INJECTABLES - Check for clarity before use.', fontSize: 10, fontFamily: 'Inter, sans-serif', fontWeight: '700', color: '#ba1a1a', width: 240, height: 44 } },
-                        { label: 'Shake Well (Susp.)', icon: 'shake', payload: { type: 'text', name: 'Shake Well', text: 'SHAKE WELL BEFORE USE', fontSize: 11, fontFamily: 'Inter, sans-serif', fontWeight: '900', color: '#191C1E', width: 240, height: 24, align: 'center' } },
-                        { label: 'Mfg & Licensing', icon: 'factory', payload: { type: 'text', name: 'Mfg Details', heading: 'Manufacturing', text: 'Mfg. Lic No: \nBatch No: \nMarketed by:', fontSize: 10, fontFamily: 'Inter, sans-serif', fontWeight: '400', color: '#191C1E', width: 240, height: 60 } },
-                        { label: 'Dosage Instructions', icon: 'medication', payload: { type: 'text', name: 'Dosage', heading: 'Dosage', text: 'As directed by the Physician.', fontSize: 10, fontFamily: 'Inter, sans-serif', fontWeight: '500', color: '#191C1E', width: 220, height: 36 } },
-                        { label: 'Net Contents', icon: 'inventory', payload: { type: 'text', name: 'Net Contents', heading: 'Net Content', text: '100 mL / 10 Tablets', fontSize: 12, fontFamily: 'Inter, sans-serif', fontWeight: '600', color: '#191C1E', width: 180, height: 32 } },
-                      ].map(item => (
-                        <motion.div
-                          key={item.label}
-                          onClick={() => addElement(item.payload)}
-                          draggable
-                          onDragStart={e => {
-                            e.dataTransfer.setData('application/json', JSON.stringify(item.payload));
-                            e.dataTransfer.effectAllowed = 'copy';
-                          }}
-                          className="flex items-center gap-3 px-4 py-3 bg-white dark:bg-slate-800 rounded-xl text-[11px] font-bold text-slate-700 dark:text-slate-300 cursor-pointer border border-slate-200 dark:border-white/10 shadow-sm transition-all group lg:active:cursor-grabbing"
-                          whileHover={{ x: 4, scale: 1.01 }}
-                          whileTap={{ scale: 0.98 }}
-                          transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                        >
-                          <span className="material-symbols-outlined text-[16px] text-slate-400 group-hover:text-primary shrink-0 transition-colors">{item.icon}</span>
-                          {item.label}
-                        </motion.div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* SHAPES TAB */}
-              {activeTab === 'shapes' && (
-                <div className="animate-fade-in flex flex-col gap-4">
-                  <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-3 h-0.5 bg-primary rounded-full"></div>
-                      <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500">Geometry</p>
-                    </div>
-                    <div className="grid gap-2 grid-cols-2">
-                      {basicShapes.map(s => (
-                        <motion.button
-                          key={s.id}
-                          onClick={() => {
-                            if (shapeDrawingTool === s.payload.shapeType) {
-                              setShapeDrawingTool(null);
-                            } else {
-                              setShapeDrawingTool(s.payload.shapeType);
-                              setSelectedIds([]);
-                              setIsDrawingMode(false);
-                            }
-                          }}
-                          draggable
-                          onDragStart={e => {
-                            e.dataTransfer.setData('application/json', JSON.stringify(s.payload));
-                            e.dataTransfer.effectAllowed = 'copy';
-                          }}
-                          className={`flex flex-col items-center p-4 rounded-2xl border-2 transition-all group lg:active:cursor-grabbing ${shapeDrawingTool === s.payload.shapeType
-                              ? 'bg-blue-600 border-blue-600 text-white shadow-lg'
-                              : 'glass-card border-transparent hover:border-slate-200'
-                            }`}
-                          whileHover={{ y: -4, scale: 1.02 }}
-                          whileTap={{ scale: 0.95 }}
-                          transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                        >
-                          <span className={`material-symbols-outlined text-2xl transition-colors mb-2 ${shapeDrawingTool === s.payload.shapeType ? 'text-white' : 'text-slate-500 group-hover:text-primary'
-                            }`}>{s.render}</span>
-                          <span className={`text-[11px] font-bold uppercase tracking-wider transition-colors ${shapeDrawingTool === s.payload.shapeType ? 'text-white' : 'text-slate-600 group-hover:text-primary'
-                            }`}>{s.name}</span>
-                          <div className={`mt-2 px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-tighter ${shapeDrawingTool === s.payload.shapeType ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-400'
-                            }`}>
-                            {shapeDrawingTool === s.payload.shapeType ? 'Active' : 'Draw'}
-                          </div>
-                        </motion.button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-3 h-0.5 bg-primary rounded-full"></div>
-                      <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500">Icons & Symbols ({allIcons.length})</p>
-                    </div>
-                    <div className="grid gap-1 grid-cols-5">
-                      {allIcons.map((icon, i) => (
-                        <motion.button
-                          key={i}
-                          onClick={() => addIcon(icon)}
-                          title={icon}
-                          draggable
-                          onDragStart={e => {
-                            e.dataTransfer.setData('application/json', JSON.stringify({ type: 'icon', iconName: icon, width: 48, height: 48, color: '#191C1E' }));
-                            e.dataTransfer.effectAllowed = 'copy';
-                          }}
-                          className="flex items-center justify-center p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-blue-50 hover:text-primary text-slate-400 transition-all aspect-square cursor-grab active:cursor-grabbing"
-                          whileHover={{ scale: 1.1, rotate: 5 }}
-                          whileTap={{ scale: 0.9 }}
-                          transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                        >
-                          <span className="material-symbols-outlined text-xl">{icon}</span>
-                        </motion.button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Icons TAB */}
-              {activeTab === 'Icons' && (
-                <div className="animate-fade-in flex flex-col gap-6">
-                  {Object.entries(IconsIcons).map(([cat, icons]) => (
-                    <div key={cat}>
-                      <div className="flex items-center gap-2 mb-2.5">
-                        <div className="w-3 h-0.5 bg-blue-500 rounded-full"></div>
-                        <p className="text-[11px] font-bold uppercase tracking-widest text-slate-700 dark:text-slate-300">{cat} ({icons.length})</p>
-                      </div>
-                      <div className="grid grid-cols-4 gap-2">
-                        {icons.map((icon, i) => (
-                          <button
-                            key={i}
-                            onClick={() => addElement({ type: 'IconsIcon', svg: icon.svg, name: icon.name, width: 60, height: 60 })}
-                            title={icon.name}
-                            draggable
-                            onDragStart={e => {
-                              e.dataTransfer.setData('application/json', JSON.stringify({ type: 'IconsIcon', svg: icon.svg, name: icon.name, width: 60, height: 60 }));
-                              e.dataTransfer.effectAllowed = 'copy';
-                            }}
-                            className="flex flex-col items-center justify-center p-2.5 glass-card group hover:-translate-y-1 transition-all duration-300 hover:border-primary/50 hover:bg-blue-50/60 hover:shadow-md transition-all group lg:active:cursor-grabbing"
-                          >
-                            <div className="w-8 h-8 mb-1.5 flex items-center justify-center transition-transform group-hover:scale-110" dangerouslySetInnerHTML={{ __html: icon.svg }} />
-                            <span className="text-[9px] font-bold uppercase text-slate-400 group-hover:text-primary truncate w-full text-center leading-tight">{icon.name}</span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* LAYERS TAB */}
-              {activeTab === 'layers' && (() => {
-                const layersToDisplay = [...elements].filter(el => {
-                  const elW = el.width || 120;
-                  const elH = el.height || 40;
-                  return (el.x + elW > 0 && el.x < AW && el.y + elH > 0 && el.y < AH);
-                }).sort((a, b) => (b.zIndex || 0) - (a.zIndex || 0));
-
-                return (
-                  <div className="animate-fade-in flex flex-col gap-1.5 h-full">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={layersToDisplay.length > 0 && layersToDisplay.every(l => selectedIds.includes(l.id))}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              const newSelection = Array.from(new Set([...selectedIds, ...layersToDisplay.map(l => l.id)]));
-                              setSelectedIds(newSelection);
-                            } else {
-                              const idsToRemove = layersToDisplay.map(l => l.id);
-                              setSelectedIds(selectedIds.filter(id => !idsToRemove.includes(id)));
-                            }
-                          }}
-                          className="w-3.5 h-3.5 rounded border-slate-300 text-primary focus:ring-primary/20 accent-primary cursor-pointer shrink-0"
-                        />
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">On-Label Layers ({layersToDisplay.length})</span>
-                      </div>
-                      {selectedIds.length > 0 && (
-                        <button
-                          onClick={() => setShowBulkDeleteModal(true)}
-                          className="text-[10px] bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md text-slate-500 hover:text-red-500 transition-colors font-bold"
-                        >
-                          Delete Selected
-                        </button>
-                      )}
-                    </div>
-
-                    <div className="flex flex-col gap-1 overflow-y-auto max-h-[600px] custom-scrollbar pr-1">
-                      {layersToDisplay.map(el => {
-                        const isSelected = selectedIds.includes(el.id);
-                        return (
-                          <motion.div
-                            key={`layer-${el.id}`}
-                            onClick={(e) => {
-                              if (e.shiftKey) {
-                                setSelectedIds(prev => prev.includes(el.id) ? prev.filter(id => id !== el.id) : [...prev, el.id]);
-                              } else {
-                                setSelectedIds([el.id]);
-                              }
-                            }}
-                            className={`group flex items-center justify-between p-3 rounded-xl border text-[11px] cursor-pointer transition-all ${isSelected ? 'bg-blue-50/80 border-primary/50 text-primary font-bold shadow-sm' : 'bg-white border-slate-100 dark:bg-slate-800 dark:border-white/5 hover:border-slate-200 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300'}`}
-                            whileHover={{ x: 4 }}
-                            whileTap={{ scale: 0.98 }}
-                            transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                          >
-                            <div className="flex items-center gap-2.5 overflow-hidden">
-                              <input
-                                type="checkbox"
-                                checked={isSelected}
-                                onChange={(e) => {
-                                  setSelectedIds(prev =>
-                                    prev.includes(el.id) ? prev.filter(id => id !== el.id) : [...prev, el.id]
-                                  );
-                                }}
-                                onClick={(e) => e.stopPropagation()}
-                                className="w-3.5 h-3.5 rounded border-slate-300 text-primary focus:ring-primary/20 accent-primary cursor-pointer shrink-0"
-                              />
-                              <span className="material-symbols-outlined text-[13px] opacity-70 shrink-0">
-                                {el.type === 'image' ? 'image' : el.type === 'shape' ? 'category' : (el.type === 'icon' || el.type === 'IconsIcon') ? 'star' : el.type === 'barcode' ? 'barcode' : el.type === 'qrcode' ? 'qr_code_2' : 'match_case'}
-                              </span>
-                              <span className="font-bold leading-tight truncate pr-1">
-                                {el.name || el.heading || (el.text ? el.text.replace(/\n/g, ' ').slice(0, 30) + (el.text.length > 30 ? '...' : '') : el.type.toUpperCase())}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-1.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  updateElement(el.id, { locked: !el.locked });
-                                  commitUpdate();
-                                }}
-                                className={`p-1 rounded-md transition-all ${el.locked ? 'text-primary scale-110' : 'text-slate-300 hover:text-slate-600'}`}
-                                title={el.locked ? "Unlock Layer" : "Lock Layer"}
-                              >
-                                <span className="material-symbols-outlined text-[15px]">{el.locked ? 'lock' : 'lock_open'}</span>
-                              </button>
-                            </div>
-                          </motion.div>
-                        );
-                      })}
-                    </div>
-                    {layersToDisplay.length === 0 && <p className="text-[10px] text-slate-400 text-center py-12 bg-slate-50/50 dark:bg-slate-800/50 rounded-xl border border-dashed border-slate-200 dark:border-white/10">No elements on label.</p>}
-                  </div>
-                );
-              })()}
-
-              {/* NOTES TAB */}
-              {activeTab === 'notes' && (
-                <div className="animate-fade-in flex flex-col h-full px-4 overflow-hidden">
-                  <div className="flex items-center justify-between mb-4 mt-2">
-                    <div className="flex flex-col">
-                      <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary leading-tight">Label Notes</h4>
-                      <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest leading-none mt-1 opacity-70">Project Metadata</p>
-                    </div>
-                    <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 text-[8px] font-black uppercase tracking-wider border border-emerald-100 dark:border-emerald-800/50">
-                      <span className="material-symbols-outlined text-[12px] animate-pulse">sync</span>
-                      Auto-saving
-                    </div>
-                  </div>
-
-                  <div className="flex-1 flex flex-col bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-white/10 overflow-hidden shadow-sm focus-within:shadow-xl focus-within:shadow-blue-500/5 focus-within:ring-2 focus-within:ring-blue-500/10 transition-all">
-                    <div className="p-3 bg-slate-50 dark:bg-slate-900/40 border-b border-slate-100 dark:border-white/5 flex items-center gap-2">
-                      <span className="material-symbols-outlined text-[16px] text-slate-400">edit_note</span>
-                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-none">Internal Remarks / SOPs</span>
-                    </div>
-                    <textarea
-                      value={meta.notes || ''}
-                      onChange={(e) => {
-                        setMeta(prev => ({ ...prev, notes: e.target.value }));
-                      }}
-                      onBlur={commitUpdate}
-                      placeholder="Type label specific instructions, change logs, or validation requirements here..."
-                      className="w-full flex-1 p-4 text-[13px] bg-transparent outline-none resize-none font-medium text-slate-700 dark:text-slate-300 leading-relaxed placeholder:text-slate-300 dark:placeholder:text-slate-600 custom-scrollbar"
+                {/* Search (Optional local filter) */}
+                <div className="px-5 py-4 border-b border-slate-100 shrink-0">
+                   <div className="relative group">
+                    <span className="material-symbols-outlined absolute left-3 top-2.5 text-[16px] text-slate-400 group-focus-within:text-blue-500 transition-colors">search</span>
+                    <input
+                      type="text"
+                      placeholder={`Search ${activeTab}...`}
+                      value={sidebarSearch}
+                      onChange={e => setSidebarSearch(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 text-[11px] font-medium text-slate-800 pl-9 pr-3 py-2 rounded-xl outline-none focus:border-blue-500/50 focus:bg-white transition-all placeholder:text-slate-400"
                     />
                   </div>
-
                 </div>
-              )}
-            </div>
-          )}
+
+                {/* Content Area */}
+                <div className="flex-1 overflow-y-auto custom-scrollbar-thin p-5">
+                  <AnimatePresence mode="popLayout">
+                    <motion.div
+                      key={activeTab}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      {/* ELEMENTS */}
+                      {activeTab === 'elements' && (
+                        <div className="flex flex-col gap-5">
+                          <div className="grid grid-cols-2 gap-3">
+                            {[
+                              { label: 'Text', icon: 'title', action: addTxt, payload: { type: 'text', name: 'Text Box', text: 'New Text', fontSize: 16, fontFamily: 'Inter, sans-serif', fontWeight: '500', color: '#191C1E', width: 160, height: 28 } },
+                              { label: 'Table', icon: 'table_chart', action: () => setShowTableModal(true) },
+                              { label: 'Barcode', icon: 'barcode', action: addBar, payload: { type: 'barcode', name: 'Barcode', text: '123456789012', color: '#191c1e', width: 180, height: 80 } },
+                              { label: 'QR Code', icon: 'qr_code_2', action: addQR, payload: { type: 'qrcode', name: 'QR Code', text: 'https://example.com', color: '#191c1e', width: 80, height: 80 } },
+                              { label: 'Upload Logo', icon: 'imagesmode', action: () => fileInputRef.current?.click() },
+                            ].map(item => (
+                              <motion.button
+                                key={item.label}
+                                onClick={item.action}
+                                draggable={!!item.payload}
+                                onDragStart={e => {
+                                  if (item.payload) {
+                                    e.dataTransfer.setData('application/json', JSON.stringify(item.payload));
+                                    e.dataTransfer.effectAllowed = 'copy';
+                                  }
+                                }}
+                                className="flex flex-col items-center p-4 bg-slate-50 border border-slate-200 rounded-2xl group hover:border-blue-500/50 hover:bg-white hover:shadow-sm transition-all cursor-grab active:cursor-grabbing"
+                                whileHover={{ y: -4, scale: 1.02 }}
+                                whileTap={{ scale: 0.95 }}
+                              >
+                                <span className="material-symbols-outlined text-slate-500 group-hover:text-blue-600 mb-2 text-2xl transition-colors">{item.icon}</span>
+                                <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 group-hover:text-slate-900 transition-colors">{item.label}</span>
+                              </motion.button>
+                            ))}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2 mb-4">
+                              <div className="w-3 h-0.5 bg-blue-500 rounded-full"></div>
+                              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Pharma Fields</p>
+                            </div>
+                            <div className="space-y-1.5">
+                              {[
+                                { label: 'Rx Symbol', icon: 'medical_services', payload: { type: 'text', name: 'Rx Symbol', text: 'Rx', fontSize: 32, fontFamily: 'serif', fontWeight: '900', color: '#ba1a1a', width: 60, height: 48 } },
+                                { label: 'Generic Name', icon: 'text_fields', payload: { type: 'text', name: 'Generic Name', text: 'GENERIC NAME IP\n(Brand Name)', fontSize: 18, fontFamily: 'Inter, sans-serif', fontWeight: '900', color: '#191C1E', width: 240, height: 72, align: 'center' } },
+                                { label: 'Schedule H Warning', icon: 'warning', payload: { type: 'text', name: 'Schedule H', heading: 'SCHEDULE H DRUG - WARNING', text: 'To be sold by retail on the prescription of a Registered Medical Practitioner only.', fontSize: 8, fontFamily: 'Inter, sans-serif', fontWeight: '700', color: '#ba1a1a', bgColor: '#fff1f0', borderColor: '#ffccc7', borderWidth: 1, borderRadius: 4, width: 260, height: 54 } },
+                                { label: 'Composition', icon: 'science', payload: { type: 'text', name: 'Composition', heading: 'Composition', text: 'Each 5ml contains:\nActive Ingredient IP 250mg\nExcipients q.s.\nColor: Tartrazine', fontSize: 10, fontFamily: 'Inter, sans-serif', fontWeight: '400', color: '#191C1E', width: 240, height: 74 } },
+                                { label: 'Batch / Mfg / Exp / MRP', icon: 'calendar_today', payload: { type: 'text', name: 'Batch Info', heading: 'Batch Information', text: 'B.No: \nMfg.Date: \nExp.Date: \nM.R.P. ₹: \n(Incl. of all taxes)', fontSize: 10, fontFamily: 'Roboto Mono, monospace', fontWeight: '700', color: '#191C1E', width: 200, height: 90 } },
+                                { label: 'Storage & Stability', icon: 'device_thermostat', payload: { type: 'text', name: 'Storage', heading: 'Storage', text: 'Store below 25°C. Protected from light and moisture. Do not freeze.', fontSize: 10, fontFamily: 'Inter, sans-serif', fontWeight: '500', color: '#191C1E', width: 240, height: 44 } },
+                                { label: 'Child Safety Warning', icon: 'child_care', payload: { type: 'text', name: 'Child Safety', text: 'KEEP OUT OF REACH OF CHILDREN', fontSize: 11, fontFamily: 'Inter, sans-serif', fontWeight: '900', color: '#191C1E', width: 240, height: 24, align: 'center' } },
+                                { label: 'Shake Well (Susp.)', icon: 'shake', payload: { type: 'text', name: 'Shake Well', text: 'SHAKE WELL BEFORE USE', fontSize: 11, fontFamily: 'Inter, sans-serif', fontWeight: '900', color: '#191C1E', width: 240, height: 24, align: 'center' } },
+                                { label: 'Dosage Instructions', icon: 'medication', payload: { type: 'text', name: 'Dosage', heading: 'Dosage', text: 'As directed by the Physician.', fontSize: 10, fontFamily: 'Inter, sans-serif', fontWeight: '500', color: '#191C1E', width: 220, height: 36 } },
+                                { label: 'Net Contents', icon: 'inventory', payload: { type: 'text', name: 'Net Contents', heading: 'Net Content', text: '100 mL / 10 Tablets', fontSize: 12, fontFamily: 'Inter, sans-serif', fontWeight: '600', color: '#191C1E', width: 180, height: 32 } },
+                              ].map(item => (
+                                <motion.div
+                                  key={item.label}
+                                  onClick={() => addElement(item.payload)}
+                                  draggable
+                                  onDragStart={e => {
+                                    e.dataTransfer.setData('application/json', JSON.stringify(item.payload));
+                                    e.dataTransfer.effectAllowed = 'copy';
+                                  }}
+                                  className="flex items-center gap-3 px-4 py-3 bg-slate-50 rounded-xl text-[11px] font-bold text-slate-700 cursor-pointer border border-slate-200 hover:border-blue-500/50 hover:bg-white hover:shadow-sm transition-all group lg:active:cursor-grabbing"
+                                  whileHover={{ x: 4 }}
+                                >
+                                  <span className="material-symbols-outlined text-[18px] text-slate-500 group-hover:text-blue-400 shrink-0">{item.icon}</span>
+                                  {item.label}
+                                </motion.div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* TEMPLATES */}
+                      {activeTab === 'templates' && (
+                        <div className="grid gap-4">
+                          {templates.map(tpl => (
+                            <motion.div
+                              key={tpl.id}
+                              onClick={() => loadTemplate(tpl)}
+                              className="group cursor-pointer bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden hover:border-blue-500/50 transition-all duration-300"
+                              whileHover={{ y: -4 }}
+                            >
+                              <div className="aspect-[1.5/1] bg-slate-200 flex items-center justify-center p-4">
+                                {tpl.imageUrl ? (
+                                  <img src={resolveUrl(tpl.imageUrl)} alt={tpl.name} className="max-w-full max-h-full object-contain" />
+                                ) : (
+                                  <span className="material-symbols-outlined text-[32px] text-slate-400/30">description</span>
+                                )}
+                              </div>
+                              <div className="p-3 border-t border-slate-100 bg-slate-50 group-hover:bg-white transition-colors">
+                                <span className="text-[11px] font-black text-slate-800 uppercase truncate block">{tpl.name}</span>
+                                <span className="text-[9px] font-bold text-slate-400 uppercase mt-0.5 block">{tpl.category || 'Standard'}</span>
+                              </div>
+                            </motion.div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* SHAPES */}
+                      {activeTab === 'shapes' && (
+                        <div className="flex flex-col gap-6">
+                          <div className="grid grid-cols-2 gap-3">
+                            {basicShapes.map(s => (
+                              <motion.button
+                                key={s.id}
+                                onClick={() => setShapeDrawingTool(s.payload.shapeType)}
+                                className={`flex flex-col items-center p-4 rounded-2xl border transition-all ${
+                                  shapeDrawingTool === s.payload.shapeType 
+                                    ? 'bg-blue-600 border-blue-600 text-white shadow-lg' 
+                                    : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'
+                                }`}
+                                whileHover={{ y: -2 }}
+                              >
+                                <span className="material-symbols-outlined text-3xl mb-2">{s.render}</span>
+                                <span className="text-[10px] font-black uppercase tracking-wider">{s.name}</span>
+                              </motion.button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* ICONS */}
+                      {activeTab === 'Icons' && (
+                        <div className="flex flex-col gap-8">
+                           {Object.entries(IconsIcons).map(([cat, icons]) => (
+                            <div key={cat}>
+                              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-4 ml-1">{cat}</p>
+                              <div className="grid grid-cols-3 gap-2">
+                                {icons.slice(0, 15).map((icon, i) => (
+                                  <button
+                                    key={i}
+                                    onClick={() => addElement({ type: 'IconsIcon', svg: icon.svg, name: icon.name, width: 60, height: 60 })}
+                                    className="aspect-square flex flex-col items-center justify-center p-2 bg-slate-50 rounded-xl border border-slate-100 hover:border-blue-500/50 hover:bg-white transition-all group"
+                                  >
+                                    <div className="w-8 h-8 mb-1.5 flex items-center justify-center transition-transform group-hover:scale-110 opacity-60 group-hover:opacity-100" dangerouslySetInnerHTML={{ __html: icon.svg }} />
+                                    <span className="text-[8px] font-black uppercase text-slate-500 group-hover:text-slate-900 truncate w-full text-center tracking-tighter">{icon.name.split(' ')[0]}</span>
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* VARIABLES */}
+                      {activeTab === 'Variables' && (
+                        <div className="flex flex-col gap-2.5">
+                          {placeholders.map(ph => (
+                            <button
+                              key={ph.id}
+                              onClick={() => addPlaceholder(ph)}
+                              className="flex items-center gap-4 p-3.5 bg-slate-50 border border-slate-200 rounded-2xl hover:bg-white hover:shadow-sm hover:border-blue-500/50 transition-all text-left group"
+                            >
+                              <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm">
+                                <span className="material-symbols-outlined text-[18px]">database</span>
+                              </div>
+                              <div className="flex flex-col min-w-0 pr-2">
+                                <span className="text-[11px] font-black text-slate-800 truncate uppercase tracking-tight">{ph.name}</span>
+                                <span className="text-[9px] font-mono text-blue-600 font-bold mt-0.5">{`{{${ph.mappingKey}}}`}</span>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* OBJECTS */}
+                      {activeTab === 'Objects' && (
+                        <div className="flex flex-col gap-4">
+                           {objects.slice(0, 30).map(obj => (
+                            <button
+                              key={obj.id}
+                              onClick={() => addObject(obj)}
+                              className="flex items-center gap-4 p-3 bg-slate-50 rounded-2xl border border-slate-200 hover:border-blue-500/50 hover:bg-white transition-all group"
+                            >
+                              <div className="w-14 h-14 rounded-xl bg-slate-200 flex items-center justify-center overflow-hidden shrink-0 border border-slate-100">
+                                {obj.type === 'LOGO' ? (
+                                  <img src={resolveUrl(obj.fileUrl)} alt={obj.name} className="w-4/5 h-4/5 object-contain" />
+                                ) : (
+                                  <span className="material-symbols-outlined text-3xl text-slate-400">{obj.type === 'QR_SPEC' ? 'qr_code_2' : 'barcode'}</span>
+                                )}
+                              </div>
+                              <div className="flex flex-col min-w-0 text-left">
+                                <span className="text-[11px] font-black text-slate-800 uppercase truncate tracking-tight">{obj.name}</span>
+                                <span className="text-[9px] font-black text-slate-400 uppercase mt-1 tracking-widest">{obj.type}</span>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* STOCKS */}
+                      {activeTab === 'stocks' && (
+                        <div className="flex flex-col gap-3">
+                          {labelStocks.filter(s => s.status === 'ACTIVE').map(stock => (
+                            <button
+                              key={stock.id}
+                              onClick={() => setLabelStock(stock.id)}
+                              className={`flex flex-col p-5 rounded-2xl border-2 transition-all text-left relative overflow-hidden group ${
+                                meta.labelStockId === stock.id 
+                                  ? 'bg-blue-600 border-blue-600 text-white shadow-xl shadow-blue-500/20 scale-[1.02]' 
+                                  : 'bg-slate-50 border-slate-200 text-slate-500 hover:border-blue-500/50 hover:bg-white'
+                              }`}
+                            >
+                              <div className="flex justify-between items-start mb-2">
+                                <span className={`text-[12px] font-black uppercase tracking-tight ${meta.labelStockId === stock.id ? 'text-white' : 'text-slate-800'}`}>{stock.name}</span>
+                                {meta.labelStockId === stock.id && <span className="material-symbols-outlined text-white text-lg">check_circle</span>}
+                              </div>
+                              <div className="flex items-center gap-2 opacity-70">
+                                <span className="text-[9px] font-bold uppercase tracking-widest">{stock.materialType}</span>
+                                <span className="w-1 h-1 rounded-full bg-current opacity-30"></span>
+                                <span className="text-[9px] font-mono font-bold">{stock.breadth}×{stock.height}mm</span>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* LAYERS */}
+                      {activeTab === 'layers' && (
+                        <div className="flex flex-col gap-1.5">
+                          {[...elements].reverse().map(el => (
+                            <div
+                              key={el.id}
+                              onClick={() => setSelectedIds([el.id])}
+                              className={`flex items-center justify-between p-4 rounded-2xl border transition-all cursor-pointer group ${
+                                selectedIds.includes(el.id) 
+                                  ? 'bg-blue-600/10 border-blue-500/50 text-blue-600' 
+                                  : 'bg-slate-50 border-slate-100 text-slate-600 hover:bg-white hover:shadow-sm'
+                              }`}
+                            >
+                              <div className="flex items-center gap-4 overflow-hidden">
+                                <span className="material-symbols-outlined text-[16px] shrink-0 opacity-60 group-hover:opacity-100 transition-opacity">
+                                   {el.type === 'image' ? 'image' : el.type === 'shape' ? 'category' : el.type === 'text' ? 'match_case' : 'star'}
+                                </span>
+                                <span className="text-[11px] font-black uppercase tracking-tight truncate">{el.name || el.text || el.type}</span>
+                              </div>
+                              <span className={`material-symbols-outlined text-lg transition-all ${el.locked ? 'text-blue-500' : 'opacity-20'}`}>
+                                {el.locked ? 'lock' : 'lock_open'}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      
+                      {/* NOTES */}
+                      {activeTab === 'notes' && (
+                        <div className="flex flex-col gap-5">
+                          <div className="flex flex-col gap-1">
+                            <h4 className="text-[11px] font-black uppercase tracking-widest text-slate-300">Project Workspace</h4>
+                            <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest leading-none">Internal SOPs & Metadata</p>
+                          </div>
+                          <div className="flex flex-col bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden shadow-sm focus-within:ring-2 focus-within:ring-blue-500/20 transition-all h-[400px]">
+                            <div className="p-3 bg-slate-100/50 border-b border-slate-100 flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <span className="material-symbols-outlined text-[16px] text-slate-500">edit_note</span>
+                                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-none">Label Notes</span>
+                              </div>
+                              <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-600 text-[8px] font-black uppercase tracking-wider border border-emerald-500/20">
+                                <span className="material-symbols-outlined text-[12px] animate-pulse">sync</span>
+                                Auto-saved
+                              </div>
+                            </div>
+                            <textarea
+                              value={meta.notes || ''}
+                              onChange={(e) => setMeta(prev => ({ ...prev, notes: e.target.value }))}
+                              onBlur={commitUpdate}
+                              placeholder="Type label specific instructions, change logs, or validation requirements here..."
+                              className="w-full flex-1 p-4 text-[13px] bg-transparent outline-none resize-none font-medium text-slate-700 leading-relaxed placeholder:text-slate-400 custom-scrollbar-thin"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </motion.div>
+                  </AnimatePresence>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
+
 
         {/* ── Premium Center Canvas ────────────────────────────────────────────── */}
         <motion.section
@@ -2189,29 +1789,29 @@ export default function LabelEditor() {
           {/* Sticky Drawing Toolbar */}
           {isDrawingMode && (
             <div className="sticky top-4 left-0 right-0 z-[1005] flex justify-center pointer-events-none px-4">
-              <div className="flex items-center gap-3 bg-white dark:bg-slate-800 p-2.5 rounded-2xl shadow-2xl border border-slate-200 dark:border-white/10 pointer-events-auto animate-in fade-in slide-in-from-top-4 duration-300">
-                <div className="flex gap-2 px-3 border-r border-slate-200 dark:border-white/10 items-center">
-                  <button onClick={() => setIsEraserMode(false)} className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${!isEraserMode ? 'btn-gradient shadow-sm text-white shadow-lg shadow-primary/30' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-white/5'}`}>
+              <div className="flex items-center gap-3 bg-white p-2.5 rounded-2xl shadow-2xl border border-slate-200 pointer-events-auto animate-in fade-in slide-in-from-top-4 duration-300">
+                <div className="flex gap-2 px-3 border-r border-slate-200 items-center">
+                  <button onClick={() => setIsEraserMode(false)} className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${!isEraserMode ? 'btn-gradient shadow-sm text-white shadow-lg shadow-primary/30' : 'text-slate-500 hover:bg-slate-100'}`}>
                     <span className="material-symbols-outlined text-lg">edit</span>
                   </button>
-                  <button onClick={() => setIsEraserMode(true)} className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${isEraserMode ? 'btn-gradient shadow-sm text-white shadow-lg shadow-primary/30' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-white/5'}`}>
+                  <button onClick={() => setIsEraserMode(true)} className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${isEraserMode ? 'btn-gradient shadow-sm text-white shadow-lg shadow-primary/30' : 'text-slate-500 hover:bg-slate-100'}`}>
                     <span className="material-symbols-outlined text-lg">ink_eraser</span>
                   </button>
                 </div>
-                <div className="flex gap-2 px-3 border-r border-slate-200 dark:border-white/10">
+                <div className="flex gap-2 px-3 border-r border-slate-200">
                   {['#191C1E', '#BA1A1A', '#1D4ED8', '#15803D'].map(c => (
                     <button key={c} onClick={() => { setPenColor(c); setIsEraserMode(false); }} className={`w-6 h-6 rounded-full ring-2 transition-all ${(!isEraserMode && penColor === c) ? 'ring-primary ring-offset-2 scale-110' : 'ring-transparent opacity-80 hover:opacity-100'}`} style={{ backgroundColor: c }} />
                   ))}
                 </div>
-                <div className="flex items-center gap-3 px-3 border-r border-slate-200 dark:border-white/10">
+                <div className="flex items-center gap-3 px-3 border-r border-slate-200">
                   <span className="material-symbols-outlined text-slate-400 text-sm">{isEraserMode ? 'circle' : 'line_weight'}</span>
-                  <input type="range" min="1" max="15" value={penWidth} onChange={e => setPenWidth(e.target.value)} className="w-20 h-1 bg-slate-200 dark:bg-slate-700 rounded-lg accent-primary" title={isEraserMode ? "Eraser Size" : "Pen Size"} />
+                  <input type="range" min="1" max="15" value={penWidth} onChange={e => setPenWidth(e.target.value)} className="w-20 h-1 bg-slate-200 rounded-lg accent-primary" title={isEraserMode ? "Eraser Size" : "Pen Size"} />
                 </div>
                 <div className="flex items-center gap-2 pr-1">
-                  <button onClick={() => setCurrentLines(currentLines.slice(0, -1))} className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-500 hover:bg-slate-100 dark:hover:bg-white/5 transition-all" title="Undo Last Stroke">
+                  <button onClick={() => setCurrentLines(currentLines.slice(0, -1))} className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-all" title="Undo Last Stroke">
                     <span className="material-symbols-outlined text-lg">undo</span>
                   </button>
-                  <button onClick={() => setCurrentLines([])} className="px-3 py-2 text-[10px] font-extrabold uppercase tracking-tight text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-all">Clear Canvas</button>
+                  <button onClick={() => setCurrentLines([])} className="px-3 py-2 text-[10px] font-extrabold uppercase tracking-tight text-slate-500 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all">Clear Canvas</button>
                   <button onClick={() => {
                     if (currentLines.length > 0) {
                       // Group strokes by style to minimize elements but keep visual integrity
@@ -2324,9 +1924,9 @@ export default function LabelEditor() {
                 className="absolute top-[-75px] right-0 flex items-center gap-3 pointer-events-none z-50 animate-fade-in"
                 style={{ transform: `scale(${1 / zoomLevel})`, transformOrigin: 'right bottom' }}
               >
-                <div className="flex items-center gap-2 px-3 py-1.5 glass bg-white/90 dark:bg-slate-900/90 rounded-xl border border-primary/20 shadow-lg">
+                <div className="flex items-center gap-2 px-3 py-1.5 glass bg-white/90 rounded-xl border border-primary/20 shadow-lg">
                   <span className="material-symbols-outlined text-[14px] text-primary">aspect_ratio</span>
-                  <span className="text-[10px] font-black font-mono text-slate-800 dark:text-slate-200">
+                  <span className="text-[10px] font-black font-mono text-slate-800">
                     {fromPx(AW, meta.unit).toFixed(1)} × {fromPx(AH, meta.unit).toFixed(1)} {meta.unit}
                   </span>
                 </div>
@@ -2418,7 +2018,6 @@ export default function LabelEditor() {
                     unit={meta.unit}
                     cursorPos={artboardCursor.x}
                     selection={selectedElement ? { start: selectedElement.x, end: selectedElement.x + (selectedElement.width || 0) } : null}
-                    isDark={theme === 'dark'}
                     onAddGuide={(pos) => setManualGuidelines(prev => [...prev, { orientation: 'vertical', pos }])}
                   />
                   <Ruler
@@ -2428,16 +2027,15 @@ export default function LabelEditor() {
                     unit={meta.unit}
                     cursorPos={artboardCursor.y}
                     selection={selectedElement ? { start: selectedElement.y, end: selectedElement.y + (selectedElement.height || 0) } : null}
-                    isDark={theme === 'dark'}
                     onAddGuide={(pos) => setManualGuidelines(prev => [...prev, { orientation: 'horizontal', pos }])}
                   />
                   {/* Corner Box where rulers meet */}
                   <div
                     className="absolute top-[-32px] left-[-32px] w-8 h-8 z-10"
                     style={{
-                      backgroundColor: theme === 'dark' ? 'rgba(30, 41, 59, 1)' : 'rgba(241, 245, 249, 1)',
-                      borderRight: `1px solid ${theme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.15)'}`,
-                      borderBottom: `1px solid ${theme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.15)'}`,
+                      backgroundColor: 'rgba(241, 245, 249, 1)',
+                      borderRight: '1px solid rgba(0, 0, 0, 0.15)',
+                      borderBottom: '1px solid rgba(0, 0, 0, 0.15)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center'
@@ -2465,7 +2063,6 @@ export default function LabelEditor() {
                     ...manualGuidelines.map(g => ({ ...g, type: 'manual' }))
                   ]}
                   zoomLevel={zoomLevel}
-                  isDark={theme === 'dark'}
                   onRemoveManualCenter={(pos, orientation) => {
                     setManualGuidelines(prev => prev.filter(g => g.pos !== pos || g.orientation !== orientation));
                   }}
@@ -2654,20 +2251,8 @@ export default function LabelEditor() {
                         }
                       }}
                     >
-                      {/* Boundary Alert Overlay */}
-                      {(() => {
-                        const isOutOfBounds = (el.x < -1 || el.y < -1 || el.x + (el.width || 0) > AW + 1 || el.y + (el.height || 0) > AH + 1);
-                        if (!isOutOfBounds) return null;
-                        return (
-                          <div className="absolute inset-[-4px] border-2 border-red-500 border-dashed rounded-lg pointer-events-none z-0">
-                            <div className="absolute top-[-20px] left-1/2 -translate-x-1/2 bg-red-600 text-white text-[8px] font-black px-2 py-0.5 rounded-full shadow-lg whitespace-nowrap">
-                              EXCEEDS PRINTABLE AREA
-                            </div>
-                          </div>
-                        );
-                      })()}
                       {isSelected && (
-                        <div className={`absolute left-0 bg-white dark:bg-slate-800 shadow-xl min-w-max px-2 py-1.5 rounded-lg border border-slate-200 dark:border-white/10 flex items-center gap-1 z-[500] pointer-events-auto transform transition-all origin-top-left ${(el.y * zoomLevel > AH * zoomLevel - 60 || (el.rotation > 110 && el.rotation < 250))
+                        <div className={`absolute left-0 bg-white shadow-xl min-w-max px-2 py-1.5 rounded-lg border border-slate-200 flex items-center gap-1 z-[500] pointer-events-auto transform transition-all origin-top-left ${(el.y * zoomLevel > AH * zoomLevel - 60 || (el.rotation > 110 && el.rotation < 250))
                             ? '-top-[56px]'
                             : 'top-[calc(100%+8px)]'
                           }`}
@@ -2683,7 +2268,7 @@ export default function LabelEditor() {
                             <>
                               {/* Table Specific Controls */}
                               {el.type === 'table' && (
-                                <div className="flex gap-1 shrink-0 px-2 border-r border-slate-200 dark:border-white/10">
+                                <div className="flex gap-1 shrink-0 px-2 border-r border-slate-200">
                                   <button onClick={e => {
                                     e.stopPropagation();
                                     const lines = (el.text || '').split('\n');
@@ -2708,11 +2293,11 @@ export default function LabelEditor() {
 
                               {/* Barcode Data Editor */}
                               {el.type === 'barcode' && (
-                                <div className="flex items-center gap-1.5 px-2 border-r border-slate-200 dark:border-white/10">
+                                <div className="flex items-center gap-1.5 px-2 border-r border-slate-200">
                                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Data:</span>
                                   <input
                                     type="text"
-                                    className="w-24 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-white/10 rounded px-1.5 py-0.5 text-[11px] font-mono outline-none focus:border-blue-400"
+                                    className="w-24 bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[11px] font-mono outline-none focus:border-blue-400"
                                     value={el.text || ''}
                                     onChange={e => { updateElement(el.id, { text: e.target.value }); }}
                                     onBlur={commitUpdate}
@@ -2722,7 +2307,7 @@ export default function LabelEditor() {
 
                               <div className="flex gap-0.5 shrink-0 pl-1.5">
                                 <button onClick={e => { e.stopPropagation(); duplicateElement(el.id); }}
-                                  className="p-1 rounded hover:bg-slate-100 dark:hover:bg-white/5 text-slate-500 hover:text-blue-600 transition-colors" title="Duplicate">
+                                  className="p-1 rounded hover:bg-slate-100 text-slate-500 hover:text-blue-600 transition-colors" title="Duplicate">
                                   <span className="material-symbols-outlined text-[16px]">content_copy</span>
                                 </button>
                                 <button onClick={e => { e.stopPropagation(); deleteElement(el.id); }}
@@ -2768,14 +2353,7 @@ export default function LabelEditor() {
                           fontWeight: el.fontWeight || '400',
                           fontStyle: el.fontStyle || 'normal',
                           textDecoration: el.textDecoration || 'none',
-                          color: (() => {
-                            if (editingElementId === el.id) return '#2563eb';
-                            // Dark Mode visibility fix: Force white for dark elements outside the label area
-                            if (theme === 'dark' && (el.x < 0 || el.y < 0 || el.x + (el.width || 120) > AW || el.y + (el.height || 40) > AH)) {
-                              if (el.color === '#191c1e' || !el.color || el.color === '#191C1E') return '#ffffff';
-                            }
-                            return (el.color || '#191c1e');
-                          })(),
+                          color: el.color || '#191c1e',
                           backgroundImage: editingElementId === el.id ? 'none' : (el.backgroundImage || undefined),
                           WebkitBackgroundClip: editingElementId === el.id ? 'initial' : (el.WebkitBackgroundClip || undefined),
                           WebkitTextFillColor: editingElementId === el.id ? 'initial' : (el.WebkitTextFillColor || undefined),
@@ -2796,12 +2374,7 @@ export default function LabelEditor() {
                           {el.type === 'path' && (
                             <svg className="w-full h-full" viewBox={`0 0 ${el.width} ${el.height}`} preserveAspectRatio="none">
                               <path d={el.pathData}
-                                stroke={(() => {
-                                  if (theme === 'dark' && (el.x < 0 || el.y < 0 || el.x + (el.width || 120) > AW || el.y + (el.height || 40) > AH)) {
-                                    if (el.color === '#191c1e' || !el.color || el.color === '#191C1E') return '#ffffff';
-                                  }
-                                  return el.color || '#191c1e';
-                                })()}
+                                stroke={el.color || '#191c1e'}
                                 strokeWidth={el.penWidth || 3} fill="none" strokeLinecap="round" strokeLinejoin="round" />
                             </svg>
                           )}
@@ -2865,22 +2438,12 @@ export default function LabelEditor() {
                             <div className="w-full flex-1 min-h-0 flex items-center justify-center overflow-hidden">
                               <span className="material-symbols-outlined leading-[0]" style={{
                                 fontSize: `${Math.min(elW, elH)}px`,
-                                color: (() => {
-                                  if (theme === 'dark' && (el.x < 0 || el.y < 0 || el.x + (el.width || 120) > AW || el.y + (el.height || 40) > AH)) {
-                                    if (el.color === '#191c1e' || !el.color || el.color === '#191C1E') return '#ffffff';
-                                  }
-                                  return el.color || '#191c1e';
-                                })()
+                                color: el.color || '#191c1e'
                               }}>{el.iconName}</span>
                             </div>
                           ) : el.type === 'IconsIcon' ? (
                             <div className="w-full flex-1 min-h-0 p-1 flex items-center justify-center pointer-events-none" style={{
-                              color: (() => {
-                                if (theme === 'dark' && (el.x < 0 || el.y < 0 || el.x + (el.width || 120) > AW || el.y + (el.height || 40) > AH)) {
-                                  if (el.color === '#191c1e' || !el.color || el.color === '#191C1E') return '#ffffff';
-                                }
-                                return el.color || '#191c1e';
-                              })()
+                              color: el.color || '#191c1e'
                             }} dangerouslySetInnerHTML={{ __html: el.svg }} />
                           ) : el.type === 'table' ? (
                             <table className="w-full flex-1 min-h-0 table-fixed" style={{ borderCollapse: 'collapse' }}>
@@ -2906,7 +2469,7 @@ export default function LabelEditor() {
                                         {editingCell?.r === i && editingCell?.c === j ? (
                                           <textarea
                                             autoFocus
-                                            className="w-full h-full bg-white dark:bg-slate-700 outline-none border-none p-1 text-inherit font-inherit resize-none block m-0"
+                                            className="w-full h-full bg-white outline-none border-none p-1 text-inherit font-inherit resize-none block m-0"
                                             value={cell}
                                             onChange={e => {
                                               const lines = (el.text || '').split('\n');
@@ -3045,7 +2608,7 @@ export default function LabelEditor() {
 
         {/* ── Premium Right Properties Panel ────────────────────────────────────── */}
         <motion.aside
-          className="bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-white/10 flex flex-col overflow-hidden shrink-0 relative shadow-sm"
+          className="bg-white border-l border-slate-200 flex flex-col overflow-hidden shrink-0 relative shadow-sm"
           initial={false}
           animate={{
             width: rightSidebarCollapsed ? 48 : rightWidth,
@@ -3077,7 +2640,7 @@ export default function LabelEditor() {
           {/* Toggle Button for Right Sidebar */}
           <button
             onClick={() => setRightSidebarCollapsed(!rightSidebarCollapsed)}
-            className="absolute top-1/2 -translate-y-1/2 left-0 w-5 h-20 bg-white/40 dark:bg-black/20 hover:bg-primary transition-all flex items-center justify-center text-slate-400 hover:text-white rounded-r-xl border border-l-0 border-white/10 shadow-sm z-50 group"
+            className="absolute top-1/2 -translate-y-1/2 left-0 w-5 h-20 bg-white/40 hover:bg-primary transition-all flex items-center justify-center text-slate-400 hover:text-white rounded-r-xl border border-l-0 border-white/10 shadow-sm z-50 group"
           >
             <span className="material-symbols-outlined text-sm transition-transform duration-300 group-hover:scale-125">
               {rightSidebarCollapsed ? 'chevron_left' : 'chevron_right'}
@@ -3088,13 +2651,13 @@ export default function LabelEditor() {
             <div className="flex flex-col h-full overflow-y-auto custom-scrollbar">
               {selectedIds.length > 1 ? (
                 <div className="animate-fade-in p-4 space-y-6">
-                  <div className="flex items-center justify-between bg-blue-50 dark:bg-blue-900/20 px-3 py-3 rounded-xl mb-4 border border-blue-500/10">
+                  <div className="flex items-center justify-between bg-blue-50 px-3 py-3 rounded-xl mb-4 border border-blue-500/10">
                     <div className="flex flex-col">
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-blue-700 dark:text-blue-300 flex items-center gap-2">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-blue-700 flex items-center gap-2">
                         <span className="material-symbols-outlined text-[15px]">group</span>
                         Bulk Selection
                       </span>
-                      <span className="text-[9px] text-blue-600/70 dark:text-blue-400/70 font-bold">{selectedIds.length} Elements Selected</span>
+                      <span className="text-[9px] text-blue-600/70 font-bold">{selectedIds.length} Elements Selected</span>
                     </div>
                     <button
                       onClick={() => setShowBulkDeleteModal(true)}
@@ -3106,7 +2669,7 @@ export default function LabelEditor() {
                   </div>
 
                   {/* Bulk Typography */}
-                  <div className="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm border border-slate-100 space-y-4">
+                  <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 space-y-4">
                     <span className="text-[11px] font-bold uppercase tracking-widest text-primary block">Typography & Appearance</span>
 
                     <div className="space-y-3">
@@ -3142,14 +2705,14 @@ export default function LabelEditor() {
                   </div>
 
                   {/* Bulk Content — Suffix */}
-                  <div className="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm border border-slate-100 space-y-3">
+                  <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 space-y-3">
                     <span className="text-[11px] font-bold uppercase tracking-widest text-primary block">Batch Content Action</span>
                     <div>
                       <label className="text-[10px] font-bold uppercase text-slate-400 mb-1.5 block">Append Suffix to Elements</label>
                       <div className="relative">
                         <input
                           type="text"
-                          className="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-white/10 text-[11px] py-2.5 pl-3 pr-10 rounded-xl outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/10 transition-all font-medium"
+                          className="w-full bg-slate-50 border border-slate-200 text-[11px] py-2.5 pl-3 pr-10 rounded-xl outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/10 transition-all font-medium"
                           placeholder="e.g. (Verified)"
                           value={bulkSuffix}
                           onFocus={() => {
@@ -3184,7 +2747,7 @@ export default function LabelEditor() {
               ) : selectedElement ? (
                 <div className="animate-fade-in pb-16 relative">
                   {/* Sticky Global Lock Toggle for the Layer */}
-                  <div className="sticky top-0 z-[20] shadow-sm flex items-center justify-between bg-primary-container px-4 py-2 border-b border-white/20 dark:border-white/10 rounded-b-xl mb-2">
+                  <div className="sticky top-0 z-[20] shadow-sm flex items-center justify-between bg-primary-container px-4 py-2 border-b border-white/20 rounded-b-xl mb-2">
                     <span className="text-[10px] font-bold uppercase tracking-widest text-primary flex items-center gap-2">
                       <span className="material-symbols-outlined text-[15px]">{selectedElement.locked ? 'lock' : 'lock_open'}</span>
                       {selectedElement.locked ? 'Layer Secured' : 'Unsecured Layer'}
@@ -3206,16 +2769,16 @@ export default function LabelEditor() {
 
                     {/* ── Premium Position Block ────────────────────────────────────────── */}
                     <motion.div
-                      className="p-5 border-b border-white/20 dark:border-white/10 bg-slate-50/50 dark:bg-slate-800/50"
+                      className="p-5 border-b border-white/20 bg-slate-50/50"
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.1 }}
                     >
                       <div className="flex items-center justify-between mb-4">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-primary dark:text-blue-400">Position & Size</span>
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Position & Size</span>
                         <motion.button
                           onClick={() => deleteElement(selectedElement.id)}
-                          className="h-7 px-3 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 text-[10px] font-bold uppercase rounded-lg border border-red-200 dark:border-red-800/50 transition-all flex items-center gap-1.5"
+                          className="h-7 px-3 bg-red-50 hover:bg-red-100 text-red-600 text-[10px] font-bold uppercase rounded-lg border border-red-200 transition-all flex items-center gap-1.5"
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                         >
@@ -3225,12 +2788,12 @@ export default function LabelEditor() {
                       </div>
                       <div className="grid grid-cols-2 gap-2 mb-2">
                         {['x', 'y'].map(axis => (
-                          <div key={axis} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-lg p-1.5 flex items-center">
-                            <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 w-8 pl-1">{axis.toUpperCase()} ({meta.unit})</span>
+                          <div key={axis} className="bg-white border border-slate-200 rounded-lg p-1.5 flex items-center">
+                            <span className="text-[9px] font-bold text-slate-400 w-8 pl-1">{axis.toUpperCase()} ({meta.unit})</span>
                             <input
                               type="number"
                               step="0.1"
-                              className="w-full text-[11px] font-mono outline-none text-right bg-transparent dark:text-white"
+                              className="w-full text-[11px] font-mono outline-none text-right bg-transparent"
                               value={Number(fromPx(selectedElement[axis] || 0, meta.unit).toFixed(2))}
                               onChange={e => {
                                 const val = parseFloat(e.target.value) || 0;
@@ -3243,12 +2806,12 @@ export default function LabelEditor() {
                       </div>
                       <div className="grid grid-cols-2 gap-2">
                         {[['width', 'W'], ['height', 'H']].map(([dim, label]) => (
-                          <div key={dim} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-lg p-1.5 flex items-center">
-                            <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 w-8 pl-1">{label} ({meta.unit})</span>
+                          <div key={dim} className="bg-white border border-slate-200 rounded-lg p-1.5 flex items-center">
+                            <span className="text-[9px] font-bold text-slate-400 w-8 pl-1">{label} ({meta.unit})</span>
                             <input
                               type="number"
                               step="0.1"
-                              className="w-full text-[11px] font-mono outline-none text-right bg-transparent dark:text-white"
+                              className="w-full text-[11px] font-mono outline-none text-right bg-transparent"
                               value={Number(fromPx(selectedElement[dim] || 0, meta.unit).toFixed(2))}
                               onChange={e => {
                                 const val = parseFloat(e.target.value) || 0;
@@ -3258,11 +2821,11 @@ export default function LabelEditor() {
                             />
                           </div>
                         ))}
-                        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-lg p-1.5 flex items-center mt-2 col-span-2">
-                          <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 w-12 pl-1">ROTATE</span>
+                        <div className="bg-white border border-slate-200 rounded-lg p-1.5 flex items-center mt-2 col-span-2">
+                          <span className="text-[9px] font-bold text-slate-400 w-12 pl-1">ROTATE</span>
                           <input
                             type="number"
-                            className="w-full text-[11px] font-mono outline-none text-right bg-transparent dark:text-white"
+                            className="w-full text-[11px] font-mono outline-none text-right bg-transparent"
                             value={selectedElement.rotation || 0}
                             onChange={e => { updateElement(selectedElement.id, { rotation: parseInt(e.target.value) || 0 }); }}
                             onBlur={commitUpdate}
@@ -3274,17 +2837,17 @@ export default function LabelEditor() {
 
                     {/* Data / Content Block — for all text-bearing types */}
                     {['text', 'warnings', 'barcode', 'qrcode', 'manufacturing', 'dosage', 'storage', 'subtext', 'table'].includes(selectedElement.type) && (
-                      <div className="p-4 border-b border-white/20 dark:border-white/10">
-                        <span className="text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 block mb-2">
+                      <div className="p-4 border-b border-white/20">
+                        <span className="text-[11px] font-bold uppercase tracking-widest text-slate-500 block mb-2">
                           {['barcode', 'qrcode'].includes(selectedElement.type) ? 'Data String' : (selectedElement.type === 'table' ? 'Table Data' : 'Text Content')}
                         </span>
 
                         {!['barcode', 'qrcode', 'table'].includes(selectedElement.type) && (
                           <div className="mb-4">
-                            <label className="text-[9px] font-extrabold uppercase text-primary dark:text-blue-400 mb-1.5 block tracking-wider">Field Heading</label>
+                            <label className="text-[9px] font-extrabold uppercase text-primary mb-1.5 block tracking-wider">Field Heading</label>
                             <input
                               type="text"
-                              className="w-full bg-blue-50/50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/40 text-[11px] font-bold py-2 px-2.5 dark:text-white focus:border-primary outline-none rounded-lg transition-all"
+                              className="w-full bg-blue-50/50 border border-blue-100 text-[11px] font-bold py-2 px-2.5 focus:border-primary outline-none rounded-lg transition-all"
                               value={selectedElement.heading ?? ''}
                               onChange={e => updateElement(selectedElement.id, { heading: e.target.value })}
                               onBlur={commitUpdate}
@@ -3295,14 +2858,14 @@ export default function LabelEditor() {
 
                         {selectedElement.type === 'table' ? (
                           <div className="space-y-1.5">
-                            <div className="max-h-[320px] overflow-y-auto overflow-x-hidden custom-scrollbar border border-slate-200/50 dark:border-slate-700 rounded-xl bg-slate-50/30 dark:bg-slate-900/30 p-2 space-y-1">
+                            <div className="max-h-[320px] overflow-y-auto overflow-x-hidden custom-scrollbar border border-slate-200/50 rounded-xl bg-slate-50/30 p-2 space-y-1">
                               {(selectedElement.text || '').split('\n').map((row, i) => (
                                 <div key={i} className="flex gap-1 group">
                                   <div className="w-4 h-7 flex items-center justify-center text-[9px] font-bold text-slate-300 select-none">{i + 1}</div>
                                   {row.split('|').map((cell, j) => (
                                     <input
                                       key={j}
-                                      className="flex-1 min-w-0 h-7 bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 text-[10px] px-2 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 outline-none transition-all dark:text-white"
+                                      className="flex-1 min-w-0 h-7 bg-white border border-slate-200 text-[10px] px-2 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 outline-none transition-all"
                                       value={cell}
                                       onChange={e => {
                                         const lines = (selectedElement.text || '').split('\n');
@@ -3326,7 +2889,7 @@ export default function LabelEditor() {
                                   updateElement(selectedElement.id, { text: lines.join('\n'), height: (selectedElement.height || 0) + 25 });
                                   commitUpdate();
                                 }}
-                                className="flex-1 h-8 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-[10px] font-bold rounded-lg border border-blue-200 dark:border-blue-800/50 transition-colors flex items-center justify-center gap-1.5"
+                                className="flex-1 h-8 bg-blue-50 hover:bg-blue-100 text-blue-700 text-[10px] font-bold rounded-lg border border-blue-200 transition-colors flex items-center justify-center gap-1.5"
                               >
                                 <span className="material-symbols-outlined text-[16px]">add</span> Add Row
                               </button>
@@ -3337,7 +2900,7 @@ export default function LabelEditor() {
                                   updateElement(selectedElement.id, { text: next.join('\n'), width: (selectedElement.width || 0) + 100 });
                                   commitUpdate();
                                 }}
-                                className="flex-1 h-8 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-[10px] font-bold rounded-lg border border-blue-200 dark:border-blue-800/50 transition-colors flex items-center justify-center gap-1.5"
+                                className="flex-1 h-8 bg-blue-50 hover:bg-blue-100 text-blue-700 text-[10px] font-bold rounded-lg border border-blue-200 transition-colors flex items-center justify-center gap-1.5"
                               >
                                 <span className="material-symbols-outlined text-[16px]">view_column</span> Add Column
                               </button>
@@ -3345,7 +2908,7 @@ export default function LabelEditor() {
                           </div>
                         ) : (
                           <textarea
-                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-[12px] py-2 px-2.5 focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none rounded-lg resize-none dark:text-white"
+                            className="w-full bg-slate-50 border border-slate-200 text-[12px] py-2 px-2.5 focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none rounded-lg resize-none"
                             style={{ minHeight: '80px', height: 'auto' }}
                             value={selectedElement.text || ''}
                             placeholder={selectedElement.type === 'qrcode' ? 'https://...' : selectedElement.type === 'barcode' ? '123456789012' : 'Enter text…'}
@@ -3363,17 +2926,17 @@ export default function LabelEditor() {
                     {/* ── Premium Typography Section ──────────────────────────────────────── */}
                     {!['image', 'barcode', 'qrcode', 'icon', 'IconsIcon'].includes(selectedElement.type) && (
                       <motion.div
-                        className="p-5 border-b border-white/20 dark:border-white/10"
+                        className="p-5 border-b border-white/20"
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.2 }}
                       >
-                        <span className="text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 block mb-4">Typography</span>
+                        <span className="text-[11px] font-bold uppercase tracking-widest text-slate-500 block mb-4">Typography</span>
                         <div className="space-y-3">
                           <div className="grid grid-cols-2 gap-2">
                             <div>
                               <label className="text-[10px] font-bold uppercase text-slate-400 mb-1 block">Font</label>
-                              <select className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-[11px] py-1.5 px-1.5 rounded-lg outline-none cursor-pointer dark:text-slate-200"
+                              <select className="w-full bg-slate-50 border border-slate-200 text-[11px] py-1.5 px-1.5 rounded-lg outline-none cursor-pointer"
                                 value={selectedElement.fontFamily || 'Inter, sans-serif'}
                                 onChange={e => { updateElement(selectedElement.id, { fontFamily: e.target.value }); commitUpdate(); }}>
                                 <option value="Inter, sans-serif">Inter</option>
@@ -3411,7 +2974,7 @@ export default function LabelEditor() {
                             </div>
                             <div>
                               <label className="text-[10px] font-bold uppercase text-slate-400 mb-1 block">Weight</label>
-                              <select className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-[11px] py-1.5 px-1.5 rounded-lg outline-none cursor-pointer dark:text-slate-200"
+                              <select className="w-full bg-slate-50 border border-slate-200 text-[11px] py-1.5 px-1.5 rounded-lg outline-none cursor-pointer"
                                 value={selectedElement.fontWeight || '400'}
                                 onChange={e => { updateElement(selectedElement.id, { fontWeight: e.target.value }); commitUpdate(); }}>
                                 <option value="800">Extra Bold</option>
@@ -3426,7 +2989,7 @@ export default function LabelEditor() {
 
                           <div>
                             <label className="text-[10px] font-bold uppercase text-slate-400 mb-1 block flex justify-between">
-                              <span>Size</span><span className="font-mono dark:text-slate-200">{selectedElement.fontSize || 12}px</span>
+                              <span>Size</span><span className="font-mono">{selectedElement.fontSize || 12}px</span>
                             </label>
                             <input type="range" min="6" max="256" className="w-full accent-blue-600"
                               value={selectedElement.fontSize || 12}
@@ -3436,14 +2999,14 @@ export default function LabelEditor() {
 
                           <div className="grid grid-cols-2 gap-2">
                             <div>
-                              <label className="text-[10px] font-bold uppercase text-slate-400 mb-1 block flex justify-between"><span>Line Height</span><span className="font-mono dark:text-slate-200">{selectedElement.lineHeight || '1.25'}</span></label>
+                              <label className="text-[10px] font-bold uppercase text-slate-400 mb-1 block flex justify-between"><span>Line Height</span><span className="font-mono">{selectedElement.lineHeight || '1.25'}</span></label>
                               <input type="range" min="1" max="3" step="0.05" className="w-full accent-blue-600"
                                 value={parseFloat(selectedElement.lineHeight) || 1.25}
                                 onChange={e => updateElement(selectedElement.id, { lineHeight: parseFloat(e.target.value) })}
                                 onMouseUp={commitUpdate} />
                             </div>
                             <div>
-                              <label className="text-[10px] font-bold uppercase text-slate-400 mb-1 block flex justify-between"><span>Spacing</span><span className="font-mono dark:text-slate-200">{selectedElement.letterSpacing || 0}px</span></label>
+                              <label className="text-[10px] font-bold uppercase text-slate-400 mb-1 block flex justify-between"><span>Spacing</span><span className="font-mono">{selectedElement.letterSpacing || 0}px</span></label>
                               <input type="range" min="-2" max="20" step="0.5" className="w-full accent-blue-600"
                                 value={selectedElement.letterSpacing || 0}
                                 onChange={e => updateElement(selectedElement.id, { letterSpacing: parseFloat(e.target.value) })}
@@ -3451,20 +3014,20 @@ export default function LabelEditor() {
                             </div>
                           </div>
 
-                          <div className="flex gap-1 bg-slate-50 dark:bg-slate-900 p-1 rounded-lg border border-slate-200 dark:border-slate-700">
+                          <div className="flex gap-1 bg-slate-50 p-1 rounded-lg border border-slate-200">
                             {[
                               ['fontStyle', 'italic', 'format_italic', selectedElement.fontStyle === 'italic'],
                               ['textDecoration', 'underline', 'format_underlined', selectedElement.textDecoration === 'underline'],
                             ].map(([prop, val, icon, active]) => (
                               <button key={prop} onClick={() => { updateElement(selectedElement.id, { [prop]: active ? (prop === 'fontStyle' ? 'normal' : 'none') : val }); commitUpdate(); }}
-                                className={`flex-1 p-1.5 rounded text-center transition-colors ${active ? 'btn-gradient shadow-sm text-white' : 'hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400'}`}>
+                                className={`flex-1 p-1.5 rounded text-center transition-colors ${active ? 'btn-gradient shadow-sm text-white' : 'hover:bg-slate-200 text-slate-500'}`}>
                                 <span className="material-symbols-outlined text-[14px]">{icon}</span>
                               </button>
                             ))}
-                            <div className="w-[1px] bg-slate-200 dark:bg-slate-700 mx-0.5"></div>
+                            <div className="w-[1px] bg-slate-200 mx-0.5"></div>
                             {['left', 'center', 'right'].map(a => (
                               <button key={a} onClick={() => { updateElement(selectedElement.id, { align: a }); commitUpdate(); }}
-                                className={`flex-1 p-1.5 rounded text-center transition-colors ${selectedElement.align === a ? 'bg-blue-100 dark:bg-blue-900/50 text-primary dark:text-blue-300' : 'hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400'}`}>
+                                className={`flex-1 p-1.5 rounded text-center transition-colors ${selectedElement.align === a ? 'bg-blue-100 text-primary' : 'hover:bg-slate-200 text-slate-500'}`}>
                                 <span className="material-symbols-outlined text-[14px]">format_align_{a}</span>
                               </button>
                             ))}
@@ -3476,18 +3039,18 @@ export default function LabelEditor() {
                     {/* ── Premium Appearance Section ──────────────────────────────────────── */}
                     {selectedElement.type !== 'image' && (
                       <motion.div
-                        className="p-5 border-b border-white/20 dark:border-white/10 space-y-5"
+                        className="p-5 border-b border-white/20 space-y-5"
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.3 }}
                       >
-                        <span className="text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 block">Appearance</span>
+                        <span className="text-[11px] font-bold uppercase tracking-widest text-slate-500 block">Appearance</span>
 
                         {/* Icon size slider */}
                         {selectedElement.type === 'icon' && (
                           <div>
                             <label className="text-[10px] font-bold uppercase text-slate-400 mb-1 flex justify-between">
-                              <span>Icon Size</span><span className="font-mono dark:text-slate-200">{selectedElement.fontSize || 48}px</span>
+                              <span>Icon Size</span><span className="font-mono">{selectedElement.fontSize || 48}px</span>
                             </label>
                             <input type="range" min="12" max="400" className="w-full accent-blue-600"
                               value={selectedElement.fontSize || 48}
@@ -3500,7 +3063,7 @@ export default function LabelEditor() {
                         {selectedElement.type === 'barcode' && (
                           <div>
                             <label className="text-[8px] font-bold uppercase text-slate-400 mb-1.5 block">Barcode Format</label>
-                            <select className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-[11px] py-1.5 px-1.5 rounded-lg outline-none cursor-pointer dark:text-slate-200"
+                            <select className="w-full bg-slate-50 border border-slate-200 text-[11px] py-1.5 px-1.5 rounded-lg outline-none cursor-pointer"
                               value={selectedElement.barcodeFormat || 'CODE128'}
                               onChange={e => { updateElement(selectedElement.id, { barcodeFormat: e.target.value }); commitUpdate(); }}>
                               <option value="CODE128">CODE 128 (default)</option>
@@ -3517,18 +3080,18 @@ export default function LabelEditor() {
                         {/* ── Dynamic Data & Rules Section ────────────────────────────────── */}
                         {(selectedElement.isPlaceholder || (selectedElement.text && selectedElement.text.includes('{{'))) && (
                           <div className="space-y-4 pt-1">
-                            <div className="flex items-center gap-2 mb-2 p-2 bg-blue-50 dark:bg-blue-500/10 rounded-xl border border-blue-100 dark:border-blue-400/20">
-                              <span className="material-symbols-outlined text-[18px] text-blue-600 dark:text-blue-400">database</span>
-                              <span className="text-[10px] font-black uppercase text-blue-800 dark:text-blue-100 tracking-tighter">Dynamic Configuration</span>
+                            <div className="flex items-center gap-2 mb-2 p-2 bg-blue-50 rounded-xl border border-blue-100">
+                              <span className="material-symbols-outlined text-[18px] text-blue-600">database</span>
+                              <span className="text-[10px] font-black uppercase text-blue-800 tracking-tighter">Dynamic Configuration</span>
                             </div>
 
                             {/* Render as Barcode Toggle */}
-                            <div className="bg-white dark:bg-slate-800/80 p-3 rounded-xl border border-slate-200 dark:border-white/20 shadow-sm space-y-3">
+                            <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm space-y-3">
                               <div className="flex items-center justify-between">
-                                <span className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 tracking-wider">Render as Barcode</span>
+                                <span className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Render as Barcode</span>
                                 <button
                                   onClick={(e) => { e.stopPropagation(); updateElement(selectedElement.id, { renderAsBarcode: !selectedElement.renderAsBarcode }); commitUpdate(); }}
-                                  className={`w-10 h-5 rounded-full relative transition-all duration-300 border ${selectedElement.renderAsBarcode ? 'bg-blue-600 border-blue-700' : 'bg-slate-200 dark:bg-slate-700 border-slate-300 dark:border-slate-600'}`}
+                                  className={`w-10 h-5 rounded-full relative transition-all duration-300 border ${selectedElement.renderAsBarcode ? 'bg-blue-600 border-blue-700' : 'bg-slate-200 border-slate-300'}`}
                                 >
                                   <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow-sm transition-all duration-300 ${selectedElement.renderAsBarcode ? 'right-0.5' : 'left-0.5'}`} />
                                 </button>
@@ -3538,7 +3101,7 @@ export default function LabelEditor() {
                                 <div className="animate-in fade-in slide-in-from-top-1 duration-300">
                                   <label className="text-[8px] font-bold uppercase text-slate-400 mb-1 block italic">Barcode Format</label>
                                   <select
-                                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-[11px] py-1.5 px-2 rounded-lg outline-none cursor-pointer dark:text-slate-200 font-medium"
+                                    className="w-full bg-slate-50 border border-slate-200 text-[11px] py-1.5 px-2 rounded-lg outline-none cursor-pointer font-medium"
                                     value={selectedElement.barcodeFormat || 'code128'}
                                     onChange={e => { updateElement(selectedElement.id, { barcodeFormat: e.target.value }); commitUpdate(); }}
                                   >
@@ -3558,16 +3121,16 @@ export default function LabelEditor() {
                             {/* Fallback & Wrap */}
                             <div className="grid grid-cols-2 gap-2">
                               <div>
-                                <label className="text-[8px] font-bold uppercase text-slate-400 dark:text-slate-300 mb-1 block italic">Fallback Text</label>
-                                <input type="text" className="w-full bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-white/10 text-[11px] py-1.5 px-2 rounded-lg outline-none dark:text-white"
+                                <label className="text-[8px] font-bold uppercase text-slate-400 mb-1 block italic">Fallback Text</label>
+                                <input type="text" className="w-full bg-white border border-slate-200 text-[11px] py-1.5 px-2 rounded-lg outline-none"
                                   placeholder="If data null..."
                                   value={selectedElement.fallbackValue || ''}
                                   onChange={e => updateElement(selectedElement.id, { fallbackValue: e.target.value })}
                                   onBlur={commitUpdate} />
                               </div>
                               <div>
-                                <label className="text-[8px] font-bold uppercase text-slate-400 dark:text-slate-300 mb-1 block italic">Text Case</label>
-                                <select className="w-full bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-white/10 text-[11px] py-1.5 px-1.5 rounded-lg outline-none dark:text-slate-100"
+                                <label className="text-[8px] font-bold uppercase text-slate-400 mb-1 block italic">Text Case</label>
+                                <select className="w-full bg-white border border-slate-200 text-[11px] py-1.5 px-1.5 rounded-lg outline-none"
                                   value={selectedElement.formatting?.textCase || 'none'}
                                   onChange={e => { updateElement(selectedElement.id, { formatting: { ...selectedElement.formatting, textCase: e.target.value } }); commitUpdate(); }}>
                                   <option value="none">Original</option>
@@ -3582,7 +3145,7 @@ export default function LabelEditor() {
                             <div className="grid grid-cols-2 gap-2">
                               <div>
                                 <label className="text-[8px] font-bold uppercase text-slate-400 mb-1 block">Value Type</label>
-                                <select className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-[11px] py-1.5 px-1.5 rounded-lg outline-none dark:text-slate-200"
+                                <select className="w-full bg-white border border-slate-200 text-[11px] py-1.5 px-1.5 rounded-lg outline-none"
                                   value={selectedElement.formatting?.type || 'text'}
                                   onChange={e => { updateElement(selectedElement.id, { formatting: { ...selectedElement.formatting, type: e.target.value } }); commitUpdate(); }}>
                                   <option value="text">General Text</option>
@@ -3593,7 +3156,7 @@ export default function LabelEditor() {
                               {selectedElement.formatting?.type === 'date' && (
                                 <div>
                                   <label className="text-[8px] font-bold uppercase text-slate-400 mb-1 block">Date Format</label>
-                                  <select className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-[11px] py-1.5 px-1.5 rounded-lg outline-none dark:text-slate-200"
+                                  <select className="w-full bg-white border border-slate-200 text-[11px] py-1.5 px-1.5 rounded-lg outline-none"
                                     value={selectedElement.formatting?.dateFormat || 'DD-MMM-YYYY'}
                                     onChange={e => { updateElement(selectedElement.id, { formatting: { ...selectedElement.formatting, dateFormat: e.target.value } }); commitUpdate(); }}>
                                     <option value="MM/YY">MM/YY (Short)</option>
@@ -3605,7 +3168,7 @@ export default function LabelEditor() {
                               {selectedElement.formatting?.type === 'number' && (
                                 <div>
                                   <label className="text-[8px] font-bold uppercase text-slate-400 mb-1 block">Decimals</label>
-                                  <select className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-[11px] py-1.5 px-1.5 rounded-lg outline-none dark:text-slate-200"
+                                  <select className="w-full bg-white border border-slate-200 text-[11px] py-1.5 px-1.5 rounded-lg outline-none"
                                     value={selectedElement.formatting?.precision || '0'}
                                     onChange={e => { updateElement(selectedElement.id, { formatting: { ...selectedElement.formatting, precision: e.target.value } }); commitUpdate(); }}>
                                     <option value="0">Whole (0)</option>
@@ -3621,7 +3184,7 @@ export default function LabelEditor() {
                             <div className="grid grid-cols-2 gap-2">
                               <div>
                                 <label className="text-[8px] font-bold uppercase text-slate-400 mb-1 block">Prefix</label>
-                                <input type="text" className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-[11px] py-1.5 px-2 rounded-lg outline-none font-mono dark:text-white"
+                                <input type="text" className="w-full bg-white border border-slate-200 text-[11px] py-1.5 px-2 rounded-lg outline-none font-mono"
                                   placeholder="Ex: 'ID:'"
                                   value={selectedElement.prefix || ''}
                                   onChange={e => updateElement(selectedElement.id, { prefix: e.target.value })}
@@ -3629,7 +3192,7 @@ export default function LabelEditor() {
                               </div>
                               <div>
                                 <label className="text-[8px] font-bold uppercase text-slate-400 mb-1 block">Suffix</label>
-                                <input type="text" className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-[11px] py-1.5 px-2 rounded-lg outline-none font-mono dark:text-white"
+                                <input type="text" className="w-full bg-white border border-slate-200 text-[11px] py-1.5 px-2 rounded-lg outline-none font-mono"
                                   placeholder="Ex: '/mg'"
                                   value={selectedElement.suffix || ''}
                                   onChange={e => updateElement(selectedElement.id, { suffix: e.target.value })}
@@ -3638,9 +3201,9 @@ export default function LabelEditor() {
                             </div>
 
                             {/* Advanced Conditional Logic */}
-                            <div className="bg-slate-100/50 dark:bg-slate-900/50 p-3 rounded-2xl border border-dashed border-slate-300 dark:border-white/10 mt-2">
+                            <div className="bg-slate-100/50 p-3 rounded-2xl border border-dashed border-slate-300 mt-2">
                               <div className="flex items-center justify-between mb-3">
-                                <label className="text-[9px] font-black uppercase text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                                <label className="text-[9px] font-black uppercase text-slate-500 flex items-center gap-1.5">
                                   <span className="material-symbols-outlined text-[14px]">rule</span> Display Logic
                                 </label>
                                 <button
@@ -3652,17 +3215,17 @@ export default function LabelEditor() {
                                     });
                                     commitUpdate();
                                   }}
-                                  className="text-[9px] font-bold text-blue-600 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
+                                  className="text-[9px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded hover:bg-blue-100 transition-colors"
                                 >
                                   + Add Rule
                                 </button>
                               </div>
 
                               {selectedElement.displayRules && selectedElement.displayRules.length > 1 && (
-                                <div className="flex gap-2 mb-3 bg-white dark:bg-slate-800 p-1 rounded-lg border border-slate-200 dark:border-white/5">
+                                <div className="flex gap-2 mb-3 bg-white p-1 rounded-lg border border-slate-200">
                                   {['AND', 'OR'].map(l => (
                                     <button key={l} onClick={() => { updateElement(selectedElement.id, { rulesLogic: l }); commitUpdate(); }}
-                                      className={`flex-1 text-[9px] font-black py-1 rounded ${selectedElement.rulesLogic === l ? 'bg-blue-500 text-white shadow-sm' : 'text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'}`}>
+                                      className={`flex-1 text-[9px] font-black py-1 rounded ${selectedElement.rulesLogic === l ? 'bg-blue-500 text-white shadow-sm' : 'text-slate-400 hover:bg-slate-100'}`}>
                                       {l}
                                     </button>
                                   ))}
@@ -3671,9 +3234,9 @@ export default function LabelEditor() {
 
                               <div className="space-y-2">
                                 {(selectedElement.displayRules || []).map((rule, idx) => (
-                                  <div key={idx} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/5 rounded-xl p-2.5 relative group">
+                                  <div key={idx} className="bg-white border border-slate-200 rounded-xl p-2.5 relative group">
                                     <div className="grid grid-cols-1 gap-2">
-                                      <select className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-[10px] p-1.5 rounded-lg outline-none dark:text-slate-200"
+                                      <select className="w-full bg-slate-50 border border-slate-200 text-[10px] p-1.5 rounded-lg outline-none"
                                         value={rule.field}
                                         onChange={e => {
                                           const rules = [...selectedElement.displayRules];
@@ -3684,7 +3247,7 @@ export default function LabelEditor() {
                                         {Object.keys(SAMPLE_TRIAL_DATA).map(k => <option key={k} value={k}>{k}</option>)}
                                       </select>
                                       <div className="grid grid-cols-2 gap-2">
-                                        <select className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-[10px] p-1.5 rounded-lg outline-none dark:text-slate-200"
+                                        <select className="w-full bg-slate-50 border border-slate-200 text-[10px] p-1.5 rounded-lg outline-none"
                                           value={rule.operator}
                                           onChange={e => {
                                             const rules = [...selectedElement.displayRules];
@@ -3699,7 +3262,7 @@ export default function LabelEditor() {
                                           <option value="contains">Contains</option>
                                         </select>
                                         {!['not_empty', 'is_empty'].includes(rule.operator) && (
-                                          <input type="text" className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-[10px] p-1.5 rounded-lg outline-none dark:text-white"
+                                          <input type="text" className="w-full bg-slate-50 border border-slate-200 text-[10px] p-1.5 rounded-lg outline-none"
                                             placeholder="Value..."
                                             value={rule.value}
                                             onChange={e => {
@@ -3718,7 +3281,7 @@ export default function LabelEditor() {
                                         updateElement(selectedElement.id, { displayRules: rules });
                                         commitUpdate();
                                       }}
-                                      className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity border border-red-200 dark:border-red-800"
+                                      className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-100 text-red-600 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity border border-red-200"
                                     >
                                       <span className="material-symbols-outlined text-[12px]">close</span>
                                     </button>
@@ -3735,12 +3298,12 @@ export default function LabelEditor() {
                             <div>
                               <label className="text-[8px] font-bold uppercase text-slate-400 mb-1.5 block">Resizing Behavior</label>
                               <button onClick={() => { updateElement(selectedElement.id, { lockAspectRatio: selectedElement.lockAspectRatio === false }); commitUpdate(); }}
-                                className={`w-full py-2 px-3 rounded-xl border text-[10px] font-bold uppercase flex items-center justify-between transition-all ${selectedElement.lockAspectRatio !== false ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300' : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400'}`}>
+                                className={`w-full py-2 px-3 rounded-xl border text-[10px] font-bold uppercase flex items-center justify-between transition-all ${selectedElement.lockAspectRatio !== false ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-slate-50 border-slate-200 text-slate-500'}`}>
                                 <span className="flex items-center gap-2">
                                   <span className="material-symbols-outlined text-[16px]">{selectedElement.lockAspectRatio !== false ? 'lock' : 'lock_open'}</span>
                                   {selectedElement.lockAspectRatio !== false ? 'Aspect Ratio Locked' : 'Freeform Resizing'}
                                 </span>
-                                <div className={`w-6 h-3 rounded-full relative transition-all duration-300 border ${selectedElement.lockAspectRatio !== false ? 'bg-blue-500 border-blue-600' : 'bg-slate-200 dark:bg-slate-700 border-slate-300 dark:border-slate-600'}`}>
+                                <div className={`w-6 h-3 rounded-full relative transition-all duration-300 border ${selectedElement.lockAspectRatio !== false ? 'bg-blue-500 border-blue-600' : 'bg-slate-200 border-slate-300'}`}>
                                   <div className={`absolute top-0.5 w-1.5 h-1.5 rounded-full bg-white transition-all duration-300 ${selectedElement.lockAspectRatio !== false ? 'right-0.5' : 'left-0.5'}`} />
                                 </div>
                               </button>
@@ -3750,7 +3313,7 @@ export default function LabelEditor() {
                               <div className="grid grid-cols-3 gap-1">
                                 {['contain', 'cover', 'fill'].map(fit => (
                                   <button key={fit} onClick={() => { updateElement(selectedElement.id, { imageFit: fit }); commitUpdate(); }}
-                                    className={`p-1.5 rounded-lg border text-[9px] font-bold capitalize transition-colors ${(selectedElement.imageFit || 'contain') === fit ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300' : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'}`}>
+                                    className={`p-1.5 rounded-lg border text-[9px] font-bold capitalize transition-colors ${(selectedElement.imageFit || 'contain') === fit ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-slate-200 bg-slate-50 text-slate-500 hover:bg-slate-100'}`}>
                                     {fit}
                                   </button>
                                 ))}
@@ -3766,13 +3329,13 @@ export default function LabelEditor() {
                               <input type="checkbox" className="accent-blue-600 w-3.5 h-3.5"
                                 checked={selectedElement.tableHeader !== false}
                                 onChange={e => { updateElement(selectedElement.id, { tableHeader: e.target.checked }); commitUpdate(); }} />
-                              <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400">Header Row</span>
+                              <span className="text-[9px] font-bold text-slate-500">Header Row</span>
                             </label>
                             <label className="flex items-center gap-1.5 cursor-pointer select-none">
                               <input type="checkbox" className="accent-blue-600 w-3.5 h-3.5"
                                 checked={!!selectedElement.tableStriped}
                                 onChange={e => { updateElement(selectedElement.id, { tableStriped: e.target.checked }); commitUpdate(); }} />
-                              <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400">Striped Rows</span>
+                              <span className="text-[9px] font-bold text-slate-500">Striped Rows</span>
                             </label>
                           </div>
                         )}
@@ -3783,13 +3346,13 @@ export default function LabelEditor() {
                             {selectedElement.type === 'shape' ? 'Fill Color' : selectedElement.type === 'table' ? 'Border / Text Color' : 'Text / Ink Color'}
                           </label>
                           <div className="flex gap-2 h-8">
-                            <div className="w-8 h-full rounded-lg shrink-0 border border-slate-200 dark:border-slate-700 relative overflow-hidden">
+                            <div className="w-8 h-full rounded-lg shrink-0 border border-slate-200 relative overflow-hidden">
                               <input type="color" className="absolute -inset-4 w-20 h-20 cursor-pointer"
                                 value={selectedElement.type === 'shape' ? (selectedElement.bgColor || '#f1f5f9') : (selectedElement.color || '#191C1E')}
                                 onChange={e => updateElement(selectedElement.id, selectedElement.type === 'shape' ? { bgColor: e.target.value } : { color: e.target.value })}
                                 onBlur={commitUpdate} />
                             </div>
-                            <input type="text" className="flex-1 text-[10px] font-mono uppercase px-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-1 focus:ring-primary outline-none dark:text-white"
+                            <input type="text" className="flex-1 text-[10px] font-mono uppercase px-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-primary outline-none"
                               value={selectedElement.type === 'shape' ? (selectedElement.bgColor || '#f1f5f9') : (selectedElement.color || '#191C1E')}
                               onChange={e => updateElement(selectedElement.id, selectedElement.type === 'shape' ? { bgColor: e.target.value } : { color: e.target.value })}
                               onBlur={commitUpdate} />
@@ -3804,7 +3367,7 @@ export default function LabelEditor() {
                               <button onClick={() => { updateElement(selectedElement.id, { bgColor: 'transparent' }); commitUpdate(); }} className="text-error hover:underline text-[8px]">Clear</button>
                             </label>
                             <div className="flex gap-2 h-8">
-                              <div className="w-8 h-full rounded-lg shrink-0 border border-slate-200 dark:border-slate-700 relative overflow-hidden bg-slate-200 dark:bg-slate-700"
+                              <div className="w-8 h-full rounded-lg shrink-0 border border-slate-200 relative overflow-hidden bg-slate-200"
                                 style={{ background: 'repeating-conic-gradient(#cbd5e1 0% 25%, transparent 0% 50%) 50% / 8px 8px' }}>
                                 <input type="color" className="absolute -inset-4 w-20 h-20 cursor-pointer opacity-0"
                                   onChange={e => { updateElement(selectedElement.id, { bgColor: e.target.value }); commitUpdate(); }} />
@@ -3817,7 +3380,7 @@ export default function LabelEditor() {
                                   </div>
                                 )}
                               </div>
-                              <input type="text" className="flex-1 text-[10px] font-mono uppercase px-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-1 focus:ring-primary outline-none dark:text-white"
+                              <input type="text" className="flex-1 text-[10px] font-mono uppercase px-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-primary outline-none"
                                 value={selectedElement.bgColor || 'transparent'}
                                 onChange={e => updateElement(selectedElement.id, { bgColor: e.target.value })}
                                 onBlur={commitUpdate} />
@@ -3837,13 +3400,13 @@ export default function LabelEditor() {
                               onChange={e => updateElement(selectedElement.id, { borderWidth: parseInt(e.target.value) })}
                               onMouseUp={commitUpdate} />
                             <div className="flex gap-1 h-7">
-                              <div className="w-7 h-full rounded-lg shrink-0 border border-slate-200 dark:border-slate-700 relative overflow-hidden">
+                              <div className="w-7 h-full rounded-lg shrink-0 border border-slate-200 relative overflow-hidden">
                                 <input type="color" className="absolute -inset-4 w-20 h-20 cursor-pointer"
                                   value={selectedElement.borderColor || '#475569'}
                                   onChange={e => updateElement(selectedElement.id, { borderColor: e.target.value })}
                                   onBlur={commitUpdate} />
                               </div>
-                              <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg flex-1 flex items-center justify-center font-mono text-[9px] text-slate-400 px-2">
+                              <div className="bg-slate-50 border border-slate-200 rounded-lg flex-1 flex items-center justify-center font-mono text-[9px] text-slate-400 px-2">
                                 {selectedElement.borderWidth || 0}px
                               </div>
                             </div>
@@ -3854,7 +3417,7 @@ export default function LabelEditor() {
                         {selectedElement.type === 'shape' && selectedElement.shapeType === 'rectangle' && (
                           <div>
                             <label className="text-[8px] font-bold uppercase text-slate-400 mb-1.5 flex justify-between">
-                              <span>Corner Radius</span><span className="font-mono dark:text-slate-200">{selectedElement.borderRadius || 0}px</span>
+                              <span>Corner Radius</span><span className="font-mono">{selectedElement.borderRadius || 0}px</span>
                             </label>
                             <input type="range" min="0" max="60" className="w-full accent-blue-600"
                               value={selectedElement.borderRadius || 0}
@@ -3878,8 +3441,8 @@ export default function LabelEditor() {
                                   key={value}
                                   onClick={() => { updateElement(selectedElement.id, { borderStyle: value }); commitUpdate(); }}
                                   className={`p-2 rounded-lg border text-[9px] font-bold flex flex-col items-center gap-1 transition-colors ${(selectedElement.borderStyle || 'solid') === value
-                                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-300'
-                                    : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
+                                    ? 'border-blue-500 bg-blue-50 text-blue-600'
+                                    : 'border-slate-200 bg-slate-50 text-slate-500 hover:bg-slate-100'
                                     }`}
                                 >
                                   <div className={`w-full h-0 border-t-2 ${preview}`} style={{ borderColor: selectedElement.bgColor || '#191c1e' }} />
@@ -3889,7 +3452,7 @@ export default function LabelEditor() {
                             </div>
                             {/* Line weight */}
                             <label className="text-[8px] font-bold uppercase text-slate-400 mt-2 mb-1 flex justify-between">
-                              <span>Thickness</span><span className="font-mono dark:text-slate-200">{selectedElement.height || 4}px</span>
+                              <span>Thickness</span><span className="font-mono">{selectedElement.height || 4}px</span>
                             </label>
                             <input type="range" min="1" max="40" className="w-full accent-blue-600"
                               value={selectedElement.height || 4}
@@ -3901,7 +3464,7 @@ export default function LabelEditor() {
                         {/* Opacity */}
                         <div>
                           <label className="text-[8px] font-bold uppercase text-slate-400 mb-1.5 flex justify-between">
-                            <span>Opacity</span><span className="font-mono dark:text-slate-200">{Math.round((selectedElement.opacity !== undefined ? selectedElement.opacity : 1) * 100)}%</span>
+                            <span>Opacity</span><span className="font-mono">{Math.round((selectedElement.opacity !== undefined ? selectedElement.opacity : 1) * 100)}%</span>
                           </label>
                           <input type="range" min="0" max="1" step="0.01" className="w-full accent-blue-600"
                             value={selectedElement.opacity !== undefined ? selectedElement.opacity : 1}
@@ -3912,7 +3475,7 @@ export default function LabelEditor() {
                         {/* Rotation Slider */}
                         <div>
                           <label className="text-[8px] font-bold uppercase text-slate-400 mb-1.5 flex justify-between">
-                            <span>Rotation</span><span className="font-mono dark:text-slate-200">{selectedElement.rotation || 0}°</span>
+                            <span>Rotation</span><span className="font-mono">{selectedElement.rotation || 0}°</span>
                           </label>
                           <div className="flex gap-2 items-center">
                             <input type="range" min="0" max="360" step="1" className="flex-1 accent-blue-600"
@@ -3941,19 +3504,19 @@ export default function LabelEditor() {
                 >
                   <div className="flex flex-col items-center text-center px-4">
                     <motion.div
-                      className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center mb-4 shadow-sm"
+                      className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mb-4 shadow-sm"
                       whileHover={{ scale: 1.05, rotate: 5 }}
                       transition={{ type: "spring", stiffness: 300, damping: 20 }}
                     >
-                      <span className="material-symbols-outlined text-[32px] text-blue-600 dark:text-blue-400">settings_overscan</span>
+                      <span className="material-symbols-outlined text-[32px] text-blue-600">settings_overscan</span>
                     </motion.div>
-                    <h3 className="text-[13px] font-black text-slate-800 dark:text-slate-100 uppercase tracking-widest">Label Settings</h3>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1.5 leading-tight">Configure global properties for the entire label surface</p>
+                    <h3 className="text-[13px] font-black text-slate-800 uppercase tracking-widest">Label Settings</h3>
+                    <p className="text-[11px] text-slate-500 mt-1.5 leading-tight">Configure global properties for the entire label surface</p>
                   </div>
 
                   <div className="space-y-6">
-                    <div className="bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-white/10 rounded-2xl p-5 shadow-sm">
-                      <label className="text-[11px] font-extrabold uppercase text-slate-700 dark:text-slate-300 mb-4 flex items-center gap-2">
+                    <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+                      <label className="text-[11px] font-extrabold uppercase text-slate-700 mb-4 flex items-center gap-2">
                         <span className="material-symbols-outlined text-[16px]">palette</span>
                         Label Background
                       </label>
@@ -3985,11 +3548,11 @@ export default function LabelEditor() {
                       </div>
                     </div>
 
-                    <div className="p-5 bg-slate-100 dark:bg-slate-700/40 rounded-2xl border border-slate-200 dark:border-white/10 text-center flex flex-col items-center gap-2">
-                      <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-700 shadow-sm flex items-center justify-center border border-slate-200 dark:border-white/10">
-                        <span className="material-symbols-outlined text-[22px] text-blue-500 dark:text-blue-400">touch_app</span>
+                    <div className="p-5 bg-slate-100 rounded-2xl border border-slate-200 text-center flex flex-col items-center gap-2">
+                      <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center border border-slate-200">
+                        <span className="material-symbols-outlined text-[22px] text-blue-500">touch_app</span>
                       </div>
-                      <p className="text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-tight">Select an element</p>
+                      <p className="text-[11px] font-extrabold text-slate-700 uppercase tracking-tight">Select an element</p>
                     </div>
                   </div>
                 </motion.div>

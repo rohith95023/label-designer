@@ -20,7 +20,6 @@ import ProtectedRoute from './components/common/ProtectedRoute';
 import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './components/common/ToastContext';
 import { LabelProvider, useLabel } from './context/LabelContext';
-import { ThemeProvider } from './context/ThemeContext';
 
 function AppContent() {
   const { loading } = useLabel();
@@ -125,16 +124,14 @@ function AppContent() {
 
 export default function App() {
   return (
-    <ThemeProvider>
-      <BrowserRouter>
-        <AuthProvider>
-          <ToastProvider>
-            <LabelProvider>
-              <AppContent />
-            </LabelProvider>
-          </ToastProvider>
-        </AuthProvider>
-      </BrowserRouter>
-    </ThemeProvider>
+    <BrowserRouter>
+      <AuthProvider>
+        <ToastProvider>
+          <LabelProvider>
+            <AppContent />
+          </LabelProvider>
+        </ToastProvider>
+      </AuthProvider>
+    </BrowserRouter>
   );
 }

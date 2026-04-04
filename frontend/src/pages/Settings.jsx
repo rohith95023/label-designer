@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useLabel, LABEL_PRESETS } from '../context/LabelContext';
-import { useTheme } from '../context/ThemeContext';
 import { api } from '../services/api';
 import AppLayout from '../components/common/AppLayout';
 
@@ -33,7 +32,7 @@ function Toggle({ label, desc, value, onChange }) {
         className={`relative w-12 h-6 rounded-full transition-all duration-300 ease-spring shrink-0 focus:outline-none focus:ring-2 focus:ring-primary/40 ${
           value
             ? 'bg-gradient-to-r from-primary to-tertiary shadow-glow-sm'
-            : 'bg-surface-container-high dark:bg-surface-container'
+            : 'bg-surface-container-high'
         }`}
       >
         <span className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow-card transition-transform duration-300 ease-spring ${value ? 'translate-x-6' : ''}`} />
@@ -144,15 +143,7 @@ export default function Settings() {
                 onChange={e => setProfileName(e.target.value)}
                 className="input-premium"
                 placeholder="Your name..."
-              />
-            </div>
-            <div className="border-t border-outline-variant/20 pt-3">
-              <Toggle
-                label="Dark Mode"
-                desc="Switch between light and dark interface"
-                value={theme === 'dark'}
-                onChange={toggleTheme}
-              />
+                />
             </div>
             <button
               onClick={handleSaveProfile}
@@ -245,13 +236,13 @@ export default function Settings() {
               value={settings.fdaValidation}
               onChange={v => updateSettings({ fdaValidation: v })}
             />
-            <div className="mt-4 p-4 rounded-xl bg-gradient-to-br from-amber-500/8 to-orange-500/6 border border-amber-200/60 dark:border-amber-700/40">
+            <div className="mt-4 p-4 rounded-xl bg-gradient-to-br from-amber-500/8 to-orange-500/6 border border-amber-200/60">
               <div className="flex items-start gap-2">
                 <span className="material-symbols-outlined text-amber-500 text-base mt-0.5 shrink-0"
                   style={{ fontVariationSettings: "'FILL' 1" }}>
                   warning
                 </span>
-                <p className="text-xs text-amber-700 dark:text-amber-300 font-medium leading-relaxed">
+                <p className="text-xs text-amber-700 font-medium leading-relaxed">
                   Disabling FDA rules will skip barcode, expiry date, brand name, and safety warning checks during label validation.
                 </p>
               </div>
@@ -264,19 +255,19 @@ export default function Settings() {
               <div className="flex flex-wrap gap-3 mb-4">
                 <button
                   onClick={handleExportAll}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 text-xs font-bold hover:bg-emerald-100 dark:hover:bg-emerald-950/60 transition-all duration-200 hover:-translate-y-0.5 active:scale-95"
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-emerald-200 text-emerald-700 bg-emerald-50 text-xs font-bold hover:bg-emerald-100 transition-all duration-200 hover:-translate-y-0.5 active:scale-95"
                 >
                   <span className="material-symbols-outlined text-lg">download</span>
                   Export All Files
                 </button>
-                <label className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/30 text-xs font-bold hover:bg-blue-100 dark:hover:bg-blue-950/60 transition-all duration-200 cursor-pointer hover:-translate-y-0.5 active:scale-95">
+                <label className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-blue-200 text-blue-700 bg-blue-50 text-xs font-bold hover:bg-blue-100 transition-all duration-200 cursor-pointer hover:-translate-y-0.5 active:scale-95">
                   <span className="material-symbols-outlined text-lg">upload</span>
                   Import Files
                   <input type="file" accept=".json" className="hidden" onChange={handleImport} />
                 </label>
                 <button
                   onClick={() => setConfirmClear(true)}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 text-xs font-bold hover:bg-red-100 dark:hover:bg-red-950/60 transition-all duration-200 hover:-translate-y-0.5 active:scale-95"
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-red-200 text-red-600 bg-red-50 text-xs font-bold hover:bg-red-100 transition-all duration-200 hover:-translate-y-0.5 active:scale-95"
                 >
                   <span className="material-symbols-outlined text-lg">delete_forever</span>
                   Clear All Files
@@ -295,7 +286,7 @@ export default function Settings() {
       {confirmClear && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-8 animate-fade-in">
           <div className="glass-card rounded-3xl shadow-float p-8 max-w-sm w-full animate-scale-in">
-            <div className="w-12 h-12 rounded-2xl bg-red-100 dark:bg-red-950/50 flex items-center justify-center mb-4">
+            <div className="w-12 h-12 rounded-2xl bg-red-100 flex items-center justify-center mb-4">
               <span className="material-symbols-outlined text-red-600 text-2xl"
                 style={{ fontVariationSettings: "'FILL' 1" }}>
                 delete_forever

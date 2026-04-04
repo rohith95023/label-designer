@@ -12,12 +12,8 @@ export default function GridOverlay({
 }) {
   if (!visible) return null;
 
-  // Determine if we should use light or dark lines based on background brightness
-  const bg = artboardBgColor.toLowerCase();
-  const isDarkBg = bg !== '#ffffff' && bg !== 'white' && !bg.startsWith('rgba(255,255,255') && !bg.startsWith('#fff') && bg !== 'transparent';
-  
-  const strokeColor = isDarkBg ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.12)';
-  const majorStrokeColor = isDarkBg ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.22)';
+  const strokeColor = 'rgba(0, 0, 0, 0.12)';
+  const majorStrokeColor = 'rgba(0, 0, 0, 0.22)';
 
   return (
     <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">

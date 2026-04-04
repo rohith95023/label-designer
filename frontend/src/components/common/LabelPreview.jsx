@@ -11,7 +11,7 @@ export default function LabelPreview({ elements, meta, scale = 1 }) {
 
   return (
     <div 
-      className="pharma-artboard shadow-2xl relative border border-slate-200 dark:border-white/10 overflow-hidden"
+      className="pharma-artboard shadow-2xl relative border border-slate-200 overflow-hidden"
       style={{
         width: `${AW * scale}px`,
         height: `${AH * scale}px`,

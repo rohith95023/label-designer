@@ -131,13 +131,13 @@ export default function SavedTemplates() {
           <div className="glass-card rounded-2xl overflow-hidden shadow-glow-sm">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
-                <thead className="bg-surface-container-low/50 dark:bg-surface-container-high/20 border-b border-outline-variant/20">
+                <thead className="bg-surface-container-low/50 border-b border-outline-variant/20">
                   <tr>
-                    <th className="px-6 py-4 text-[11px] font-bold text-outline dark:text-outline-variant/80 uppercase tracking-widest">label name</th>
-                    {isAdmin && <th className="px-6 py-4 text-[11px] font-bold text-outline dark:text-outline-variant/80 uppercase tracking-widest">Ownership</th>}
-                    <th className="px-6 py-4 text-[11px] font-bold text-outline dark:text-outline-variant/80 uppercase tracking-widest">Label Size</th>
-                    <th className="px-6 py-4 text-[11px] font-bold text-outline dark:text-outline-variant/80 uppercase tracking-widest">Last Modified</th>
-                    <th className="px-6 py-4 text-[11px] font-bold text-outline dark:text-outline-variant/80 uppercase tracking-widest text-right">Actions</th>
+                    <th className="px-6 py-4 text-[11px] font-bold text-outline uppercase tracking-widest">label name</th>
+                    {isAdmin && <th className="px-6 py-4 text-[11px] font-bold text-outline uppercase tracking-widest">Ownership</th>}
+                    <th className="px-6 py-4 text-[11px] font-bold text-outline uppercase tracking-widest">Label Size</th>
+                    <th className="px-6 py-4 text-[11px] font-bold text-outline uppercase tracking-widest">Last Modified</th>
+                    <th className="px-6 py-4 text-[11px] font-bold text-outline uppercase tracking-widest text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -160,20 +160,20 @@ export default function SavedTemplates() {
                       {isAdmin && (
                         <td className="px-6 py-5">
                           <div className="flex items-center gap-2">
-                            <span className="material-symbols-outlined text-sm text-primary/60 dark:text-primary-variant">person</span>
-                            <span className="text-xs font-medium text-on-surface dark:text-on-surface-variant">
+                            <span className="material-symbols-outlined text-sm text-primary/60">person</span>
+                            <span className="text-xs font-medium text-on-surface">
                               {file.createdByUsername || 'Guest/Anonymous'}
                             </span>
                           </div>
                         </td>
                       )}
                       <td className="px-6 py-5">
-                        <span className="px-3 py-1 bg-surface-container-high dark:bg-surface-container-highest/30 text-on-surface-variant dark:text-on-secondary-container rounded-full text-[11px] font-bold">
+                        <span className="px-3 py-1 bg-surface-container-high text-on-surface-variant rounded-full text-[11px] font-bold">
                           {file.latestVersionDesign?.labelSize ? `${file.latestVersionDesign.labelSize.w} x ${file.latestVersionDesign.labelSize.h} px` : 'Custom'}
                         </span>
                       </td>
                       <td className="px-6 py-5">
-                        <p className="text-xs text-on-surface-variant dark:text-on-surface-variant/80">{formatDate(file.updatedAt)}</p>
+                        <p className="text-xs text-on-surface-variant">{formatDate(file.updatedAt)}</p>
                       </td>
                       <td className="px-6 py-5 text-right">
                         <div className="flex items-center justify-end gap-2">

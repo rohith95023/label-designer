@@ -64,8 +64,8 @@ const QUICK_ACTIONS = (handleNew, navigate, handleUpload) => [
     desc: 'Start from a blank canvas',
     gradient: 'from-blue-500 to-blue-700',
     glow: 'rgba(37,99,235,0.25)',
-    bg: 'bg-blue-50 dark:bg-blue-950/30',
-    border: 'border-blue-100 dark:border-blue-900/40',
+    bg: 'bg-blue-50',
+    border: 'border-blue-100',
     onClick: handleNew,
   },
   {
@@ -74,8 +74,8 @@ const QUICK_ACTIONS = (handleNew, navigate, handleUpload) => [
     desc: 'Pick from the library',
     gradient: 'from-violet-500 to-purple-700',
     glow: 'rgba(124,58,237,0.25)',
-    bg: 'bg-violet-50 dark:bg-violet-950/30',
-    border: 'border-violet-100 dark:border-violet-900/40',
+    bg: 'bg-violet-50',
+    border: 'border-violet-100',
     onClick: () => navigate('/assets'),
   },
   {
@@ -84,8 +84,8 @@ const QUICK_ACTIONS = (handleNew, navigate, handleUpload) => [
     desc: 'Import an existing label',
     gradient: 'from-emerald-500 to-teal-700',
     glow: 'rgba(5,150,105,0.25)',
-    bg: 'bg-emerald-50 dark:bg-emerald-950/30',
-    border: 'border-emerald-100 dark:border-emerald-900/40',
+    bg: 'bg-emerald-50',
+    border: 'border-emerald-100',
     onClick: handleUpload,
   },
 ];
@@ -188,7 +188,7 @@ export default function Dashboard() {
                     {approvals.map(app => (
                       <div key={app.id} className="glass-card rounded-2xl p-4 flex items-center justify-between group hover:border-primary/30 transition-all">
                         <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-primary">
+                          <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-primary">
                             <span className="material-symbols-outlined">assignment_late</span>
                           </div>
                           <div>
