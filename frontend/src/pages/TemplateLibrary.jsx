@@ -265,6 +265,7 @@ export default function TemplateLibrary() {
           setConfirmTemplate(null);
         }}
         canvasName={meta.fileName || 'Untitled Label'}
+        title="How would you like to load this template?"
       />
     </AppLayout>
   );

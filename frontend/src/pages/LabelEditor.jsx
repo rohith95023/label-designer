@@ -939,6 +939,7 @@ export default function LabelEditor() {
           setPendingTemplate(null);
         }}
         canvasName={meta.fileName || 'Untitled Label'}
+        title="How would you like to load this template?"
       />
 
       {/* ── Toast ───────────────────────────────────────────────────────────── */}
@@ -2646,7 +2647,7 @@ export default function LabelEditor() {
                           }
                         }
                       }}
-                      onDoubleTap={e => {
+                      onDoubleClick={e => {
                         if (!el.locked && ['barcode', 'qrcode'].includes(el.type)) {
                           e.stopPropagation();
                         }

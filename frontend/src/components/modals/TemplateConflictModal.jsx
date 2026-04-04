@@ -7,7 +7,11 @@ export default function TemplateConflictModal({
   onClose, 
   onClearAndLoad, 
   onCreateNew, 
-  canvasName = 'Untitled Label' 
+  canvasName = 'Untitled Label',
+  replaceLabel = 'Replace Current Design',
+  replaceDescription = `Clears all elements in "${canvasName}"`,
+  showCreateNew = true,
+  title = 'Already active label found'
 }) {
   if (!isOpen) return null;
 
@@ -28,7 +32,7 @@ export default function TemplateConflictModal({
           </div>
           
           <h2 className="text-xl font-black text-slate-800 dark:text-white tracking-tight text-center">
-            How would you like to load this template?
+            {title}
           </h2>
           <p className="text-[13px] font-medium text-slate-500 dark:text-slate-400 mt-2 text-center leading-relaxed">
             Choose whether to replace your current workspace or start fresh in a new file.
@@ -46,29 +50,31 @@ export default function TemplateConflictModal({
               <span className="material-symbols-outlined text-[20px]">layers_clear</span>
             </div>
             <div className="flex-1">
-              <span className="block text-[13px] font-bold text-slate-800 dark:text-white">Replace Current Design</span>
-              <span className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mt-0.5">Clears all elements in <strong className="text-red-500">"{canvasName}"</strong></span>
+              <span className="block text-[13px] font-bold text-slate-800 dark:text-white">{replaceLabel}</span>
+              <span className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mt-0.5">{replaceDescription}</span>
             </div>
             <span className="material-symbols-outlined text-slate-300 group-hover:text-red-400 transition-colors">chevron_right</span>
           </button>
 
-          <button
-            onClick={onCreateNew}
-            className="group flex items-center gap-4 p-4 rounded-2xl bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/20 border border-blue-500 hover:scale-[1.02] active:scale-[0.98] transition-all text-left"
-          >
-            <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-white shadow-inner border border-white/20">
-              <span className="material-symbols-outlined text-[20px]">add_box</span>
-            </div>
-            <div className="flex-1">
-              <span className="block text-[13px] font-bold text-white">Create New Label</span>
-              <span className="block text-[10px] font-medium text-blue-100 mt-0.5">Keep current work and start a new canvas</span>
-            </div>
-            <span className="material-symbols-outlined text-white/40 group-hover:text-white transition-colors">chevron_right</span>
-          </button>
+          {showCreateNew && (
+            <button
+              onClick={onCreateNew}
+              className="group flex items-center gap-4 p-4 rounded-2xl bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/20 border border-blue-500 hover:scale-[1.02] active:scale-[0.98] transition-all text-left"
+            >
+              <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-white shadow-inner border border-white/20">
+                <span className="material-symbols-outlined text-[20px]">add_box</span>
+              </div>
+              <div className="flex-1">
+                <span className="block text-[13px] font-bold text-white">Create New Label</span>
+                <span className="block text-[10px] font-medium text-blue-100 mt-0.5">Keep current work and start a new canvas</span>
+              </div>
+              <span className="material-symbols-outlined text-white/40 group-hover:text-white transition-colors">chevron_right</span>
+            </button>
+          )}
 
           <button
             onClick={onClose}
-            className="mt-2 w-full py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-all"
+            className="mt-2 w-full py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-all text-center"
           >
             Cancel and Discard Template
           </button>

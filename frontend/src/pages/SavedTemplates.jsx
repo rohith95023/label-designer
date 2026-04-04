@@ -7,7 +7,7 @@ import PreviewModal from '../components/modals/PreviewModal';
 import TemplateConflictModal from '../components/modals/TemplateConflictModal';
 
 export default function SavedTemplates() {
-  const { userFiles, openFileById, deleteUserTemplate, loading, getTemplateById, newFile, meta } = useLabel();
+  const { userFiles, openFileById, deleteUserTemplate, loading, getTemplateById, newFile, meta, elements } = useLabel();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
@@ -272,14 +272,11 @@ export default function SavedTemplates() {
           if (confirmOpen) executeOpen(confirmOpen.id);
           setConfirmOpen(null);
         }}
-        onCreateNew={async () => {
-          if (confirmOpen) {
-            await newFile();
-            executeOpen(confirmOpen.id);
-          }
-          setConfirmOpen(null);
-        }}
         canvasName={meta.fileName || 'Untitled Label'}
+        showCreateNew={false}
+        title={`Active label found: ${meta.fileName || 'Untitled Label'}`}
+        replaceLabel="Close current label and open this"
+        replaceDescription="This will discard any unsaved changes in the current workspace"
       />
     </AppLayout>
   );
