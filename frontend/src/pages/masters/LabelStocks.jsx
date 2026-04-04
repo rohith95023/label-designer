@@ -60,10 +60,15 @@ const LabelStocks = () => {
     }
   }, [fetchData]);
 
+  const [fieldErrors, setFieldErrors] = useState({});
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    // Clear individual field error on typing (AC 10)
+    if (fieldErrors[name]) setFieldErrors(prev => ({ ...prev, [name]: null }));
   };
+
 
   const openAddModal = () => {
     setIsEditing(false);
@@ -79,45 +84,35 @@ const LabelStocks = () => {
 
   const closeModal = () => {
     setShowModal(false);
+    setFieldErrors({});
   };
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // AC1-5: Validation logic
     const { name, stockId, length, breadth, height, description, quantityOnHand, reorderLevel, maxStockLevel, unitOfMeasure } = formData;
 
-    if (!name || !stockId || !length || !breadth || !height || !description || !unitOfMeasure) {
-      toastError('All fields marked with * are mandatory.');
-      return;
-    }
+    // AC 10: Per-field inline validation
+    const errors = {};
+    if (!name?.trim()) errors.name = 'Internal reference name is required.';
+    if (!stockId?.trim()) errors.stockId = 'System Stock ID is required.';
+    else if (!/^[a-zA-Z0-9\-]+$/.test(stockId)) errors.stockId = 'Stock ID must be alphanumeric (hyphens allowed only).';
+    if (!length || Number(length) <= 0) errors.length = 'Length must be a positive value.';
+    if (!breadth || Number(breadth) <= 0) errors.breadth = 'Breadth must be a positive value.';
+    if (!height || Number(height) <= 0) errors.height = 'Height must be a positive value.';
+    if (!description?.trim()) errors.description = 'Technical description is required.';
+    if (quantityOnHand === '' || quantityOnHand === null || Number(quantityOnHand) < 0) errors.quantityOnHand = 'Quantity on hand cannot be negative.';
+    if (reorderLevel === '' || reorderLevel === null || Number(reorderLevel) < 0) errors.reorderLevel = 'Reorder level must be a non-negative number.';
+    if (maxStockLevel && Number(reorderLevel) > Number(maxStockLevel)) errors.maxStockLevel = 'Reorder level cannot exceed max stock level.';
+    if (!unitOfMeasure) errors.unitOfMeasure = 'Unit of measure is required.';
 
-    // AC2: Format check (simplified frontend version)
-    if (!/^[a-zA-Z0-9\-]+$/.test(stockId)) {
-      toastError('Stock ID must be alphanumeric (hyphens allowed).');
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      toastError('Please correct the highlighted fields.');
       return;
     }
-
-    if (length <= 0 || breadth <= 0 || height <= 0) {
-      toastError('Dimensions must be positive values.');
-      return;
-    }
-
-    // AC3: Non-negative quantity
-    if (quantityOnHand < 0) {
-      toastError('Quantity on hand cannot be negative.');
-      return;
-    }
-
-    // AC4: Reorder level checks
-    if (reorderLevel < 0) {
-      toastError('Reorder level must be a non-negative number.');
-      return;
-    }
-    if (maxStockLevel && Number(reorderLevel) > Number(maxStockLevel)) {
-      toastError('Reorder level cannot exceed maximum stock level.');
-      return;
-    }
+    setFieldErrors({});
 
     // Ensure numeric fields are sent as numbers
     const submissionData = {
@@ -353,8 +348,9 @@ const LabelStocks = () => {
                       onChange={handleInputChange} 
                       maxLength="100"
                       placeholder="e.g. Premium High-Gloss Pharma Roll"
-                      required 
+                      className={fieldErrors.name ? '!border-red-400' : ''}
                     />
+                    {fieldErrors.name && <p className="text-red-500 text-[10px] font-bold mt-1 pl-1">{fieldErrors.name}</p>}
                   </div>
                   <div className="form-group">
                     <label>System Stock ID *</label>
@@ -365,8 +361,9 @@ const LabelStocks = () => {
                       onChange={handleInputChange} 
                       maxLength="50"
                       placeholder="STK-001"
-                      required 
+                      className={fieldErrors.stockId ? '!border-red-400' : ''}
                     />
+                    {fieldErrors.stockId && <p className="text-red-500 text-[10px] font-bold mt-1 pl-1">{fieldErrors.stockId}</p>}
                   </div>
                 </div>
 
@@ -375,15 +372,18 @@ const LabelStocks = () => {
                 <div className="form-grid">
                   <div className="form-group">
                     <label>Length ({unit}) *</label>
-                    <input type="number" step="0.01" min="0.01" name="length" value={formData.length} onChange={handleInputChange} placeholder="0.00" required />
+                    <input type="number" step="0.01" min="0.01" name="length" value={formData.length} onChange={handleInputChange} placeholder="0.00" className={fieldErrors.length ? '!border-red-400' : ''} />
+                    {fieldErrors.length && <p className="text-red-500 text-[10px] font-bold mt-1 pl-1">{fieldErrors.length}</p>}
                   </div>
                   <div className="form-group">
                     <label>Breadth ({unit}) *</label>
-                    <input type="number" step="0.01" min="0.01" name="breadth" value={formData.breadth} onChange={handleInputChange} placeholder="0.00" required />
+                    <input type="number" step="0.01" min="0.01" name="breadth" value={formData.breadth} onChange={handleInputChange} placeholder="0.00" className={fieldErrors.breadth ? '!border-red-400' : ''} />
+                    {fieldErrors.breadth && <p className="text-red-500 text-[10px] font-bold mt-1 pl-1">{fieldErrors.breadth}</p>}
                   </div>
                   <div className="form-group">
                     <label>Height ({unit}) *</label>
-                    <input type="number" step="0.01" min="0.01" name="height" value={formData.height} onChange={handleInputChange} placeholder="0.00" required />
+                    <input type="number" step="0.01" min="0.01" name="height" value={formData.height} onChange={handleInputChange} placeholder="0.00" className={fieldErrors.height ? '!border-red-400' : ''} />
+                    {fieldErrors.height && <p className="text-red-500 text-[10px] font-bold mt-1 pl-1">{fieldErrors.height}</p>}
                   </div>
                 </div>
 
@@ -392,21 +392,25 @@ const LabelStocks = () => {
                 <div className="form-grid">
                   <div className="form-group">
                     <label>Current Stock Quantity *</label>
-                    <input type="number" step="0.01" min="0" name="quantityOnHand" value={formData.quantityOnHand} onChange={handleInputChange} placeholder="0" required />
+                    <input type="number" step="0.01" min="0" name="quantityOnHand" value={formData.quantityOnHand} onChange={handleInputChange} placeholder="0" className={fieldErrors.quantityOnHand ? '!border-red-400' : ''} />
+                    {fieldErrors.quantityOnHand && <p className="text-red-500 text-[10px] font-bold mt-1 pl-1">{fieldErrors.quantityOnHand}</p>}
                   </div>
                   <div className="form-group">
                     <label>Unit of Measure *</label>
-                    <select name="unitOfMeasure" value={formData.unitOfMeasure} onChange={handleInputChange} required>
+                    <select name="unitOfMeasure" value={formData.unitOfMeasure} onChange={handleInputChange} className={fieldErrors.unitOfMeasure ? '!border-red-400' : ''}>
                        {UOM_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                     </select>
+                    {fieldErrors.unitOfMeasure && <p className="text-red-500 text-[10px] font-bold mt-1 pl-1">{fieldErrors.unitOfMeasure}</p>}
                   </div>
                   <div className="form-group">
                     <label>Reorder Level *</label>
-                    <input type="number" step="0.01" min="0" name="reorderLevel" value={formData.reorderLevel} onChange={handleInputChange} placeholder="0" required />
+                    <input type="number" step="0.01" min="0" name="reorderLevel" value={formData.reorderLevel} onChange={handleInputChange} placeholder="0" className={fieldErrors.reorderLevel ? '!border-red-400' : ''} />
+                    {fieldErrors.reorderLevel && <p className="text-red-500 text-[10px] font-bold mt-1 pl-1">{fieldErrors.reorderLevel}</p>}
                   </div>
                   <div className="form-group">
                     <label>Max Stock Level</label>
-                    <input type="number" step="0.01" min="0" name="maxStockLevel" value={formData.maxStockLevel} onChange={handleInputChange} placeholder="Optional (0 for ∞)" />
+                    <input type="number" step="0.01" min="0" name="maxStockLevel" value={formData.maxStockLevel} onChange={handleInputChange} placeholder="Optional (0 for ∞)" className={fieldErrors.maxStockLevel ? '!border-red-400' : ''} />
+                    {fieldErrors.maxStockLevel && <p className="text-red-500 text-[10px] font-bold mt-1 pl-1">{fieldErrors.maxStockLevel}</p>}
                   </div>
                 </div>
 
@@ -419,8 +423,9 @@ const LabelStocks = () => {
                     rows="3" 
                     maxLength="255"
                     placeholder="Adhesive details, core size, compatible printers..."
-                    required
+                    className={fieldErrors.description ? '!border-red-400' : ''}
                   />
+                  {fieldErrors.description && <p className="text-red-500 text-[10px] font-bold mt-1 pl-1">{fieldErrors.description}</p>}
                 </div>
               </div>
               <div className="modal-actions !p-10 !bg-transparent !border-none">

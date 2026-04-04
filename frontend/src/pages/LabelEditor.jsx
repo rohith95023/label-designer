@@ -1618,32 +1618,74 @@ export default function LabelEditor() {
                         </div>
                       )}
 
+
                       {/* STOCKS */}
-                      {activeTab === 'stocks' && (
-                        <div className="flex flex-col gap-3">
-                          {labelStocks.filter(s => s.status === 'ACTIVE').map(stock => (
-                            <button
-                              key={stock.id}
-                              onClick={() => setLabelStock(stock.id)}
-                              className={`flex flex-col p-5 rounded-2xl border-2 transition-all text-left relative overflow-hidden group ${
-                                meta.labelStockId === stock.id 
-                                  ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-white shadow-xl shadow-[var(--color-primary)]/50/20 scale-[1.02]' 
-                                  : 'bg-slate-50 border-slate-200 text-slate-500 hover:border-[var(--color-primary)]/50/50 hover:bg-white'
-                              }`}
-                            >
-                              <div className="flex justify-between items-start mb-2">
-                                <span className={`text-[12px] font-black uppercase tracking-tight ${meta.labelStockId === stock.id ? 'text-white' : 'text-slate-800'}`}>{stock.name}</span>
-                                {meta.labelStockId === stock.id && <span className="material-symbols-outlined text-white text-lg">check_circle</span>}
+                      {activeTab === 'stocks' && (() => {
+                        const activeStocks = labelStocks.filter(s => s.status === 'ACTIVE');
+                        const selectedStock = activeStocks.find(s => s.id === meta.labelStockId);
+                        return (
+                          <div className="flex flex-col gap-3">
+                            {/* Detail card for selected stock — AC 13.3, 13.9 */}
+                            {selectedStock && (
+                              <div className="p-4 rounded-2xl bg-[var(--color-primary)]/8 border border-[var(--color-primary)]/20 mb-1">
+                                <p className="text-[9px] font-black uppercase tracking-widest text-[var(--color-primary)] mb-2 flex items-center gap-1.5">
+                                  <span className="material-symbols-outlined text-[14px]">verified</span>
+                                  Selected Stock
+                                </p>
+                                <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-[10px]">
+                                  <span className="text-slate-500 font-medium">ID</span>
+                                  <span className="font-black text-slate-800 text-right">{selectedStock.stockId}</span>
+                                  <span className="text-slate-500 font-medium">Dimensions</span>
+                                  <span className="font-black text-slate-800 text-right">{selectedStock.length}×{selectedStock.breadth}×{selectedStock.height} mm</span>
+                                  <span className="text-slate-500 font-medium">Unit</span>
+                                  <span className="font-black text-slate-800 text-right">{selectedStock.unitOfMeasure}</span>
+                                  <span className="text-slate-500 font-medium">In Stock</span>
+                                  <span className={`font-black text-right ${Number(selectedStock.quantityOnHand) <= Number(selectedStock.reorderLevel) ? 'text-red-600' : 'text-green-700'}`}>{selectedStock.quantityOnHand}</span>
+                                  {selectedStock.supplier && <>
+                                    <span className="text-slate-500 font-medium">Supplier</span>
+                                    <span className="font-black text-slate-800 text-right truncate">{selectedStock.supplier}</span>
+                                  </>}
+                                  {selectedStock.costCenter && <>
+                                    <span className="text-slate-500 font-medium">Cost Centre</span>
+                                    <span className="font-black text-slate-800 text-right">{selectedStock.costCenter}</span>
+                                  </>}
+                                </div>
                               </div>
-                              <div className="flex items-center gap-2 opacity-70">
-                                <span className="text-[9px] font-bold uppercase tracking-widest">{stock.materialType}</span>
-                                <span className="w-1 h-1 rounded-full bg-current opacity-30"></span>
-                                <span className="text-[9px] font-mono font-bold">{stock.breadth}×{stock.height}mm</span>
+                            )}
+
+                            {/* Stock cards list */}
+                            {activeStocks.length === 0 ? (
+                              <div className="flex flex-col items-center justify-center py-10 text-slate-400 gap-2">
+                                <span className="material-symbols-outlined text-[36px]">inventory_2</span>
+                                <p className="text-[10px] font-bold text-center">No active stocks found.<br/>Add stocks in the Label Stocks master.</p>
                               </div>
-                            </button>
-                          ))}
-                        </div>
-                      )}
+                            ) : activeStocks.map(stock => (
+                              <button
+                                key={stock.id}
+                                onClick={() => setLabelStock(stock.id)}
+                                className={`flex flex-col p-4 rounded-2xl border-2 transition-all text-left relative overflow-hidden group ${
+                                  meta.labelStockId === stock.id 
+                                    ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-white shadow-xl scale-[1.02]' 
+                                    : 'bg-slate-50 border-slate-200 text-slate-500 hover:border-[var(--color-primary)]/50 hover:bg-white'
+                                }`}
+                              >
+                                <div className="flex justify-between items-start mb-1.5">
+                                  <span className={`text-[12px] font-black uppercase tracking-tight leading-tight ${meta.labelStockId === stock.id ? 'text-white' : 'text-slate-800'}`}>{stock.name}</span>
+                                  {meta.labelStockId === stock.id && <span className="material-symbols-outlined text-white text-lg shrink-0">check_circle</span>}
+                                </div>
+                                <div className="flex items-center gap-2 opacity-70">
+                                  <span className="text-[9px] font-bold uppercase tracking-widest">{stock.unitOfMeasure}</span>
+                                  <span className="w-1 h-1 rounded-full bg-current opacity-30"></span>
+                                  <span className="text-[9px] font-mono font-bold">{stock.length}×{stock.breadth} mm</span>
+                                  <span className="w-1 h-1 rounded-full bg-current opacity-30"></span>
+                                  <span className="text-[9px] font-mono">{stock.stockId}</span>
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        );
+                      })()}
+
 
                       {/* LAYERS */}
                       {activeTab === 'layers' && (
