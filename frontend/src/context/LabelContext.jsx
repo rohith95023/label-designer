@@ -37,6 +37,8 @@ export const DEFAULT_SETTINGS = {
   gridEnabled: true,
   units: 'mm',
   defaultLanguage: 'en',
+  languageId: null,
+  direction: 'LTR',
   autoTranslate: false,
   fdaValidation: true,
 };
@@ -216,11 +218,12 @@ export const LabelProvider = ({ children }) => {
         }
 
         // Parallelize initial fetches to improve boot time
-        const [dashRes, stockRes, templatesRes, labelsRes] = await Promise.allSettled([
+        const [dashRes, stockRes, templatesRes, labelsRes, languagesRes] = await Promise.allSettled([
           api.getDashboard(effectiveId),
           api.getLabelStocks(),
           api.getLabels('PREDEFINED'),
-          api.getLabels('ACTIVE')
+          api.getLabels('ACTIVE'),
+          api.getLanguages()
         ]);
 
         // 1. Process Dashboard
@@ -245,7 +248,25 @@ export const LabelProvider = ({ children }) => {
           if (Array.isArray(systemLabels) && systemLabels.length > 0) setTemplates(systemLabels);
         }
 
-        // 4. Process Labels & Restore Last Session
+        // 4. Process Languages & Global Setting Synchronization
+        if (languagesRes.status === 'fulfilled') {
+          const langs = languagesRes.value;
+          const activeLangs = Array.isArray(langs) ? langs.filter(l => l.status === 'ACTIVE') : [];
+          
+          // Determine current language using preference from dashboard (set above) or default
+          const currentLangCode = settings.defaultLanguage || DEFAULT_SETTINGS.defaultLanguage;
+          const currentLanguage = activeLangs.find(l => l.code === currentLangCode || l.id === settings.languageId);
+          
+          if (currentLanguage) {
+            setSettings(prev => ({
+              ...prev,
+              languageId: currentLanguage.id,
+              direction: currentLanguage.direction
+            }));
+          }
+        }
+
+        // 5. Process Labels & Restore Last Session
         if (labelsRes.status === 'fulfilled') {
           const labels = labelsRes.value;
           setUserFiles(labels);
@@ -254,16 +275,18 @@ export const LabelProvider = ({ children }) => {
             const last = labels.sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0))[0];
             try {
               const latestVersion = await api.getLatestLabelVersion(last.id);
-              setMeta(prev => ({
-                ...prev,
-                fileId: last.id,
-                fileName: last.name,
-                labelStockId: last.labelStockId || last.labelStock?.id,
-                labelSize: latestVersion.designJson?.labelSize || { w: 600, h: 400 },
-                bgColor: latestVersion.designJson?.bgColor || '#FFFFFF',
-                notes: latestVersion.designJson?.notes || ''
-              }));
-              setElements(latestVersion.designJson?.elementsData || []);
+              if (latestVersion) {
+                setMeta(prev => ({
+                  ...prev,
+                  fileId: last.id,
+                  fileName: last.name,
+                  labelStockId: last.labelStockId || last.labelStock?.id,
+                  labelSize: latestVersion.designJson?.labelSize || { w: 600, h: 400 },
+                  bgColor: latestVersion.designJson?.bgColor || '#FFFFFF',
+                  notes: latestVersion.designJson?.notes || ''
+                }));
+                setElements(latestVersion.designJson?.elementsData || []);
+              }
             } catch (verErr) {
               console.error('Failed to restore last version', verErr);
             }
@@ -907,6 +930,7 @@ export const LabelProvider = ({ children }) => {
     validateLabel,
     LABEL_PRESETS,
     setUnit,
+    setLabelStock, // Add this line
     toPx, fromPx, UNITS,
   };
 

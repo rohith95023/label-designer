@@ -17,6 +17,9 @@ const EMPTY_FORM = {
   reorderLevel: '',
   maxStockLevel: '',
   unitOfMeasure: 'ROLL',
+  status: 'ACTIVE',
+  supplier: '',
+  costCenter: '',
 };
 
 const UOM_OPTIONS = ['ROLL', 'SHEET', 'PKT', 'BOX', 'CASE'];
@@ -114,14 +117,26 @@ const LabelStocks = () => {
       return;
     }
 
+    // Ensure numeric fields are sent as numbers
+    const submissionData = {
+      ...formData,
+      length: Number(length),
+      breadth: Number(breadth),
+      height: Number(height),
+      quantityOnHand: Number(quantityOnHand),
+      reorderLevel: Number(reorderLevel),
+      maxStockLevel: maxStockLevel ? Number(maxStockLevel) : null,
+      status: formData.status || 'ACTIVE'
+    };
+
     setActionLoading(true);
     try {
       if (isEditing) {
-        const updated = await api.updateLabelStock(formData.id, formData);
+        const updated = await api.updateLabelStock(formData.id, submissionData);
         setStocks(prev => prev.map(s => s.id === updated.id ? updated : s));
         success(`Stock "${formData.name}" updated.`);
       } else {
-        const created = await api.createLabelStock(formData);
+        const created = await api.createLabelStock(submissionData);
         setStocks(prev => [...prev, created]);
         success(`Stock "${formData.name}" created.`);
       }
@@ -298,24 +313,24 @@ const LabelStocks = () => {
                 <div className="form-grid">
                   <div className="form-group">
                     <label>Length ({unit}) *</label>
-                    <input type="number" step="0.01" min="0.01" name="length" value={formData.length} onChange={handleInputChange} required />
+                    <input type="number" step="0.01" min="0.01" name="length" value={formData.length} onChange={handleInputChange} placeholder="0.00" required />
                   </div>
                   <div className="form-group">
                     <label>Breadth ({unit}) *</label>
-                    <input type="number" step="0.01" min="0.01" name="breadth" value={formData.breadth} onChange={handleInputChange} required />
+                    <input type="number" step="0.01" min="0.01" name="breadth" value={formData.breadth} onChange={handleInputChange} placeholder="0.00" required />
                   </div>
                   <div className="form-group">
                     <label>Height ({unit}) *</label>
-                    <input type="number" step="0.01" min="0.01" name="height" value={formData.height} onChange={handleInputChange} required />
+                    <input type="number" step="0.01" min="0.01" name="height" value={formData.height} onChange={handleInputChange} placeholder="0.00" required />
                   </div>
                 </div>
 
                 <div className="form-divider">Inventory Controls</div>
 
                 <div className="form-grid">
-                   <div className="form-group">
+                  <div className="form-group">
                     <label>Current Stock Quantity *</label>
-                    <input type="number" step="0.01" min="0" name="quantityOnHand" value={formData.quantityOnHand} onChange={handleInputChange} required />
+                    <input type="number" step="0.01" min="0" name="quantityOnHand" value={formData.quantityOnHand} onChange={handleInputChange} placeholder="0" required />
                   </div>
                   <div className="form-group">
                     <label>Unit of Measure *</label>
@@ -325,11 +340,11 @@ const LabelStocks = () => {
                   </div>
                   <div className="form-group">
                     <label>Reorder Level *</label>
-                    <input type="number" step="0.01" min="0" name="reorderLevel" value={formData.reorderLevel} onChange={handleInputChange} required />
+                    <input type="number" step="0.01" min="0" name="reorderLevel" value={formData.reorderLevel} onChange={handleInputChange} placeholder="0" required />
                   </div>
                   <div className="form-group">
                     <label>Max Stock Level</label>
-                    <input type="number" step="0.01" min="0" name="maxStockLevel" value={formData.maxStockLevel} onChange={handleInputChange} placeholder="Optional" />
+                    <input type="number" step="0.01" min="0" name="maxStockLevel" value={formData.maxStockLevel} onChange={handleInputChange} placeholder="Optional (0 for ∞)" />
                   </div>
                 </div>
 

@@ -280,6 +280,7 @@ export default function LabelEditor() {
     validateLabel,
     saveFile, saveFileAs, openFileById, openFileFromJSON, exportJSON, getAllFiles,
     setUnit,
+    setLabelStock,
     labelStocks,
     toggleOrientation, saveAsTemplate, templates,
     loadTemplate,

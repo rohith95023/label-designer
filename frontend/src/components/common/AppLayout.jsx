@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 
+import { useLabel } from '../../context/LabelContext';
+
 const NAV_ITEMS = [
   { key: 'dashboard', to: '/', icon: 'grid_view', label: 'Dashboard', roles: ['ADMIN', 'REVIEWER', 'OPERATOR', 'EXTERNAL'], permission: 'dashboard' },
   { key: 'assets', to: '/assets', icon: 'auto_awesome_mosaic', label: 'Template Library', roles: ['ADMIN', 'REVIEWER', 'OPERATOR', 'EXTERNAL'], permission: 'templates' },
@@ -14,6 +16,7 @@ const NAV_ITEMS = [
   
   // Masters Section
   { key: 'masters', to: '/masters/label-stocks', icon: 'inventory_2', label: 'Label Stocks', roles: ['ADMIN'], permission: 'masters' },
+  { key: 'languages', to: '/masters/languages', icon: 'language', label: 'Languages', roles: ['ADMIN'], permission: 'masters' },
   
   { key: 'users', to: '/admin/users', icon: 'group', label: 'Users', roles: ['ADMIN'], permission: 'users' },
   { key: 'settings', to: '/settings', icon: 'settings', label: 'Settings', roles: ['ADMIN'], permission: 'settings' },
@@ -22,9 +25,12 @@ const NAV_ITEMS = [
 export default function AppLayout({ children, activePage = '', searchBar = null }) {
   const { theme, toggleTheme } = useTheme();
   const { user, logout, logoutLoading } = useAuth();
+  const { settings } = useLabel();
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+
+  const direction = settings?.direction?.toLowerCase() || 'ltr';
 
   const hasPermission = (item) => {
     if (!user) return false;
@@ -50,7 +56,7 @@ export default function AppLayout({ children, activePage = '', searchBar = null 
   const filteredNavItems = NAV_ITEMS.filter(hasPermission);
 
   return (
-    <div className="bg-mesh text-on-surface min-h-screen">
+    <div className={`bg-mesh text-on-surface min-h-screen ${direction === 'rtl' ? 'rtl-mode' : ''}`} dir={direction}>
       {/* Logout Animation Overlay */}
       {logoutLoading && (
         <div className="fixed inset-0 z-[10000] flex flex-col items-center justify-center bg-mesh/80 dark:bg-[#0D1117]/90 backdrop-blur-2xl animate-in fade-in duration-500">

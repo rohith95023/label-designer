@@ -11,5 +11,6 @@ public interface LanguageService {
     Optional<Language> getLanguageByCode(String code);
     Language createLanguage(Language language);
     Language updateLanguage(UUID id, Language language);
+    List<Language> getVariants(UUID parentId);
     void deleteLanguage(UUID id);
 }

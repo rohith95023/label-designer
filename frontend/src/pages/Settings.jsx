@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLabel, LABEL_PRESETS } from '../context/LabelContext';
 import { useTheme } from '../context/ThemeContext';
+import { api } from '../services/api';
 import AppLayout from '../components/common/AppLayout';
 
 function SectionCard({ icon, iconGrad, title, children }) {
@@ -42,12 +43,28 @@ function Toggle({ label, desc, value, onChange }) {
 }
 
 export default function Settings() {
-  const { settings, updateSettings, getAllFiles, exportJSON } = useLabel();
-  const { theme, toggleTheme } = useTheme();
-
   const [profileName, setProfileName] = useState(settings.profileName || 'Pharma Designer');
   const [confirmClear, setConfirmClear] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [languages, setLanguages] = useState([]);
+
+  useEffect(() => {
+    api.getLanguages().then(data => {
+      setLanguages(data.filter(l => l.status === 'ACTIVE'));
+    }).catch(console.error);
+  }, []);
+
+  const handleLanguageChange = (e) => {
+    const code = e.target.value;
+    const lang = languages.find(l => l.code === code);
+    if (lang) {
+      updateSettings({ 
+        defaultLanguage: code, 
+        languageId: lang.id, 
+        direction: lang.direction 
+      });
+    }
+  };
 
   const handleSaveProfile = () => {
     updateSettings({ profileName });
@@ -199,17 +216,15 @@ export default function Settings() {
               <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-2">Default Language</label>
               <select
                 value={settings.defaultLanguage}
-                onChange={e => updateSettings({ defaultLanguage: e.target.value })}
+                onChange={handleLanguageChange}
                 className="input-premium"
               >
-                <option value="en">🇬🇧 English</option>
-                <option value="hi">🇮🇳 Hindi</option>
-                <option value="fr">🇫🇷 French</option>
-                <option value="de">🇩🇪 German</option>
-                <option value="es">🇪🇸 Spanish</option>
-                <option value="ar">🇸🇦 Arabic</option>
-                <option value="zh">🇨🇳 Chinese</option>
-                <option value="ja">🇯🇵 Japanese</option>
+                {languages.length === 0 && <option value="en">English (Default)</option>}
+                {languages.map(lang => (
+                  <option key={lang.id} value={lang.code}>
+                    {lang.name} ({lang.code.toUpperCase()})
+                  </option>
+                ))}
               </select>
             </div>
             <div className="border-t border-outline-variant/20 pt-1">

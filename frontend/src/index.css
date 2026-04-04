@@ -891,3 +891,62 @@ input[type="color"]::-webkit-color-swatch {
     background: white !important;
   }
 }
+/* ═══════════════════════════════════════════════════════════════════════════
+   RTL SUPPORT SYSTEM
+   ═══════════════════════════════════════════════════════════════════════════ */
+[dir="rtl"] {
+  text-align: right;
+}
+
+[dir="rtl"] .material-symbols-outlined {
+  transform: scaleX(-1);
+}
+
+/* Sidebar RTL adjustments */
+[dir="rtl"] .sidebar-item {
+  transform-origin: right;
+}
+[dir="rtl"] .sidebar-item:hover {
+  transform: translateX(-4px);
+}
+[dir="rtl"] .sidebar-item.active::before {
+  left: auto;
+  right: 0;
+  border-radius: 3px 0 0 3px;
+}
+
+/* Navigation & Layout logical properties */
+[dir="rtl"] .ml-auto { margin-right: auto; margin-left: 0; }
+[dir="rtl"] .mr-auto { margin-left: auto; margin-right: 0; }
+[dir="rtl"] .text-left { text-align: right; }
+[dir="rtl"] .text-right { text-align: left; }
+
+/* Toast position for RTL */
+[dir="rtl"] .toast-container {
+  right: auto;
+  left: 2rem;
+}
+[dir="rtl"] .toast {
+  animation: toastSlideInRTL 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  border-left: none;
+  border-right: 4px solid #ddd;
+}
+[dir="rtl"] .toast.success { border-right-color: #10b981; }
+[dir="rtl"] .toast.error   { border-right-color: #ef4444; }
+[dir="rtl"] .toast.warning { border-right-color: #f59e0b; }
+[dir="rtl"] .toast.info    { border-right-color: #6366f1; }
+
+@keyframes toastSlideInRTL {
+  from { opacity: 0; transform: translateX(-30px) scale(0.9); }
+  to { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+/* Header logical order */
+[dir="rtl"] header {
+  flex-direction: row-reverse;
+}
+
+/* Custom Scrollbar for RTL */
+[dir="rtl"] ::-webkit-scrollbar-track {
+  direction: ltr;
+}
