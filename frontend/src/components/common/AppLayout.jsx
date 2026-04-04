@@ -16,6 +16,7 @@ const NAV_ITEMS = [
   
   // Masters Section
   { key: 'masters', to: '/masters/label-stocks', icon: 'inventory_2', label: 'Label Stocks', roles: ['ADMIN'], permission: 'masters' },
+  { key: 'visual-assets', to: '/masters/assets', icon: 'category', label: 'Visual Asset Master', roles: ['ADMIN'], permission: 'masters' },
   { key: 'languages', to: '/masters/languages', icon: 'language', label: 'Languages', roles: ['ADMIN'], permission: 'masters' },
   
   { key: 'users', to: '/admin/users', icon: 'group', label: 'Users', roles: ['ADMIN'], permission: 'users' },
@@ -55,26 +56,26 @@ export default function AppLayout({ children, activePage = '', searchBar = null 
   const filteredNavItems = NAV_ITEMS.filter(hasPermission);
 
   return (
-    <div className={`bg-mesh text-on-surface min-h-screen ${direction === 'rtl' ? 'rtl-mode' : ''}`} dir={direction}>
+    <div className={`bg-[var(--color-background)] text-[var(--color-on-surface)] min-h-screen ${direction === 'rtl' ? 'rtl-mode' : ''}`} dir={direction}>
       {/* Logout Animation Overlay */}
       {logoutLoading && (
-        <div className="fixed inset-0 z-[10000] flex flex-col items-center justify-center bg-mesh/80 backdrop-blur-2xl animate-in fade-in duration-500">
-          <div className="relative flex flex-col items-center">
+        <div className="fixed inset-0 z-[10000] flex flex-col items-center justify-center bg-[var(--color-primary-dark)]/90 backdrop-blur-2xl animate-in fade-in duration-500">
+          <div className="relative flex flex-col items-center text-white">
             <div className="w-24 h-24 mb-8 relative">
-              <div className="absolute inset-0 rounded-full border-4 border-primary/10"></div>
-              <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin" style={{ animationDuration: '0.8s' }}></div>
-              <div className="absolute inset-4 rounded-2xl bg-gradient-to-br from-primary to-tertiary flex items-center justify-center shadow-lg shadow-primary/20 animate-bounce-subtle">
-                <span className="material-symbols-outlined text-white text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>medical_services</span>
+              <div className="absolute inset-0 rounded-full border-4 border-white/10"></div>
+              <div className="absolute inset-0 rounded-full border-4 border-[var(--color-primary)] border-t-transparent animate-spin" style={{ animationDuration: '0.8s' }}></div>
+              <div className="absolute inset-4 rounded-2xl bg-white flex items-center justify-center shadow-lg shadow-black/20 animate-bounce-subtle">
+                <span className="material-symbols-outlined text-[var(--color-primary)] text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>medical_services</span>
               </div>
             </div>
             
-            <h2 className="text-2xl font-black text-gradient mb-2 tracking-tight">Logging Out</h2>
-            <p className="text-on-surface-variant font-medium tracking-wide flex items-center gap-1.5 opacity-80">
+            <h2 className="text-2xl font-black mb-2 tracking-tight">Logging Out</h2>
+            <p className="text-white/60 font-medium tracking-wide flex items-center gap-1.5 opacity-80">
               Terminating session environment
               <span className="flex gap-1 ml-1">
-                <span className="w-1 h-1 rounded-full bg-primary animate-pulse"></span>
-                <span className="w-1 h-1 rounded-full bg-primary animate-pulse [animation-delay:200ms]"></span>
-                <span className="w-1 h-1 rounded-full bg-primary animate-pulse [animation-delay:400ms]"></span>
+                <span className="w-1 h-1 rounded-full bg-[var(--color-primary)] animate-pulse"></span>
+                <span className="w-1 h-1 rounded-full bg-[var(--color-primary)] animate-pulse [animation-delay:200ms]"></span>
+                <span className="w-1 h-1 rounded-full bg-[var(--color-primary)] animate-pulse [animation-delay:400ms]"></span>
               </span>
             </p>
           </div>
@@ -134,19 +135,19 @@ export default function AppLayout({ children, activePage = '', searchBar = null 
 
         {/* ── Sidebar ──────────────────────────────────────────────────── */}
         <aside
-          className={`hidden lg:flex flex-col h-full bg-white border-r border-outline-variant/30 shrink-0 overflow-hidden transition-all duration-350 ease-out-expo ${collapsed ? 'w-[68px]' : 'w-64'
+          className={`hidden lg:flex flex-col h-full bg-[var(--color-surface-container-low)] border-r border-[var(--color-secondary)]/10 shrink-0 overflow-hidden transition-all duration-350 ease-out-expo ${collapsed ? 'w-[68px]' : 'w-64'
             }`}
         >
           {/* Logo area inside sidebar */}
-          <div className={`flex items-center h-16 border-b border-outline-variant/20 px-4 shrink-0 ${collapsed ? 'justify-center' : 'gap-3'}`}>
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary to-tertiary flex items-center justify-center shrink-0">
+          <div className={`flex items-center h-16 border-b border-[var(--color-secondary)]/5 px-4 shrink-0 ${collapsed ? 'justify-center' : 'gap-3'}`}>
+            <div className="w-7 h-7 rounded-lg bg-[var(--color-primary-dark)] flex items-center justify-center shrink-0">
               <span className="material-symbols-outlined text-white text-base"
                 style={{ fontVariationSettings: "'FILL' 1, 'wght' 700" }}>
                 medical_services
               </span>
             </div>
             {!collapsed && (
-              <span className="font-extrabold text-[15px] tracking-tight text-gradient leading-none">
+              <span className="font-extrabold text-[15px] tracking-tight text-[var(--color-primary-dark)] leading-none">
                 Clinical Label Design
               </span>
             )}

@@ -1,6 +1,7 @@
 package com.pharmalabel.api.controllers;
 
 import com.pharmalabel.api.models.ObjectEntity;
+import com.pharmalabel.api.models.enums.ObjectStatus;
 import com.pharmalabel.api.services.ObjectService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +23,11 @@ public class ObjectController {
         return ResponseEntity.ok(objectService.getAllObjects());
     }
 
+    @GetMapping("/status/{status}")
+    public ResponseEntity<List<ObjectEntity>> getObjectsByStatus(@PathVariable ObjectStatus status) {
+        return ResponseEntity.ok(objectService.getObjectsByStatus(status));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ObjectEntity> getObjectById(@PathVariable UUID id) {
         return objectService.getObjectById(id)
@@ -29,29 +35,52 @@ public class ObjectController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @GetMapping("/{id}/versions")
+    public ResponseEntity<List<ObjectEntity>> getVersions(@PathVariable UUID id) {
+        return objectService.getObjectById(id)
+                .map(obj -> ResponseEntity.ok(objectService.getVersionsForObject(obj.getParentId())))
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     @PostMapping(value = "/upload", consumes = "multipart/form-data")
     public ResponseEntity<ObjectEntity> uploadObject(
             @RequestPart("name") String name,
             @RequestPart("type") String type,
+            @RequestPart(value = "description", required = false) String description,
+            @RequestPart(value = "tags", required = false) String tags,
             @RequestPart("file") MultipartFile file,
             @RequestPart(value = "labelId", required = false) String labelId) {
-        System.out.println("Processing Upload: " + name + " (" + type + ") linked to: " + labelId);
         
         UUID labelUuid = null;
-        if (labelId != null && !labelId.isEmpty() && !"null".equalsIgnoreCase(labelId) && !labelId.startsWith("tpl-")) {
+        if (labelId != null && !labelId.isEmpty() && !"null".equalsIgnoreCase(labelId)) {
             try {
                 labelUuid = UUID.fromString(labelId);
-            } catch (Exception e) {
-                System.err.println("Skipping invalid labelId: " + labelId);
-            }
+            } catch (Exception ignored) {}
         }
         
-        return ResponseEntity.ok(objectService.createObject(name, type, file, labelUuid));
+        return ResponseEntity.ok(objectService.createObject(name, type, description, tags, file, labelUuid));
+    }
+
+    @PostMapping(value = "/{id}/replace", consumes = "multipart/form-data")
+    public ResponseEntity<ObjectEntity> replaceObject(
+            @PathVariable UUID id,
+            @RequestPart("file") MultipartFile file) {
+        return ResponseEntity.ok(objectService.replaceObject(id, file));
+    }
+
+    @PostMapping("/{id}/activate")
+    public ResponseEntity<ObjectEntity> activateVersion(@PathVariable UUID id) {
+        return ResponseEntity.ok(objectService.activateVersion(id));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ObjectEntity> updateObject(@PathVariable UUID id, @RequestBody ObjectEntity objectEntity) {
-        return ResponseEntity.ok(objectService.updateObject(id, objectEntity));
+    public ResponseEntity<ObjectEntity> updateMetadata(
+            @PathVariable UUID id,
+            @RequestParam("name") String name,
+            @RequestParam("type") String type,
+            @RequestParam(value = "description", required = false) String description,
+            @RequestParam(value = "tags", required = false) String tags) {
+        return ResponseEntity.ok(objectService.updateMetadata(id, name, type, description, tags));
     }
 
     @DeleteMapping("/{id}")

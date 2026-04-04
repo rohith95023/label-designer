@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../services/api';
 import AppLayout from '../components/common/AppLayout';
 import PermissionMatrix from '../components/users/PermissionMatrix';
@@ -324,26 +325,33 @@ const UserManagement = () => {
 
       <div className="um-container animate-fade-in">
         {/* ── Header ──────────────────────────────────────────────────────── */}
-        <div className="um-header">
+        <motion.div 
+          className="um-header"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
           <div className="um-header-left">
-            <div className="um-header-icon">
-              <span className="material-symbols-outlined">manage_accounts</span>
+            <div className="um-header-icon shadow-xl">
+              <span className="material-symbols-outlined text-[28px]">manage_accounts</span>
             </div>
             <div>
-              <h1>User Management</h1>
-              <p>Identity & Access Control — FDA 21 CFR Part 11 Compliant</p>
+              <p className="text-[var(--color-primary)] font-black text-[10px] uppercase tracking-[0.3em] mb-1 opacity-60">Identity & Access Control</p>
+              <h1 className="text-3xl font-black text-[var(--color-primary-dark)] tracking-tighter">User Management</h1>
             </div>
           </div>
-          <button className="um-add-btn" onClick={openAddModal}>
-            <span className="material-symbols-outlined">person_add</span>
-            Add User
+          <button className="um-add-btn group" onClick={openAddModal}>
+            <span className="material-symbols-outlined group-hover:rotate-90 transition-transform">person_add</span>
+            Add System User
           </button>
-        </div>
+        </motion.div>
 
         {/* ── Stats Row ───────────────────────────────────────────────────── */}
         <div className="um-stats-row">
-          <div
-            className="um-stat-card"
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.1 }}
+            className="um-stat-card border-none bg-[var(--color-primary-light)]/40 backdrop-blur-md"
             onClick={() => {
               setFilterStatus('ALL');
               setFilterExternal(false);
@@ -352,61 +360,62 @@ const UserManagement = () => {
             }}
             style={{
               cursor: 'pointer',
-              transition: 'all 0.2s',
-              opacity: (filterStatus !== 'ALL' || filterExternal || filterRole !== 'ALL' || searchQuery !== '') ? 1 : 0.8
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              opacity: (filterStatus !== 'ALL' || filterExternal || filterRole !== 'ALL' || searchQuery !== '') ? 1 : 0.85
             }}
-            title="Click to reset all filters"
           >
-            <div className="um-stat-icon-box">
-              <span className="material-symbols-outlined">group</span>
+            <div className="um-stat-icon-box bg-white shadow-sm">
+              <span className="material-symbols-outlined text-[var(--color-primary)]">group</span>
             </div>
             <div className="um-stat-info">
-              <span className="um-stat-value">{stats.total}</span>
-              <span className="um-stat-label">Total Users</span>
+              <span className="um-stat-value text-[var(--color-primary-dark)]">{stats.total}</span>
+              <span className="um-stat-label">System-Wide</span>
             </div>
-          </div>
+          </motion.div>
 
-          <div
-            className="um-stat-card um-stat-active"
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2 }}
+            className="um-stat-card um-stat-active border-none bg-[var(--color-primary-light)]/40 backdrop-blur-md"
             onClick={() => handleStatCardClick('active')}
             style={{
               cursor: 'pointer',
-              transition: 'all 0.2s',
-              outline: filterStatus === 'ACTIVE' ? '2px solid var(--um-primary, #4ade80)' : '2px solid transparent',
-              transform: filterStatus === 'ACTIVE' ? 'scale(1.04)' : 'scale(1)',
-              boxShadow: filterStatus === 'ACTIVE' ? '0 0 0 4px rgba(74,222,128,0.15)' : '',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              boxShadow: filterStatus === 'ACTIVE' ? '0 0 0 3px var(--color-primary-dark)' : 'none',
+              transform: filterStatus === 'ACTIVE' ? 'scale(1.05)' : 'scale(1)',
             }}
-            title="Click to filter Active users"
           >
-            <div className="um-stat-icon-box">
-              <span className="material-symbols-outlined">verified_user</span>
+            <div className="um-stat-icon-box bg-white shadow-sm">
+              <span className="material-symbols-outlined text-[var(--color-success)] text-[var(--color-success)]">verified_user</span>
             </div>
             <div className="um-stat-info">
-              <span className="um-stat-value">{stats.active}</span>
-              <span className="um-stat-label">Active</span>
+              <span className="um-stat-value text-[var(--color-primary-dark)]">{stats.active}</span>
+              <span className="um-stat-label">Operational</span>
             </div>
-          </div>
+          </motion.div>
 
-          <div
-            className="um-stat-card um-stat-locked"
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.3 }}
+            className="um-stat-card um-stat-locked border-none bg-[var(--color-primary-light)]/40 backdrop-blur-md"
             onClick={() => handleStatCardClick('locked')}
             style={{
               cursor: 'pointer',
-              transition: 'all 0.2s',
-              outline: filterStatus === 'LOCKED' ? '2px solid #f87171' : '2px solid transparent',
-              transform: filterStatus === 'LOCKED' ? 'scale(1.04)' : 'scale(1)',
-              boxShadow: filterStatus === 'LOCKED' ? '0 0 0 4px rgba(248,113,113,0.15)' : '',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              boxShadow: filterStatus === 'LOCKED' ? '0 0 0 3px var(--color-error)' : 'none',
+              transform: filterStatus === 'LOCKED' ? 'scale(1.05)' : 'scale(1)',
             }}
-            title="Click to filter Locked users"
           >
-            <div className="um-stat-icon-box">
-              <span className="material-symbols-outlined">lock</span>
+            <div className="um-stat-icon-box bg-white shadow-sm">
+              <span className="material-symbols-outlined text-[var(--color-error)]">lock</span>
             </div>
             <div className="um-stat-info">
-              <span className="um-stat-value">{stats.locked}</span>
-              <span className="um-stat-label">Locked</span>
+              <span className="um-stat-value text-[var(--color-primary-dark)]">{stats.locked}</span>
+              <span className="um-stat-label">Restricted</span>
             </div>
-          </div>
+          </motion.div>
 
           <div
             className="um-stat-card um-stat-external"
@@ -462,13 +471,18 @@ const UserManagement = () => {
         )}
 
         {/* ── Filter Bar ──────────────────────────────────────────────────── */}
-        <div className="um-filter-bar">
+        <motion.div 
+          className="um-filter-bar bg-white/40 backdrop-blur-md p-4 rounded-2xl border border-[var(--color-primary-dark)]/5"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+        >
           <div className="um-search-wrap">
-            <span className="um-search-icon material-symbols-outlined">search</span>
+            <span className="um-search-icon material-symbols-outlined opacity-40">search</span>
             <input
               type="text"
-              className="um-search-input"
-              placeholder="Search by username, email or role..."
+              className="um-search-input bg-white border-none shadow-sm font-bold text-[var(--color-primary-dark)] placeholder:text-[var(--color-primary-dark)]/30"
+              placeholder="Search by identity reference, audit trail, or role access..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -480,24 +494,24 @@ const UserManagement = () => {
           </div>
 
           <select
-            className="um-filter-select"
+            className="um-filter-select bg-white border-none shadow-sm font-black text-[var(--color-primary-dark)] uppercase text-[11px] tracking-widest cursor-pointer"
             value={filterRole}
             onChange={(e) => setFilterRole(e.target.value)}
           >
-            <option value="ALL">All Roles</option>
+            <option value="ALL">All Validated Roles</option>
             {roles.map(r => <option key={r} value={r}>{r}</option>)}
           </select>
 
           <select
-            className="um-filter-select"
+            className="um-filter-select bg-white border-none shadow-sm font-black text-[var(--color-primary-dark)] uppercase text-[11px] tracking-widest cursor-pointer"
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
           >
-            <option value="ALL">All Status</option>
-            <option value="ACTIVE">Active</option>
-            <option value="LOCKED">Locked</option>
+            <option value="ALL">All Account Status</option>
+            <option value="ACTIVE">Active Deployment</option>
+            <option value="LOCKED">Access Restricted</option>
           </select>
-        </div>
+        </motion.div>
 
         {/* ── Table ───────────────────────────────────────────────────────── */}
         <div className="um-table-card">
@@ -520,87 +534,85 @@ const UserManagement = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredUsers.map(user => {
+                {filteredUsers.map((user, idx) => {
                   const isSelf = user.id === currentUser?.id;
                   return (
-                    <tr key={user.id} className={`um-row ${user.status === 'LOCKED' ? 'um-row-locked' : ''} ${isSelf ? 'um-row-self' : ''}`}>
+                    <motion.tr 
+                      key={user.id} 
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: idx * 0.03 + 0.6 }}
+                      className={`um-row ${user.status === 'LOCKED' ? 'um-row-locked' : ''} ${isSelf ? 'um-row-self bg-[var(--color-primary-light)]/40' : ''}`}
+                    >
                       <td>
                         <div className="um-user-cell">
-                          <div className="um-avatar" data-self={isSelf}>
+                          <div className={`um-avatar !bg-[var(--color-primary-dark)] shadow-lg shadow-[var(--color-primary-dark)]/20`} data-self={isSelf}>
                             {user.username?.charAt(0).toUpperCase()}
                           </div>
                           <div className="um-user-info">
-                            <span className="um-username">
+                            <span className="um-username !text-[var(--color-primary-dark)] font-black">
                               {user.username}
-                              {isSelf && <span className="um-self-badge">(You)</span>}
+                              {isSelf && <span className="um-self-badge !bg-[var(--color-primary-dark)] !text-white ml-2 text-[9px] uppercase px-2 py-0.5 rounded-full">(Primary)</span>}
                             </span>
-                            <span className="um-email">{user.email}</span>
+                            <span className="um-email font-bold opacity-60">{user.email}</span>
                           </div>
                         </div>
                       </td>
                       <td>
-                        <span className={`role-badge role-${user.role?.toLowerCase()}`}>
+                        <span className={`role-badge role-${user.role?.toLowerCase()} !text-[9px] font-black tracking-widest`}>
                           {user.role}
                         </span>
                       </td>
                       <td>
-                        <span className={`type-badge type-${user.isExternal ? 'external' : 'internal'}`}>
-                          {user.isExternal ? 'EXTERNAL' : 'INTERNAL'}
+                        <span className={`type-badge type-${user.isExternal ? 'external' : 'internal'} !text-[9px] font-black tracking-widest`}>
+                          {user.isExternal ? 'AUDITOR / VENDOR' : 'INTERNAL ASSET'}
                         </span>
                       </td>
                       <td>
-                        <div className={`status-badge status-${user.status?.toLowerCase()}`}>
-                          <span className="status-dot" />
+                        <div className={`status-badge status-${user.status?.toLowerCase()} !text-[9px] font-black tracking-widest flex items-center gap-2`}>
+                          <span className={`status-dot !w-2 !h-2 rounded-full ${user.status === 'ACTIVE' ? 'bg-[var(--color-success)]' : 'bg-[var(--color-error)]'} animate-pulse`} />
                           {user.status}
                         </div>
                       </td>
-                      <td>
-                        <span className={`attempts-badge ${user.failedLoginAttempts >= 3 ? 'attempts-warn' : ''}`}>
-                          {user.failedLoginAttempts}
+                      <td className="text-center">
+                        <span className={`attempts-badge px-3 py-1 rounded-lg text-[11px] font-black ${user.failedLoginAttempts >= 3 ? 'bg-[var(--color-error)] text-white' : 'bg-[var(--color-primary-light)] text-[var(--color-primary-dark)]'}`}>
+                          {user.failedLoginAttempts} / 5
                         </span>
                       </td>
-                      <td className="um-date-cell">
+                      <td className="um-date-cell font-bold text-[var(--color-primary-dark)] opacity-70">
                         {user.createdAt
-                          ? new Date(user.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+                          ? format(new Date(user.createdAt), 'MMM dd, yyyy')
                           : '—'}
                       </td>
                       <td>
                         <div className="um-actions" style={{ justifyContent: 'flex-end' }}>
                           <button
-                            className="um-action-btn"
+                            className="um-action-btn hover:!bg-[var(--color-primary-dark)] hover:!text-white transition-all shadow-sm"
                             title="View Activity Log"
                             onClick={() => openAuditSidebar(user)}
                           >
-                            <span className="material-symbols-outlined">history</span>
+                            <span className="material-symbols-outlined text-[18px]">history</span>
                           </button>
                           <button
-                            className="um-action-btn"
+                            className="um-action-btn hover:!bg-[var(--color-primary-dark)] hover:!text-white transition-all shadow-sm"
                             title="Edit Permissions"
                             onClick={() => openEditModal(user)}
                           >
-                            <span className="material-symbols-outlined">edit</span>
+                            <span className="material-symbols-outlined text-[18px]">edit</span>
                           </button>
                           <button
-                            className="um-action-btn"
+                            className={`um-action-btn hover:!text-white transition-all shadow-sm ${user.status === 'LOCKED' ? 'hover:!bg-[var(--color-success)]' : 'hover:!bg-[var(--color-error)]'}`}
                             title={user.status === 'LOCKED' ? 'Unlock Account' : 'Lock Account'}
                             onClick={() => handleToggleLock(user)}
                             disabled={actionLoading || isSelf}
                           >
-                            <span className="material-symbols-outlined">
+                            <span className="material-symbols-outlined text-[18px]">
                               {user.status === 'LOCKED' ? 'lock_open' : 'lock'}
                             </span>
                           </button>
-                          <button
-                            className="um-action-btn um-action-delete"
-                            title="Delete User"
-                            onClick={() => openDeleteModal(user)}
-                            disabled={actionLoading || isSelf}
-                          >
-                            <span className="material-symbols-outlined">person_remove</span>
-                          </button>
                         </div>
                       </td>
-                    </tr>
+                    </motion.tr>
                   );
                 })}
 
@@ -620,21 +632,32 @@ const UserManagement = () => {
         </div>
       </div>
 
-      {/* ── Modals ───────────────────────────────────────────────────────── */}
-      {showModal && (
-        <div className="modal-overlay" onClick={closeModal}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <div className="um-modal-header">
-              <div className="um-modal-title-icon">
-                <span className="material-symbols-outlined">
-                  {isEditing ? 'manage_accounts' : 'person_add'}
-                </span>
+      <AnimatePresence>
+        {showModal && (
+          <div className="modal-overlay !bg-[var(--color-primary-dark)]/80 backdrop-blur-sm" onClick={closeModal}>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 30 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 30 }}
+              className="modal-content !bg-[var(--color-background)] !rounded-[40px] shadow-[0_32px_120px_rgba(56,36,13,0.3)] border border-white/40" 
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="um-modal-header !p-10 !border-none !bg-transparent">
+                <div className="flex items-center gap-6">
+                  <div className="w-16 h-16 rounded-[24px] bg-[var(--color-primary-dark)] flex items-center justify-center text-white shadow-2xl">
+                    <span className="material-symbols-outlined text-[32px]">
+                      {isEditing ? 'manage_accounts' : 'person_add'}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-[var(--color-primary)] font-black text-[11px] uppercase tracking-[0.4em] mb-1 opacity-60">Identity Management</p>
+                    <h2 className="text-3xl font-black text-[var(--color-primary-dark)] tracking-tighter">{isEditing ? `Audit Trial: ${formData.username}` : 'Initialize System Account'}</h2>
+                  </div>
+                </div>
+                <button className="w-12 h-12 rounded-2xl flex items-center justify-center text-[var(--color-primary-dark)]/30 hover:bg-[var(--color-primary-dark)]/5 hover:text-[var(--color-primary-dark)] transition-all" onClick={closeModal}>
+                  <span className="material-symbols-outlined">close</span>
+                </button>
               </div>
-              <h2>{isEditing ? `Edit User — ${formData.username}` : 'Create New System User'}</h2>
-              <button className="um-modal-close" onClick={closeModal}>
-                <span className="material-symbols-outlined">close</span>
-              </button>
-            </div>
 
             {formError && (
               <div className="um-alert-card um-alert-danger um-alert-compact" style={{ margin: '0 1.5rem 1rem' }}>
@@ -723,39 +746,31 @@ const UserManagement = () => {
 
               </div>
 
-              <div className="modal-actions">
-                <button type="button" className="um-sod-btn" onClick={closeModal} style={{ color: 'var(--um-on-surface-variant)' }}>Cancel</button>
+              <div className="modal-actions !p-10 !bg-transparent !border-none">
+                <button type="button" className="h-16 px-8 rounded-2xl font-black uppercase tracking-widest text-[11px] text-[var(--color-primary-dark)]/40 hover:bg-[var(--color-primary-dark)]/5 transition-all" onClick={closeModal}>Cancel Operation</button>
                 <button 
                   type="submit" 
-                  className="um-add-btn" 
+                  className="h-16 px-10 bg-[var(--color-primary-dark)] hover:bg-[var(--color-primary)] text-white rounded-[24px] shadow-2xl shadow-[var(--color-primary-dark)]/20 flex items-center justify-center gap-4 transition-all font-black uppercase tracking-[0.2em] text-[12px] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none group"
                   disabled={actionLoading}
-                  onClick={() => console.log('Create/Save button clicked')}
-                  style={{ 
-                    background: 'var(--um-primary)', 
-                    color: 'white', 
-                    border: 'none', 
-                    borderRadius: '8px', 
-                    padding: '0.6rem 1.5rem', 
-                    fontWeight: 'bold', 
-                    minWidth: '140px', 
-                    justifyContent: 'center',
-                    cursor: actionLoading ? 'wait' : 'pointer'
-                  }}
                 >
                   {actionLoading ? (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <div className="um-spinner" style={{ width: '16px', height: '16px', borderWidth: '2px', borderTopColor: 'white', borderColor: 'rgba(255,255,255,0.2)' }} />
-                      <span>{isEditing ? 'Saving...' : 'Creating...'}</span>
+                      <div className="um-spinner !w-5 !h-5 !border-[3px] !border-white/20 !border-t-white" />
+                      <span>Synchronizing...</span>
                     </div>
                   ) : (
-                    isEditing ? 'Save Changes' : 'Create User'
+                    <>
+                      <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">verified_user</span>
+                      {isEditing ? 'Commit Changes' : 'Initialize Account'}
+                    </>
                   )}
                 </button>
               </div>
             </form>
+          </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
 
       <ConfirmDeleteModal
         user={deleteTarget}
@@ -764,38 +779,60 @@ const UserManagement = () => {
         loading={deleteLoading}
       />
 
-      {auditUser && (
-        <div className="um-audit-overlay" onClick={() => setAuditUser(null)}>
-          <div className="um-audit-sidebar" onClick={e => e.stopPropagation()}>
-            <div className="um-audit-header">
-              <div>
-                <h3>Activity Log</h3>
-                <p>{auditUser.username}</p>
-              </div>
-              <button className="um-modal-close" onClick={() => setAuditUser(null)}>
-                <span className="material-symbols-outlined">close</span>
-              </button>
-            </div>
-            <div className="um-audit-body">
-              {auditLoading ? (
-                <div className="um-loading-state"><div className="um-spinner" /></div>
-              ) : auditLogs.length === 0 ? (
-                <div className="um-audit-empty"><p>No activity recorded.</p></div>
-              ) : (
-                <div className="um-audit-list">
-                  {auditLogs.map((log, i) => (
-                    <div key={i} className="um-audit-entry">
-                      <span className="um-audit-action">{log.action}</span>
-                      <p className="um-audit-detail">{log.details}</p>
-                      <time className="um-audit-time">{new Date(log.timestamp).toLocaleString()}</time>
-                    </div>
-                  ))}
+      <AnimatePresence>
+        {auditUser && (
+          <div className="um-audit-overlay !bg-[var(--color-primary-dark)]/60 backdrop-blur-[2px] z-[9999]" onClick={() => setAuditUser(null)}>
+            <motion.div 
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="um-audit-sidebar !bg-[var(--color-background)] !w-[450px] shadow-[-20px_0_60px_rgba(56,36,13,0.2)] border-l border-white/20" 
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="um-audit-header !p-10 !border-b !border-[var(--color-primary-dark)]/5">
+                <div>
+                  <p className="text-[var(--color-primary)] font-black text-[10px] uppercase tracking-[0.4em] mb-1 opacity-60">Compliance Monitoring</p>
+                  <h3 className="text-2xl font-black text-[var(--color-primary-dark)] tracking-tighter">Activity Log</h3>
+                  <p className="text-[12px] font-bold opacity-40">Origin: {auditUser.username}</p>
                 </div>
-              )}
-            </div>
+                <button className="w-12 h-12 rounded-2xl flex items-center justify-center text-[var(--color-primary-dark)]/30 hover:bg-[var(--color-primary-dark)]/5 hover:text-[var(--color-primary-dark)] transition-all" onClick={() => setAuditUser(null)}>
+                  <span className="material-symbols-outlined">close</span>
+                </button>
+              </div>
+              <div className="um-audit-body !p-10">
+                {auditLoading ? (
+                  <div className="um-loading-state !py-20"><div className="um-spinner !w-10 !h-10" /></div>
+                ) : auditLogs.length === 0 ? (
+                  <div className="um-audit-empty !py-20 text-center opacity-30">
+                    <span className="material-symbols-outlined text-[48px] mb-4">history_toggle_off</span>
+                    <p className="font-bold uppercase tracking-widest text-[11px]">No activity recorded</p>
+                  </div>
+                ) : (
+                  <div className="um-audit-list space-y-6">
+                    {auditLogs.map((log, i) => (
+                      <motion.div 
+                        key={i} 
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.05 }}
+                        className="um-audit-entry !p-6 !bg-white !rounded-2xl shadow-sm border border-[var(--color-primary-dark)]/5"
+                      >
+                        <span className="um-audit-action !text-[var(--color-primary)] !text-[11px] font-black uppercase tracking-widest block mb-2">{log.action}</span>
+                        <p className="um-audit-detail !text-[var(--color-primary-dark)] font-bold text-[13px] mb-3 leading-relaxed">{log.details}</p>
+                        <div className="flex items-center gap-2 opacity-30">
+                          <span className="material-symbols-outlined text-[14px]">schedule</span>
+                          <time className="um-audit-time font-black text-[10px] uppercase tracking-tighter">{format(new Date(log.timestamp), 'MMM dd | HH:mm:ss')}</time>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </AppLayout>
   );
 };

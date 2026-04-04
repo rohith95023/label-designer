@@ -115,9 +115,20 @@ export const api = {
 
   // Objects (Assets)
   getObjects: () => authApi.get('/objects').then(res => res.data),
+  getObjectsByStatus: (status) => authApi.get(`/objects/status/${status}`).then(res => res.data),
   getObject: (id) => authApi.get(`/objects/${id}`).then(res => res.data),
+  getObjectVersions: (id) => authApi.get(`/objects/${id}/versions`).then(res => res.data),
   uploadObject: (formData) => authApi.post('/objects/upload', formData).then(res => res.data),
-  updateObject: (id, data) => authApi.put(`/objects/${id}`, data).then(res => res.data),
+  replaceObject: (id, formData) => authApi.post(`/objects/${id}/replace`, formData).then(res => res.data),
+  activateObjectVersion: (id) => authApi.post(`/objects/${id}/activate`).then(res => res.data),
+  updateObject: (id, data) => {
+    const params = new URLSearchParams();
+    params.append('name', data.name);
+    params.append('type', data.type);
+    if (data.description) params.append('description', data.description);
+    if (data.tags) params.append('tags', data.tags);
+    return authApi.put(`/objects/${id}?${params.toString()}`).then(res => res.data);
+  },
   deleteObject: (id) => authApi.delete(`/objects/${id}`).then(res => res.status === 204),
 
   // Languages

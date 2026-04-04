@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { createPortal } from 'react-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useLabel } from '../context/LabelContext';
 import AppLayout from '../components/common/AppLayout';
@@ -73,16 +73,20 @@ export default function TemplateLibrary() {
       <div className="p-6 lg:p-10 pb-24">
 
         {/* Hero */}
-        <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6 animate-slide-up">
+        <motion.div 
+          className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
           <div>
-            <p className="text-primary font-bold text-[11px] uppercase tracking-[0.2em] mb-2">Curated Assets</p>
-            <h1 className="text-4xl font-extrabold tracking-tighter text-gradient mb-2">Template Library</h1>
-            <p className="text-on-surface-variant text-sm max-w-lg">
-              Browse medically validated label templates, compliant with international pharma standards.
+            <p className="text-[var(--color-primary)] font-black text-[11px] uppercase tracking-[0.3em] mb-2 opacity-60">Curated Assets</p>
+            <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-[var(--color-primary-dark)] mb-3">Template Library</h1>
+            <p className="text-[var(--color-on-surface-variant)] text-sm max-w-lg font-medium leading-relaxed">
+              Browse medically validated label templates, compliant with international pharma standards and clinical guidelines.
             </p>
           </div>
           {/* View toggle */}
-          <div className="flex items-center gap-1 bg-surface-container-low rounded-xl p-1 border border-outline-variant/20">
+          <div className="flex items-center gap-1 bg-[var(--color-surface-container-low)] rounded-xl p-1 border border-[var(--color-secondary)]/10">
             {[
               { mode: 'grid', icon: 'grid_view' },
               { mode: 'list', icon: 'view_list' },
@@ -92,8 +96,8 @@ export default function TemplateLibrary() {
                 onClick={() => setViewMode(mode)}
                 className={`p-2.5 rounded-lg flex items-center gap-2 text-xs font-bold transition-all duration-200 ${
                   viewMode === mode
-                    ? 'bg-gradient-to-br from-primary to-primary-container text-on-primary shadow-glow-sm'
-                    : 'text-on-surface-variant hover:bg-surface-container'
+                    ? 'bg-[var(--color-primary-dark)] text-white shadow-lg'
+                    : 'text-[var(--color-on-surface-variant)] hover:bg-[var(--color-primary-mid)]/5'
                 }`}
               >
                 <span className="material-symbols-outlined text-base"
@@ -103,38 +107,44 @@ export default function TemplateLibrary() {
               </button>
             ))}
           </div>
-        </div>
+        </motion.div>
 
         {/* Filters */}
-        <div className="sticky top-0 z-10 bg-mesh py-3 -mx-6 px-6 mb-6 animate-slide-up stagger-1" style={{ backdropFilter: 'blur(12px)' }}>
+        <motion.div 
+          className="sticky top-0 z-10 py-3 -mx-6 px-6 mb-8 border-b border-[var(--color-secondary)]/5 shadow-sm bg-[var(--color-background)]/80" 
+          style={{ backdropFilter: 'blur(24px)' }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+        >
           <div className="flex flex-wrap items-center gap-2 overflow-x-auto scrollbar-hide pb-1">
             {CATEGORIES.map(cat => (
               <button
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-200 ${
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-black uppercase tracking-widest whitespace-nowrap transition-all duration-300 ${
                   activeCategory === cat
-                    ? 'bg-gradient-to-r from-primary to-tertiary text-on-primary shadow-glow-sm'
-                    : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container hover:text-on-surface border border-outline-variant/20'
+                    ? 'bg-[var(--color-primary-dark)] text-white shadow-xl shadow-black/10 scale-105'
+                    : 'bg-white/40 text-[var(--color-on-surface-variant)]/60 hover:bg-white hover:text-[var(--color-primary-dark)] border border-[var(--color-secondary)]/10'
                 }`}
               >
-                <span className="material-symbols-outlined text-[14px]"
+                <span className="material-symbols-outlined text-[16px]"
                   style={{ fontVariationSettings: activeCategory === cat ? "'FILL' 1" : "'FILL' 0" }}>
                   {CATEGORY_ICONS[cat]}
                 </span>
                 {cat === 'All' ? 'All Templates' : cat}
               </button>
             ))}
-            <div className="h-5 w-px bg-outline-variant/30 mx-1" />
+            <div className="h-6 w-px bg-[var(--color-secondary)]/10 mx-2" />
             <select
               value={activeSize}
               onChange={e => setActiveSize(e.target.value)}
-              className="bg-surface-container-low border border-outline-variant/20 rounded-full px-4 py-2 text-xs font-semibold text-on-surface-variant focus:ring-2 focus:ring-primary outline-none"
+              className="bg-white/40 border border-[var(--color-secondary)]/10 rounded-full px-5 py-2.5 text-xs font-black uppercase tracking-widest text-[var(--color-on-surface-variant)]/60 focus:bg-white focus:text-[var(--color-primary-dark)] outline-none transition-all cursor-pointer"
             >
               {SIZES.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
           </div>
-        </div>
+        </motion.div>
 
         {/* Empty state */}
         {filteredTemplates.length === 0 && (
@@ -150,70 +160,81 @@ export default function TemplateLibrary() {
         )}
 
         {/* Grid view */}
-        {viewMode === 'grid' && filteredTemplates.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
-            {filteredTemplates.map((template, idx) => (
-              <div
-                key={template.id}
-                className={`group glass-card rounded-2xl overflow-hidden flex flex-col cursor-pointer animate-slide-up stagger-${Math.min(idx+1,10)}`}
-              >
-                {/* Image */}
-                <div className="aspect-[4/3] bg-surface-container-low overflow-hidden relative flex items-center justify-center p-3">
-                  <img
-                    className="w-full h-full object-cover rounded-xl shadow-card group-hover:scale-105 transition-transform duration-500"
-                    alt={template.name}
-                    src={template.imageUrl || template.image}
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = `https://placehold.co/600x400/2c3e50/white/png?text=${encodeURIComponent(template.name)}`;
-                    }}
-                  />
-                  {/* Compliant badge */}
-                  <div className="absolute top-3 right-3 glass rounded-full px-2.5 py-1 flex items-center gap-1">
-                    <span className="material-symbols-outlined text-secondary text-[13px]"
-                      style={{ fontVariationSettings: "'FILL' 1" }}>
-                      verified
-                    </span>
-                    <span className="text-[10px] font-bold text-secondary uppercase tracking-tight">FDA</span>
-                  </div>
-                  {/* Overlay on hover */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl flex items-end p-4">
-                    <button
-                      onClick={() => handleUseTemplate(template)}
-                      className="btn-gradient text-xs w-full py-2.5"
-                    >
-                      <span className="material-symbols-outlined text-base">bolt</span>
-                      Use Template
-                    </button>
-                  </div>
-                </div>
-
-                {/* Info */}
-                <div className="p-5 flex flex-col flex-1">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[10px] font-bold text-primary uppercase tracking-widest">{template.category}</span>
-                    <span className="text-[10px] text-on-surface-variant font-medium">v2.0</span>
-                  </div>
-                  <h3 className="text-base font-bold text-on-surface tracking-tight mb-1">{template.name}</h3>
-                  <p className="text-xs text-on-surface-variant">{template.brand}</p>
-                  <div className="mt-4 pt-4 flex items-center justify-between border-t border-outline-variant/15">
-                    <div>
-                      <p className="text-[10px] text-on-surface-variant uppercase font-bold">Label Size</p>
-                      <p className="text-xs font-semibold text-on-surface">{template.size}</p>
+        <AnimatePresence mode="wait">
+          {viewMode === 'grid' && filteredTemplates.length > 0 && (
+            <motion.div 
+              className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              {filteredTemplates.map((template, idx) => (
+                <motion.div
+                  key={template.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.05 }}
+                  whileHover={{ y: -8 }}
+                  className="group flex flex-col bg-white rounded-[32px] overflow-hidden border border-[var(--color-secondary)]/10 shadow-sm hover:shadow-2xl hover:shadow-[var(--color-primary-dark)]/5 transition-all duration-500"
+                >
+                  {/* Image */}
+                  <div className="aspect-[4/3] bg-[var(--color-primary-light)]/30 overflow-hidden relative flex items-center justify-center p-6">
+                    <motion.img
+                      className="w-full h-full object-cover rounded-2xl shadow-2xl group-hover:scale-110 transition-transform duration-700 ease-out-expo"
+                      alt={template.name}
+                      src={template.imageUrl || template.image}
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = `https://placehold.co/600x400/38240D/white/png?text=${encodeURIComponent(template.name)}`;
+                      }}
+                    />
+                    {/* Compliant badge */}
+                    <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md rounded-full px-3 py-1.5 flex items-center gap-1.5 shadow-sm border border-black/5">
+                      <span className="material-symbols-outlined text-[var(--color-primary)] text-[14px]"
+                        style={{ fontVariationSettings: "'FILL' 1" }}>
+                        verified
+                      </span>
+                      <span className="text-[10px] font-black text-[var(--color-primary-dark)] uppercase tracking-tighter">FDA Standard</span>
                     </div>
-                    <button
-                      onClick={() => handleUseTemplate(template)}
-                      className="btn-ghost text-xs py-1.5 px-3"
-                    >
-                      Use
-                      <span className="material-symbols-outlined text-base">chevron_right</span>
-                    </button>
+                    {/* Overlay on hover */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-primary-dark)]/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-6">
+                      <button
+                        onClick={() => handleUseTemplate(template)}
+                        className="bg-white text-[var(--color-primary-dark)] font-black uppercase tracking-widest text-[11px] w-full py-4 rounded-2xl flex items-center justify-center gap-2 shadow-2xl hover:bg-[var(--color-primary)] hover:text-white transition-all transform translate-y-4 group-hover:translate-y-0 duration-500"
+                      >
+                        <span className="material-symbols-outlined text-base">bolt</span>
+                        Quick Deploy
+                      </button>
+                    </div>
                   </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+
+                  {/* Info */}
+                  <div className="p-6 flex flex-col flex-1">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="px-3 py-1 bg-[var(--color-primary)]/10 text-[var(--color-primary)] text-[9px] font-black uppercase tracking-widest rounded-full">{template.category}</span>
+                      <span className="text-[10px] text-[var(--color-on-surface-variant)] font-bold opacity-40">v2.4.0</span>
+                    </div>
+                    <h3 className="text-lg font-black text-[var(--color-primary-dark)] tracking-tight mb-1 group-hover:text-[var(--color-primary)] transition-colors line-clamp-1">{template.name}</h3>
+                    <p className="text-xs text-[var(--color-on-surface-variant)] font-medium mb-6">{template.brand}</p>
+                    
+                    <div className="mt-auto pt-5 flex items-center justify-between border-t border-[var(--color-secondary)]/5">
+                      <div>
+                        <p className="text-[9px] text-[var(--color-on-surface-variant)] uppercase font-black tracking-widest opacity-40 mb-1">Dimensions</p>
+                        <p className="text-[12px] font-black text-[var(--color-primary-dark)]">{template.size}</p>
+                      </div>
+                      <button
+                        onClick={() => handleUseTemplate(template)}
+                        className="w-10 h-10 rounded-full bg-[var(--color-secondary)]/5 flex items-center justify-center text-[var(--color-primary-dark)] hover:bg-[var(--color-primary)] hover:text-white transition-all group/btn"
+                      >
+                        <span className="material-symbols-outlined text-xl group-hover/btn:translate-x-0.5 transition-transform">chevron_right</span>
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* List view */}
         {viewMode === 'list' && filteredTemplates.length > 0 && (

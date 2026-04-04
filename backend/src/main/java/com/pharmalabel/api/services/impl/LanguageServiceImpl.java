@@ -59,7 +59,7 @@ public class LanguageServiceImpl implements LanguageService {
                     existing.setDateFormat(language.getDateFormat());
                     existing.setTimeFormat(language.getTimeFormat());
                     existing.setCurrencySymbol(language.getCurrencySymbol());
-                    existing.setDefaultVariant(language.isDefaultVariant());
+                    existing.setIsDefaultVariant(Boolean.TRUE.equals(language.getIsDefaultVariant()));
                     existing.setDirection(language.getDirection());
                     existing.setStatus(language.getStatus());
                     return languageRepository.save(existing);

@@ -206,6 +206,20 @@ export const LabelProvider = ({ children }) => {
     setTimeout(() => setToast(null), 3000);
   };
 
+  const refreshStocks = async () => {
+    try {
+      const stocks = await api.getLabelStocks();
+      if (Array.isArray(stocks)) {
+        setLabelStocks(stocks);
+        if (!meta.labelStockId && stocks.length > 0) {
+          defaultStockIdRef.current = stocks[0].id;
+        }
+      }
+    } catch (err) {
+      console.error('Failed to refresh stocks', err);
+    }
+  };
+
   // ── Hydrate from Backend (only when authenticated) ──
   useEffect(() => {
     const init = async () => {
@@ -954,11 +968,13 @@ export const LabelProvider = ({ children }) => {
     deleteElement, moveLayer, alignElements,
     // Design Tools: Orientation & Template logic
     toggleOrientation, saveAsTemplate,
+    undo, redo,
     // Validation
     validateLabel,
     LABEL_PRESETS,
     setUnit,
     setLabelStock, // Add this line
+    refreshStocks,
     toPx, fromPx, UNITS,
   };
 

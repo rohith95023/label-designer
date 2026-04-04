@@ -26,6 +26,19 @@ import { UNITS, toPx, fromPx, PX_PER_UNIT, getTickIntervals } from '../utils/uni
 import { resolveElementData, SAMPLE_TRIAL_DATA } from '../utils/dynamicData';
 import { resolveUrl } from '../utils/url';
 
+const ICON_RAIL_ITEMS = [
+  { id: 'elements', label: 'Basics', icon: 'category' },
+  { id: 'text', label: 'WordArt', icon: 'title' },
+  { id: 'templates', label: 'Library', icon: 'temp_preferences_custom' },
+  { id: 'shapes', label: 'Shapes', icon: 'interests' },
+  { id: 'Icons', label: 'Symbols', icon: 'emoji_symbols' },
+  { id: 'Variables', label: 'Data', icon: 'database' },
+  { id: 'Objects', label: 'Assets', icon: 'image' },
+  { id: 'stocks', label: 'Stocks', icon: 'inventory_2' },
+  { id: 'layers', label: 'Layers', icon: 'layers' },
+  { id: 'notes', label: 'Notes', icon: 'sticky_note_2' },
+];
+
 function resolvePlaceholders(text, placeholderValues) {
   if (!text) return '';
   let result = text;
@@ -68,11 +81,11 @@ function TableSetupModal({ onConfirm, onCancel }) {
       <div className="bg-white w-full max-w-[540px] max-h-[90vh] flex flex-col rounded-[24px] shadow-3xl shadow-blue-900/10 relative overflow-hidden border border-white/50">
 
         {/* Subtle Accent Bar */}
-        <div className="absolute top-0 left-0 w-full h-[4px] bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-600"></div>
+        <div className="absolute top-0 left-0 w-full h-[4px] bg-gradient-to-r from-[var(--color-primary)] via-indigo-500 to-purple-600"></div>
 
         <div className="px-7 py-5 border-b border-slate-100 flex items-center justify-between bg-white">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-[16px] bg-gradient-to-br from-blue-50 to-indigo-50 shadow-inner flex items-center justify-center text-blue-600 border border-blue-100">
+            <div className="w-12 h-12 rounded-[16px] bg-gradient-to-br from-[var(--color-primary)]/5 to-indigo-50 shadow-inner flex items-center justify-center text-[var(--color-primary)] border border-[var(--color-primary)]/10">
               <span className="material-symbols-outlined text-[24px]">table_view</span>
             </div>
             <div>
@@ -102,15 +115,15 @@ function TableSetupModal({ onConfirm, onCancel }) {
                   key={t.id}
                   onClick={() => setTemplate(t.id)}
                   className={`relative flex items-center gap-3 p-3.5 rounded-2xl border-2 text-left transition-all overflow-hidden group ${template === t.id
-                      ? 'border-blue-500 bg-blue-50 focus:outline-none'
+                      ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/5 focus:outline-none'
                       : 'border-slate-100 hover:border-slate-300 text-slate-600 hover:bg-slate-50'
                     }`}
                 >
-                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-colors ${template === t.id ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-500 group-hover:bg-white group-hover:text-blue-500 group-hover:shadow-sm'}`}>
+                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-colors ${template === t.id ? 'bg-[var(--color-primary)] text-white' : 'bg-slate-100 text-slate-500 group-hover:bg-white group-hover:text-[var(--color-primary)] group-hover:shadow-sm'}`}>
                     <span className="material-symbols-outlined text-[20px]">{t.icon}</span>
                   </div>
                   <div>
-                    <div className={`text-[13px] font-extrabold leading-none mb-1.5 ${template === t.id ? 'text-blue-800' : 'text-slate-700'}`}>{t.label}</div>
+                    <div className={`text-[13px] font-extrabold leading-none mb-1.5 ${template === t.id ? 'text-[var(--color-primary)]' : 'text-slate-700'}`}>{t.label}</div>
                     <div className="text-[10px] font-semibold text-slate-500">{t.desc}</div>
                   </div>
                 </button>
@@ -122,11 +135,11 @@ function TableSetupModal({ onConfirm, onCancel }) {
             <div className="flex-1">
               <label className="text-[10px] font-bold uppercase tracking-widest flex justify-between items-center text-slate-500 mb-3">
                 <span className="flex items-center gap-1.5"><span className="material-symbols-outlined text-[14px]">table_rows</span> Rows</span>
-                <span className="text-blue-600 font-mono text-[11px] bg-blue-100 px-2 py-0.5 rounded-md leading-none">{rows}</span>
+                <span className="text-[var(--color-primary)] font-mono text-[11px] bg-[var(--color-primary)]/10 px-2 py-0.5 rounded-md leading-none">{rows}</span>
               </label>
               <div className="flex items-center gap-3">
-                <input type="range" min="1" max="50" className="flex-1 accent-blue-600" value={rows} onChange={e => setRows(Number(e.target.value))} />
-                <input type="number" min="1" max="100" className="w-14 bg-white border border-slate-200 rounded-xl px-2 py-1 text-sm font-mono font-bold outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-center" value={rows} onChange={e => setRows(Math.max(1, Number(e.target.value)))} />
+                <input type="range" min="1" max="50" className="flex-1 accent-[var(--color-primary)]" value={rows} onChange={e => setRows(Number(e.target.value))} />
+                <input type="number" min="1" max="100" className="w-14 bg-white border border-slate-200 rounded-xl px-2 py-1 text-sm font-mono font-bold outline-none focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)] transition-all text-center" value={rows} onChange={e => setRows(Math.max(1, Number(e.target.value)))} />
               </div>
             </div>
 
@@ -136,11 +149,11 @@ function TableSetupModal({ onConfirm, onCancel }) {
             <div className={`flex-1 transition-opacity duration-300 ${template !== 'blank' ? 'opacity-30 pointer-events-none grayscale' : ''}`}>
               <label className="text-[10px] font-bold uppercase tracking-widest flex justify-between items-center text-slate-500 mb-3">
                 <span className="flex items-center gap-1.5"><span className="material-symbols-outlined text-[14px]">view_column</span> Columns</span>
-                <span className="text-blue-600 font-mono text-[11px] bg-blue-100 px-2 py-0.5 rounded-md leading-none">{cols}</span>
+                <span className="text-[var(--color-primary)] font-mono text-[11px] bg-[var(--color-primary)]/10 px-2 py-0.5 rounded-md leading-none">{cols}</span>
               </label>
               <div className="flex items-center gap-3">
-                <input type="range" min="1" max="12" className="flex-1 accent-blue-600" value={cols} onChange={e => updateColCount(Number(e.target.value))} />
-                <input type="number" min="1" max="20" className="w-14 bg-white border border-slate-200 rounded-xl px-2 py-1 text-sm font-mono font-bold outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-center" value={cols} onChange={e => updateColCount(Math.max(1, Number(e.target.value)))} />
+                <input type="range" min="1" max="12" className="flex-1 accent-[var(--color-primary)]" value={cols} onChange={e => updateColCount(Number(e.target.value))} />
+                <input type="number" min="1" max="20" className="w-14 bg-white border border-slate-200 rounded-xl px-2 py-1 text-sm font-mono font-bold outline-none focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)] transition-all text-center" value={cols} onChange={e => updateColCount(Math.max(1, Number(e.target.value)))} />
               </div>
             </div>
           </section>
@@ -156,7 +169,7 @@ function TableSetupModal({ onConfirm, onCancel }) {
                     <span className="text-[10px] font-extrabold uppercase text-slate-400 absolute left-3.5 top-2.5 pointer-events-none">Col {i + 1}</span>
                     <input
                       type="text"
-                      className="w-full bg-slate-50 hover:bg-white border-2 border-slate-100 text-sm font-semibold text-slate-800 px-3.5 pt-7 pb-2.5 rounded-xl outline-none focus:border-blue-500 focus:bg-white transition-all placeholder-slate-300"
+                      className="w-full bg-slate-50 hover:bg-white border-2 border-slate-100 text-sm font-semibold text-slate-800 px-3.5 pt-7 pb-2.5 rounded-xl outline-none focus:border-[var(--color-primary)] focus:bg-white transition-all placeholder-slate-300"
                       value={colHeaders[i] || ''}
                       placeholder={`Enter name...`}
                       onChange={e => {
@@ -225,12 +238,12 @@ function AssetUploadModal({ onConfirm, onCancel, labelId }) {
         <div className="p-7 flex flex-col gap-5">
           <div className="flex flex-col gap-1.5">
             <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Asset Name</label>
-            <input value={name} onChange={e => setName(e.target.value)} className="w-full bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl text-sm font-bold outline-none focus:border-blue-500" placeholder="e.g. Pfizer Logo" />
+            <input value={name} onChange={e => setName(e.target.value)} className="w-full bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl text-sm font-bold outline-none focus:border-[var(--color-primary)]" placeholder="e.g. Pfizer Logo" />
           </div>
           <div className="flex flex-col gap-1.5">
             <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Object Type</label>
             <div className="relative">
-              <select value={type} onChange={e => setType(e.target.value)} className="w-full bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl text-sm font-bold outline-none focus:border-blue-500 appearance-none">
+              <select value={type} onChange={e => setType(e.target.value)} className="w-full bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl text-sm font-bold outline-none focus:border-[var(--color-primary)] appearance-none">
                 <option value="LOGO">LOGO / IMAGE</option>
                 <option value="ICON">UI ICON</option>
                 <option value="QR_SPEC">QR CODE SPEC</option>
@@ -244,7 +257,7 @@ function AssetUploadModal({ onConfirm, onCancel, labelId }) {
             <div className="p-4 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50 flex flex-col items-center gap-2">
               <span className="material-symbols-outlined text-[32px] text-slate-300">cloud_upload</span>
               <input type="file" onChange={e => setFile(e.target.files[0])} className="text-[12px] font-bold text-slate-500 file:hidden" id="asset-upload-input" />
-              <label htmlFor="asset-upload-input" className="cursor-pointer text-[11px] font-black text-blue-600 uppercase hover:underline">
+              <label htmlFor="asset-upload-input" className="cursor-pointer text-[11px] font-black text-[var(--color-primary)] uppercase hover:underline">
                 {file ? file.name : 'Choose file or drag here'}
               </label>
             </div>
@@ -255,7 +268,7 @@ function AssetUploadModal({ onConfirm, onCancel, labelId }) {
           <button
             onClick={handleUpload}
             disabled={loading || !name || !file}
-            className="px-6 py-2.5 bg-blue-600 text-white rounded-xl text-[12px] font-black uppercase tracking-widest hover:bg-blue-700 disabled:opacity-50 transition-all flex items-center gap-2 shadow-lg shadow-blue-500/20"
+            className="px-6 py-2.5 bg-[var(--color-primary)] text-white rounded-xl text-[12px] font-black uppercase tracking-widest hover:bg-[var(--color-primary-dark)] disabled:opacity-50 transition-all flex items-center gap-2 shadow-lg shadow-[var(--color-primary)]/20"
           >
             {loading ? <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin"></div> : <span className="material-symbols-outlined text-[18px]">cloud_upload</span>}
             {loading ? 'Uploading...' : 'Confirm Upload'}
@@ -400,18 +413,6 @@ export default function LabelEditor() {
   const [lockedIcon, setLockedIcon] = useState(null);
   const activeTab = lockedIcon || hoveredIcon;
 
-  const ICON_RAIL_ITEMS = [
-    { id: 'elements', icon: 'add_circle', label: 'Elements' },
-    { id: 'shapes', icon: 'category', label: 'Shapes' },
-    { id: 'Icons', icon: 'medical_services', label: 'Icons' },
-    { id: 'templates', icon: 'auto_awesome_motion', label: 'Templates' },
-    { id: 'Variables', icon: 'database', label: 'Variables' },
-    { id: 'Objects', icon: 'image', label: 'Objects' },
-    { id: 'stocks', icon: 'inventory', label: 'Stocks' },
-    { id: 'layers', icon: 'layers', label: 'Layers' },
-    { id: 'notes', icon: 'description', label: 'Notes' },
-  ];
-
   const sidebarRef = useRef(null);
 
   useEffect(() => {
@@ -438,7 +439,7 @@ export default function LabelEditor() {
       try {
         const [phData, objData] = await Promise.all([
           api.getPlaceholders(),
-          api.getObjects()
+          api.getObjectsByStatus('ACTIVE')
         ]);
         setPlaceholders(phData);
         setObjects(objData);
@@ -455,7 +456,7 @@ export default function LabelEditor() {
   const refreshObjects = async () => {
     setObjectsLoading(true);
     try {
-      const objData = await api.getObjects();
+      const objData = await api.getObjectsByStatus('ACTIVE');
       setObjects(objData);
     } catch (err) {
       console.error("Failed to refresh objects:", err);
@@ -473,7 +474,7 @@ export default function LabelEditor() {
       fontSize: 14,
       fontFamily: 'Inter, sans-serif',
       fontWeight: '600',
-      color: '#2563eb', // Blue for placeholders by default
+      color: 'var(--color-primary)', // Blue for placeholders by default
       width: 140,
       height: 24,
       isPlaceholder: true
@@ -538,8 +539,16 @@ export default function LabelEditor() {
   }, [captureArtboard, meta.fileName]);
 
   const addObject = (obj) => {
+    const commonProps = {
+      sourceObjectId: obj.id,
+      isManaged: true,
+      managedType: obj.type,
+      managedVersion: obj.version
+    };
+
     if (obj.type === 'LOGO') {
       addElement({
+        ...commonProps,
         type: 'image',
         src: obj.fileUrl,
         name: obj.name,
@@ -549,8 +558,9 @@ export default function LabelEditor() {
       });
     } else if (obj.type === 'ICON') {
       addElement({
+        ...commonProps,
         type: 'icon',
-        iconName: obj.name.toLowerCase().replace(/\s+/g, '_'), // Heuristic for material symbols
+        iconName: obj.name.toLowerCase().replace(/\s+/g, '_'),
         name: obj.name,
         width: 48,
         height: 48,
@@ -558,8 +568,9 @@ export default function LabelEditor() {
       });
     } else if (obj.type === 'QR_SPEC') {
       addElement({
+        ...commonProps,
         type: 'qrcode',
-        text: 'SPEC_QR_DATA', // Ideally this would come from the spec
+        text: 'SPEC_QR_DATA',
         name: obj.name,
         width: 80,
         height: 80,
@@ -567,6 +578,7 @@ export default function LabelEditor() {
       });
     } else if (obj.type === 'BARCODE_SPEC') {
       addElement({
+        ...commonProps,
         type: 'barcode',
         text: 'SPEC_BAR_DATA',
         name: obj.name,
@@ -839,47 +851,6 @@ export default function LabelEditor() {
         />
       )}
 
-      {/* WordArt Modal */}
-      {showWordArtModal && createPortal(
-        <div className="fixed inset-0 z-[1001] flex items-center justify-center bg-slate-900/60 backdrop-blur-md animate-fade-in p-6">
-          <div className="glass-card bg-white rounded-3xl shadow-glow w-[700px] h-[75vh] flex flex-col overflow-hidden">
-            <div className="p-6 border-b border-white/20 flex items-center justify-between bg-slate-50/50">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-lg">
-                  <span className="material-symbols-outlined">abc</span>
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-slate-800">WordArt Gallery</h3>
-                  <p className="text-[11px] text-slate-500">Stylized branding typography</p>
-                </div>
-              </div>
-              <button onClick={() => setShowWordArtModal(false)} className="w-8 h-8 rounded-full hover:bg-slate-200 flex items-center justify-center text-slate-500 transition-colors"><span className="material-symbols-outlined text-xl">close</span></button>
-            </div>
-
-            <div className="flex border-b border-white/20 bg-[#F8FAFC] px-4 pt-2 shrink-0">
-              {WORDART_CATEGORIES.map(t => (
-                <button key={t} onClick={() => setWordArtTab(t)}
-                  className={`px-4 py-3 text-[11px] font-bold uppercase tracking-widest transition-all border-b-2 ${wordArtTab === t ? 'text-primary border-primary bg-white' : 'text-slate-400 border-transparent hover:text-slate-600'}`}
-                >{t}</button>
-              ))}
-            </div>
-
-            <div className="p-6 grid grid-cols-2 gap-4 overflow-y-auto bg-slate-50/30 custom-scrollbar flex-1">
-              {(WORDART_STYLES[wordArtTab] || []).map((art, idx) => (
-                <button key={idx} onClick={() => {
-                  addElement({ type: 'text', text: art.name, ...art.style, width: 220, height: 40, fontFamily: 'Outfit, sans-serif' });
-                  setShowWordArtModal(false);
-                  commitUpdate();
-                }} className="flex flex-col items-center justify-center p-8 border border-slate-200 rounded-2xl bg-white hover:border-blue-500 hover:shadow-2xl transition-all group active:scale-95 overflow-hidden min-h-[140px]">
-                  <span style={art.style} className="mb-3 block text-center leading-normal break-words w-full">{art.name}</span>
-                  <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400 group-hover:text-blue-500 transition-colors">Apply Style</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
       {/* Bulk Delete Dialog */}
       {showBulkDeleteModal && createPortal(
         <div className="fixed inset-0 z-[1002] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm animate-fade-in">
@@ -929,7 +900,7 @@ export default function LabelEditor() {
               value={saveAsName}
               onChange={e => setSaveAsName(e.target.value)}
               placeholder="New file name…"
-              className="border border-outline-variant/40 rounded-lg px-3 py-2 text-sm outline-none focus:border-primary"
+              className="border border-outline-variant/40 rounded-lg px-3 py-2 text-sm outline-none focus:border-[var(--color-primary)]"
             />
             <div className="flex gap-3">
               <button onClick={() => setShowSaveAs(false)} className="flex-1 py-2 rounded-xl border text-sm text-slate-600 hover:bg-slate-100">Cancel</button>
@@ -1204,7 +1175,7 @@ export default function LabelEditor() {
             <div className="w-[1px] h-4 bg-[var(--color-primary-dark)]/10 self-center mx-0.5" />
             <button
               onClick={toggleOrientation}
-              className="flex items-center gap-2 h-8 px-3 rounded-lg text-[10px] font-black text-[var(--color-primary-dark)]/60 hover:text-blue-600 hover:bg-blue-50/50 transition-all"
+              className="flex items-center gap-2 h-8 px-3 rounded-lg text-[10px] font-black text-[var(--color-primary-dark)]/60 hover:text-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 transition-all"
               title="Toggle Portrait/Landscape"
             >
               <span className="material-symbols-outlined text-[16px]">screen_rotation</span>
@@ -1306,7 +1277,7 @@ export default function LabelEditor() {
           onMouseLeave={() => setHoveredIcon(null)}
         >
           {/* 1. Icon Rail (Fixed width: 72px) */}
-          <aside className="w-[72px] bg-slate-50 border-r border-slate-200 flex flex-col items-center py-4 gap-2 flex-shrink-0">
+          <aside className="w-[72px] bg-[var(--color-primary-light)]/5 border-r border-[var(--color-primary-dark)]/5 flex flex-col items-center py-6 gap-3 flex-shrink-0">
             {ICON_RAIL_ITEMS.map((item) => {
               const isActive = activeTab === item.id;
               const isLocked = lockedIcon === item.id;
@@ -1318,28 +1289,28 @@ export default function LabelEditor() {
                     e.stopPropagation();
                     setLockedIcon(isLocked ? null : item.id);
                   }}
-                  className={`group relative w-full flex flex-col items-center py-3 px-1 transition-all duration-200 ${
-                    isActive ? 'text-primary' : 'text-slate-500 hover:text-slate-800'
+                  className={`group relative w-full flex flex-col items-center py-3 px-1 transition-all duration-300 ${
+                    isActive ? 'text-[var(--color-primary-dark)]' : 'text-[var(--color-primary-dark)]/40 hover:text-[var(--color-primary-dark)]'
                   }`}
                   title={item.label}
                 >
-                  {/* Lock Indicator (Blue Bar) */}
+                  {/* Lock Indicator (Espresso Bar) */}
                   {isLocked && (
                     <motion.div
                       layoutId="railIndicator"
-                      className="absolute left-0 top-2 bottom-2 w-[3px] bg-[#3B82F6] rounded-r shadow-[0_0_12px_rgba(59,130,246,0.6)]"
+                      className="absolute left-0 top-2 bottom-2 w-[4px] bg-[var(--color-primary-dark)] rounded-r-[4px] shadow-[0_0_15px_rgba(56,36,13,0.4)]"
                     />
                   )}
                   
                   {/* Active/Hover Background */}
                   {isActive && (
-                    <div className="absolute inset-x-1.5 inset-y-1 bg-primary/5 rounded-xl border border-primary/10 shadow-sm -z-10" />
+                    <div className="absolute inset-x-2 inset-y-1 bg-[var(--color-primary-dark)]/5 rounded-2xl border border-[var(--color-primary-dark)]/10 shadow-[inset_0_2px_4px_rgba(255,255,255,0.8)] -z-10" />
                   )}
 
-                  <span className={`material-symbols-outlined text-[24px] mb-1 transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-105'}`}>
+                  <span className={`material-symbols-outlined text-[26px] mb-1.5 transition-all duration-500 ${isActive ? 'scale-110' : 'group-hover:scale-105 opacity-60 group-hover:opacity-100'}`}>
                     {item.icon}
                   </span>
-                  <span className="text-[9px] font-bold uppercase tracking-tighter text-center leading-none opacity-80">
+                  <span className="text-[8px] font-black uppercase tracking-[0.2em] text-center leading-none opacity-60">
                     {item.label}
                   </span>
                 </button>
@@ -1359,31 +1330,34 @@ export default function LabelEditor() {
                 className="w-[320px] bg-white border-r border-slate-200 flex flex-col overflow-hidden shadow-2xl h-full"
               >
                 {/* Panel Header */}
-                <div className="p-5 border-b border-slate-100 flex items-center justify-between shrink-0">
+                <div className="p-6 border-b border-[var(--color-primary-dark)]/5 flex items-center justify-between shrink-0 bg-[var(--color-background)]/80 backdrop-blur-md">
                   <div className="flex flex-col">
-                    <h2 className="text-[14px] font-black uppercase tracking-widest text-slate-800 leading-tight">
+                    <h2 className="text-[13px] font-black uppercase tracking-[0.3em] text-[var(--color-primary-dark)] leading-tight">
                       {ICON_RAIL_ITEMS.find(it => it.id === activeTab)?.label}
                     </h2>
-                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Management Tool</p>
+                    <p className="text-[9px] font-black text-[var(--color-primary-dark)]/40 uppercase tracking-widest mt-1.5 flex items-center gap-2">
+                       <span className="w-1 h-1 rounded-full bg-[var(--color-primary)]" />
+                       Engineering Dashboard
+                    </p>
                   </div>
                   <button 
                     onClick={() => { setLockedIcon(null); setHoveredIcon(null); }}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition-all"
+                    className="w-10 h-10 rounded-2xl flex items-center justify-center text-[var(--color-primary-dark)]/30 hover:bg-[var(--color-primary-dark)]/5 hover:text-[var(--color-primary-dark)] transition-all"
                   >
                     <span className="material-symbols-outlined text-lg">close</span>
                   </button>
                 </div>
 
                 {/* Search (Optional local filter) */}
-                <div className="px-5 py-4 border-b border-slate-100 shrink-0">
+                <div className="px-6 py-5 border-b border-[var(--color-primary-dark)]/5 shrink-0">
                    <div className="relative group">
-                    <span className="material-symbols-outlined absolute left-3 top-2.5 text-[16px] text-slate-400 group-focus-within:text-blue-500 transition-colors">search</span>
+                    <span className="material-symbols-outlined absolute left-3 top-3 text-[18px] text-[var(--color-primary-dark)]/20 group-focus-within:text-[var(--color-primary)] transition-colors">search</span>
                     <input
                       type="text"
-                      placeholder={`Search ${activeTab}...`}
+                      placeholder={`Search ${activeTab.toUpperCase()} inventory...`}
                       value={sidebarSearch}
                       onChange={e => setSidebarSearch(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 text-[11px] font-medium text-slate-800 pl-9 pr-3 py-2 rounded-xl outline-none focus:border-blue-500/50 focus:bg-white transition-all placeholder:text-slate-400"
+                      className="w-full bg-[var(--color-primary-light)]/10 border border-transparent text-[11px] font-black text-[var(--color-primary-dark)] pl-10 pr-3 py-3 rounded-[16px] outline-none focus:border-[var(--color-primary)]/20 focus:bg-white focus:shadow-xl focus:shadow-[var(--color-primary-dark)]/5 transition-all placeholder:text-[var(--color-primary-dark)]/30 placeholder:uppercase placeholder:text-[9px] placeholder:tracking-widest"
                     />
                   </div>
                 </div>
@@ -1403,7 +1377,6 @@ export default function LabelEditor() {
                         <div className="flex flex-col gap-5">
                           <div className="grid grid-cols-2 gap-3">
                             {[
-                              { label: 'Text', icon: 'title', action: addTxt, payload: { type: 'text', name: 'Text Box', text: 'New Text', fontSize: 16, fontFamily: 'Inter, sans-serif', fontWeight: '500', color: '#191C1E', width: 160, height: 28 } },
                               { label: 'Table', icon: 'table_chart', action: () => setShowTableModal(true) },
                               { label: 'Barcode', icon: 'barcode', action: addBar, payload: { type: 'barcode', name: 'Barcode', text: '123456789012', color: '#191c1e', width: 180, height: 80 } },
                               { label: 'QR Code', icon: 'qr_code_2', action: addQR, payload: { type: 'qrcode', name: 'QR Code', text: 'https://example.com', color: '#191c1e', width: 80, height: 80 } },
@@ -1419,18 +1392,18 @@ export default function LabelEditor() {
                                     e.dataTransfer.effectAllowed = 'copy';
                                   }
                                 }}
-                                className="flex flex-col items-center p-4 bg-slate-50 border border-slate-200 rounded-2xl group hover:border-blue-500/50 hover:bg-white hover:shadow-sm transition-all cursor-grab active:cursor-grabbing"
+                                className="flex flex-col items-center p-4 bg-slate-50 border border-slate-200 rounded-2xl group hover:border-[var(--color-primary)]/50/50 hover:bg-white hover:shadow-sm transition-all cursor-grab active:cursor-grabbing"
                                 whileHover={{ y: -4, scale: 1.02 }}
                                 whileTap={{ scale: 0.95 }}
                               >
-                                <span className="material-symbols-outlined text-slate-500 group-hover:text-blue-600 mb-2 text-2xl transition-colors">{item.icon}</span>
+                                <span className="material-symbols-outlined text-slate-500 group-hover:text-[var(--color-primary)] mb-2 text-2xl transition-colors">{item.icon}</span>
                                 <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 group-hover:text-slate-900 transition-colors">{item.label}</span>
                               </motion.button>
                             ))}
                           </div>
                           <div>
                             <div className="flex items-center gap-2 mb-4">
-                              <div className="w-3 h-0.5 bg-blue-500 rounded-full"></div>
+                              <div className="w-3 h-0.5 bg-[var(--color-primary)]/50 rounded-full"></div>
                               <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Pharma Fields</p>
                             </div>
                             <div className="space-y-1.5">
@@ -1454,12 +1427,73 @@ export default function LabelEditor() {
                                     e.dataTransfer.setData('application/json', JSON.stringify(item.payload));
                                     e.dataTransfer.effectAllowed = 'copy';
                                   }}
-                                  className="flex items-center gap-3 px-4 py-3 bg-slate-50 rounded-xl text-[11px] font-bold text-slate-700 cursor-pointer border border-slate-200 hover:border-blue-500/50 hover:bg-white hover:shadow-sm transition-all group lg:active:cursor-grabbing"
+                                  className="flex items-center gap-3 px-4 py-3 bg-slate-50 rounded-xl text-[11px] font-bold text-slate-700 cursor-pointer border border-slate-200 hover:border-[var(--color-primary)]/50/50 hover:bg-white hover:shadow-sm transition-all group lg:active:cursor-grabbing"
                                   whileHover={{ x: 4 }}
                                 >
                                   <span className="material-symbols-outlined text-[18px] text-slate-500 group-hover:text-blue-400 shrink-0">{item.icon}</span>
                                   {item.label}
                                 </motion.div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* TEXT & WORDART */}
+                      {activeTab === 'text' && (
+                        <div className="flex flex-col gap-8 animate-in fade-in slide-in-from-left-4 duration-300">
+                          {/* Standard Text Presets */}
+                          <div className="flex flex-col gap-3">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1 ml-1 text-primary">Add Text Box</p>
+                            <button
+                              onClick={() => addElement({ type: 'text', name: 'Heading', text: 'Add a heading', fontSize: 32, fontFamily: 'Outfit, sans-serif', fontWeight: '900', color: '#191C1E', width: 280, height: 48 })}
+                              className="group flex items-center justify-between p-4 bg-slate-50 border border-slate-200 rounded-2xl hover:bg-white hover:border-[var(--color-primary)]/50 hover:shadow-lg transition-all"
+                            >
+                              <span className="text-xl font-black text-slate-800">Add a heading</span>
+                              <span className="material-symbols-outlined text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">add_circle</span>
+                            </button>
+                            <button
+                              onClick={() => addElement({ type: 'text', name: 'Subheading', text: 'Add a subheading', fontSize: 18, fontFamily: 'Outfit, sans-serif', fontWeight: '700', color: '#475569', width: 220, height: 32 })}
+                              className="group flex items-center justify-between p-3.5 bg-slate-50 border border-slate-200 rounded-2xl hover:bg-white hover:border-[var(--color-primary)]/50 hover:shadow-lg transition-all"
+                            >
+                              <span className="text-sm font-bold text-slate-700">Add a subheading</span>
+                              <span className="material-symbols-outlined text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">add_circle</span>
+                            </button>
+                            <button
+                              onClick={() => addElement({ type: 'text', name: 'Body Text', text: 'Add a little bit of body text', fontSize: 12, fontFamily: 'Inter, sans-serif', fontWeight: '400', color: '#64748b', width: 180, height: 28 })}
+                              className="group flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-2xl hover:bg-white hover:border-[var(--color-primary)]/50 hover:shadow-lg transition-all"
+                            >
+                              <span className="text-[11px] font-medium text-slate-500">Add a little bit of body text</span>
+                              <span className="material-symbols-outlined text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">add_circle</span>
+                            </button>
+                          </div>
+
+                          {/* WordArt Gallery Section */}
+                          <div className="flex flex-col gap-4">
+                            <div className="flex items-center justify-between mb-1">
+                              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">WordArt styles</p>
+                              <div className="flex gap-1.5 p-1 bg-slate-100 rounded-xl">
+                                {WORDART_CATEGORIES.map(t => (
+                                  <button 
+                                    key={t} 
+                                    onClick={(e) => { e.stopPropagation(); setWordArtTab(t); }}
+                                    className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all ${wordArtTab === t ? 'bg-white text-[var(--color-primary)] shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                                  >
+                                    {t}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 gap-3">
+                              {(WORDART_STYLES[wordArtTab] || []).map((art, idx) => (
+                                <button key={idx} onClick={() => {
+                                  addElement({ type: 'text', text: art.name, ...art.style, width: 220, height: 40, fontFamily: 'Outfit, sans-serif' });
+                                  commitUpdate();
+                                }} className="flex flex-col items-center justify-center p-6 border border-slate-200 rounded-2xl bg-white hover:border-[var(--color-primary)]/50 hover:shadow-xl transition-all group active:scale-[0.98] overflow-hidden min-h-[100px] shadow-sm">
+                                  <span style={{ ...art.style, fontSize: '20px' }} className="mb-2 block text-center leading-normal break-words w-full h-auto text-on-surface">{art.name}</span>
+                                  <span className="text-[8px] uppercase font-black tracking-widest text-slate-300 group-hover:text-[var(--color-primary)]/50 transition-colors">Apply Preset</span>
+                                </button>
                               ))}
                             </div>
                           </div>
@@ -1473,7 +1507,7 @@ export default function LabelEditor() {
                             <motion.div
                               key={tpl.id}
                               onClick={() => loadTemplate(tpl)}
-                              className="group cursor-pointer bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden hover:border-blue-500/50 transition-all duration-300"
+                              className="group cursor-pointer bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden hover:border-[var(--color-primary)]/50/50 transition-all duration-300"
                               whileHover={{ y: -4 }}
                             >
                               <div className="aspect-[1.5/1] bg-slate-200 flex items-center justify-center p-4">
@@ -1502,7 +1536,7 @@ export default function LabelEditor() {
                                 onClick={() => setShapeDrawingTool(s.payload.shapeType)}
                                 className={`flex flex-col items-center p-4 rounded-2xl border transition-all ${
                                   shapeDrawingTool === s.payload.shapeType 
-                                    ? 'bg-blue-600 border-blue-600 text-white shadow-lg' 
+                                    ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-white shadow-lg' 
                                     : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'
                                 }`}
                                 whileHover={{ y: -2 }}
@@ -1526,7 +1560,7 @@ export default function LabelEditor() {
                                   <button
                                     key={i}
                                     onClick={() => addElement({ type: 'IconsIcon', svg: icon.svg, name: icon.name, width: 60, height: 60 })}
-                                    className="aspect-square flex flex-col items-center justify-center p-2 bg-slate-50 rounded-xl border border-slate-100 hover:border-blue-500/50 hover:bg-white transition-all group"
+                                    className="aspect-square flex flex-col items-center justify-center p-2 bg-slate-50 rounded-xl border border-slate-100 hover:border-[var(--color-primary)]/50/50 hover:bg-white transition-all group"
                                   >
                                     <div className="w-8 h-8 mb-1.5 flex items-center justify-center transition-transform group-hover:scale-110 opacity-60 group-hover:opacity-100" dangerouslySetInnerHTML={{ __html: icon.svg }} />
                                     <span className="text-[8px] font-black uppercase text-slate-500 group-hover:text-slate-900 truncate w-full text-center tracking-tighter">{icon.name.split(' ')[0]}</span>
@@ -1545,14 +1579,14 @@ export default function LabelEditor() {
                             <button
                               key={ph.id}
                               onClick={() => addPlaceholder(ph)}
-                              className="flex items-center gap-4 p-3.5 bg-slate-50 border border-slate-200 rounded-2xl hover:bg-white hover:shadow-sm hover:border-blue-500/50 transition-all text-left group"
+                              className="flex items-center gap-4 p-3.5 bg-slate-50 border border-slate-200 rounded-2xl hover:bg-white hover:shadow-sm hover:border-[var(--color-primary)]/50/50 transition-all text-left group"
                             >
-                              <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm">
+                              <div className="w-10 h-10 rounded-xl bg-[var(--color-primary)]/50/10 text-[var(--color-primary)] flex items-center justify-center shrink-0 group-hover:bg-[var(--color-primary)] group-hover:text-white transition-all shadow-sm">
                                 <span className="material-symbols-outlined text-[18px]">database</span>
                               </div>
                               <div className="flex flex-col min-w-0 pr-2">
                                 <span className="text-[11px] font-black text-slate-800 truncate uppercase tracking-tight">{ph.name}</span>
-                                <span className="text-[9px] font-mono text-blue-600 font-bold mt-0.5">{`{{${ph.mappingKey}}}`}</span>
+                                <span className="text-[9px] font-mono text-[var(--color-primary)] font-bold mt-0.5">{`{{${ph.mappingKey}}}`}</span>
                               </div>
                             </button>
                           ))}
@@ -1566,7 +1600,7 @@ export default function LabelEditor() {
                             <button
                               key={obj.id}
                               onClick={() => addObject(obj)}
-                              className="flex items-center gap-4 p-3 bg-slate-50 rounded-2xl border border-slate-200 hover:border-blue-500/50 hover:bg-white transition-all group"
+                              className="flex items-center gap-4 p-3 bg-slate-50 rounded-2xl border border-slate-200 hover:border-[var(--color-primary)]/50/50 hover:bg-white transition-all group"
                             >
                               <div className="w-14 h-14 rounded-xl bg-slate-200 flex items-center justify-center overflow-hidden shrink-0 border border-slate-100">
                                 {obj.type === 'LOGO' ? (
@@ -1593,8 +1627,8 @@ export default function LabelEditor() {
                               onClick={() => setLabelStock(stock.id)}
                               className={`flex flex-col p-5 rounded-2xl border-2 transition-all text-left relative overflow-hidden group ${
                                 meta.labelStockId === stock.id 
-                                  ? 'bg-blue-600 border-blue-600 text-white shadow-xl shadow-blue-500/20 scale-[1.02]' 
-                                  : 'bg-slate-50 border-slate-200 text-slate-500 hover:border-blue-500/50 hover:bg-white'
+                                  ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-white shadow-xl shadow-[var(--color-primary)]/50/20 scale-[1.02]' 
+                                  : 'bg-slate-50 border-slate-200 text-slate-500 hover:border-[var(--color-primary)]/50/50 hover:bg-white'
                               }`}
                             >
                               <div className="flex justify-between items-start mb-2">
@@ -1620,7 +1654,7 @@ export default function LabelEditor() {
                               onClick={() => setSelectedIds([el.id])}
                               className={`flex items-center justify-between p-4 rounded-2xl border transition-all cursor-pointer group ${
                                 selectedIds.includes(el.id) 
-                                  ? 'bg-blue-600/10 border-blue-500/50 text-blue-600' 
+                                  ? 'bg-[var(--color-primary)]/10 border-[var(--color-primary)]/50/50 text-[var(--color-primary)]' 
                                   : 'bg-slate-50 border-slate-100 text-slate-600 hover:bg-white hover:shadow-sm'
                               }`}
                             >
@@ -1630,7 +1664,7 @@ export default function LabelEditor() {
                                 </span>
                                 <span className="text-[11px] font-black uppercase tracking-tight truncate">{el.name || el.text || el.type}</span>
                               </div>
-                              <span className={`material-symbols-outlined text-lg transition-all ${el.locked ? 'text-blue-500' : 'opacity-20'}`}>
+                              <span className={`material-symbols-outlined text-lg transition-all ${el.locked ? 'text-[var(--color-primary)]/50' : 'opacity-20'}`}>
                                 {el.locked ? 'lock' : 'lock_open'}
                               </span>
                             </div>
@@ -1645,7 +1679,7 @@ export default function LabelEditor() {
                             <h4 className="text-[11px] font-black uppercase tracking-widest text-slate-300">Project Workspace</h4>
                             <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest leading-none">Internal SOPs & Metadata</p>
                           </div>
-                          <div className="flex flex-col bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden shadow-sm focus-within:ring-2 focus-within:ring-blue-500/20 transition-all h-[400px]">
+                          <div className="flex flex-col bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden shadow-sm focus-within:ring-2 focus-within:ring-[var(--color-primary)]/50/20 transition-all h-[400px]">
                             <div className="p-3 bg-slate-100/50 border-b border-slate-100 flex items-center justify-between">
                               <div className="flex items-center gap-2">
                                 <span className="material-symbols-outlined text-[16px] text-slate-500">edit_note</span>
@@ -1794,7 +1828,7 @@ export default function LabelEditor() {
           {/* Sticky Tool Indicator for Shape Drawing */}
           {shapeDrawingTool && (
             <div className="sticky top-4 left-0 right-0 z-[1005] flex justify-center pointer-events-none px-4">
-              <div className="flex items-center gap-3 bg-blue-600 p-2.5 rounded-2xl shadow-2xl border border-blue-400 pointer-events-auto animate-in fade-in slide-in-from-top-4 duration-300">
+              <div className="flex items-center gap-3 bg-[var(--color-primary)] p-2.5 rounded-2xl shadow-2xl border border-blue-400 pointer-events-auto animate-in fade-in slide-in-from-top-4 duration-300">
                 <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-white">
                   <span className="material-symbols-outlined text-xl">
                     {shapeDrawingTool === 'rectangle' ? 'crop_square' : shapeDrawingTool === 'circle' ? 'radio_button_unchecked' : 'horizontal_rule'}
@@ -1802,7 +1836,7 @@ export default function LabelEditor() {
                 </div>
                 <div className="flex flex-col pr-2">
                   <span className="text-white text-[11px] font-black uppercase tracking-widest leading-none">Drafting: {shapeDrawingTool}</span>
-                  <span className="text-blue-100 text-[10px] font-bold mt-0.5">Click and drag on canvas to draw</span>
+                  <span className="text-[var(--color-primary)]/10 text-[10px] font-bold mt-0.5">Click and drag on canvas to draw</span>
                 </div>
                 <button
                   onClick={() => setShapeDrawingTool(null)}
@@ -1833,7 +1867,7 @@ export default function LabelEditor() {
                 backgroundColor: meta.bgColor || '#ffffff',
                 transform: `scale(${zoomLevel})`,
                 transformOrigin: 'center top',
-                marginBottom: `${(zoomLevel - 1) * AH}px`,
+                marginBottom: `${Math.max(0, (zoomLevel - 1) * AH)}px`,
                 overflow: 'visible',
               }}
               initial={{ scale: 0.95, opacity: 0 }}
@@ -1862,7 +1896,7 @@ export default function LabelEditor() {
                   </span>
                 </div>
                 {artboardCursor.x !== null && (
-                  <div className="flex items-center gap-2 px-3 py-1.5 glass bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-500/20 border border-blue-400/30">
+                  <div className="flex items-center gap-2 px-3 py-1.5 glass bg-[var(--color-primary)] text-white rounded-xl shadow-lg shadow-[var(--color-primary)]/50/20 border border-blue-400/30">
                     <span className="material-symbols-outlined text-[14px]">near_me</span>
                     <span className="text-[10px] font-black font-mono">
                       {fromPx(artboardCursor.x, meta.unit).toFixed(1)}, {fromPx(artboardCursor.y, meta.unit).toFixed(1)} {meta.unit}
@@ -1933,7 +1967,7 @@ export default function LabelEditor() {
                         stroke={stroke.color} strokeWidth={stroke.width} fill="none" strokeLinecap="round" strokeLinejoin="round" />
                     ))}
                     {isEraserMode && eraserPos && (
-                      <circle cx={eraserPos.x} cy={eraserPos.y} r={parseFloat(penWidth) * 2.5} fill="rgba(37, 99, 235, 0.15)" stroke="#2563eb" strokeWidth="1" strokeDasharray="2 2" />
+                      <circle cx={eraserPos.x} cy={eraserPos.y} r={parseFloat(penWidth) * 2.5} fill="rgba(37, 99, 235, 0.15)" stroke="var(--color-primary)" strokeWidth="1" strokeDasharray="2 2" />
                     )}
                   </svg>
                 </div>
@@ -2192,7 +2226,7 @@ export default function LabelEditor() {
                         >
 
                           {el.locked ? (
-                            <div className="flex items-center gap-2 px-3 py-1 text-blue-600 font-bold text-[10px] uppercase tracking-wider animate-pulse">
+                            <div className="flex items-center gap-2 px-3 py-1 text-[var(--color-primary)] font-bold text-[10px] uppercase tracking-wider animate-pulse">
                               <span className="material-symbols-outlined text-[16px]">lock</span> Layer Locked
                             </div>
                           ) : (
@@ -2207,7 +2241,7 @@ export default function LabelEditor() {
                                     lines.push(Array(colCount).fill('').join('\n'));
                                     updateElement(el.id, { text: lines.join('\n'), height: (el.height || 0) + 25 });
                                     commitUpdate();
-                                  }} className="px-2 py-0.5 rounded bg-blue-50 hover:bg-blue-100 text-blue-700 text-[10px] font-bold flex items-center gap-1 transition-all" title="Add Row">
+                                  }} className="px-2 py-0.5 rounded bg-[var(--color-primary)]/5 hover:bg-[var(--color-primary)]/10 text-blue-700 text-[10px] font-bold flex items-center gap-1 transition-all" title="Add Row">
                                     <span className="material-symbols-outlined text-[14px]">add</span> Row
                                   </button>
                                   <button onClick={e => {
@@ -2216,7 +2250,7 @@ export default function LabelEditor() {
                                     const next = lines.map(l => l + '|');
                                     updateElement(el.id, { text: next.join('\n'), width: (el.width || 0) + 50 });
                                     commitUpdate();
-                                  }} className="px-2 py-0.5 rounded bg-blue-50 hover:bg-blue-100 text-blue-700 text-[10px] font-bold flex items-center gap-1 transition-all" title="Add Column">
+                                  }} className="px-2 py-0.5 rounded bg-[var(--color-primary)]/5 hover:bg-[var(--color-primary)]/10 text-blue-700 text-[10px] font-bold flex items-center gap-1 transition-all" title="Add Column">
                                     <span className="material-symbols-outlined text-[14px]">add</span> Column
                                   </button>
                                 </div>
@@ -2238,7 +2272,7 @@ export default function LabelEditor() {
 
                               <div className="flex gap-0.5 shrink-0 pl-1.5">
                                 <button onClick={e => { e.stopPropagation(); duplicateElement(el.id); }}
-                                  className="p-1 rounded hover:bg-slate-100 text-slate-500 hover:text-blue-600 transition-colors" title="Duplicate">
+                                  className="p-1 rounded hover:bg-slate-100 text-slate-500 hover:text-[var(--color-primary)] transition-colors" title="Duplicate">
                                   <span className="material-symbols-outlined text-[16px]">content_copy</span>
                                 </button>
                                 <button onClick={e => { e.stopPropagation(); deleteElement(el.id); }}
@@ -2252,7 +2286,7 @@ export default function LabelEditor() {
                       )}
                       <div
                         data-id={el.id}
-                        className={`w-full h-full relative text-content-wrapper overflow-visible ${editingElementId === el.id ? '' : 'select-none'} ${isSelected ? 'outline outline-2 outline-blue-500 outline-offset-0 ring-4 ring-blue-500/10' : ''}`}
+                        className={`w-full h-full relative text-content-wrapper overflow-visible ${editingElementId === el.id ? '' : 'select-none'} ${isSelected ? 'outline outline-2 outline-[var(--color-primary)]/50 outline-offset-0 ring-4 ring-[var(--color-primary)]/50/10' : ''}`}
                         style={{
                           transform: `rotate(${el.rotation || 0}deg)`,
                           transformOrigin: '50% 50%',
@@ -2522,7 +2556,7 @@ export default function LabelEditor() {
                                 document.addEventListener('mousemove', handleMove);
                                 document.addEventListener('mouseup', handleUp);
                               }}
-                              className="absolute -top-10 left-1/2 -translate-x-1/2 bg-white border border-slate-200 rounded-full w-8 h-8 flex items-center justify-center shadow-lg hover:bg-slate-50 text-blue-600 z-[60] cursor-grab active:cursor-grabbing"
+                              className="absolute -top-10 left-1/2 -translate-x-1/2 bg-white border border-slate-200 rounded-full w-8 h-8 flex items-center justify-center shadow-lg hover:bg-slate-50 text-[var(--color-primary)] z-[60] cursor-grab active:cursor-grabbing"
                               title="Drag to rotate"
                             >
                               <span className="material-symbols-outlined text-[18px]">rotate_right</span>
@@ -2551,7 +2585,7 @@ export default function LabelEditor() {
           {/* Resizer Handle for Right Side */}
           {!rightSidebarCollapsed && (
             <div
-              className="absolute left-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-blue-500/30 active:bg-blue-500 z-50 transition-colors"
+              className="absolute left-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-[var(--color-primary)]/50/30 active:bg-[var(--color-primary)]/50 z-50 transition-colors"
               onMouseDown={(e) => {
                 const startX = e.clientX;
                 const startW = rightWidth;
@@ -2582,13 +2616,13 @@ export default function LabelEditor() {
             <div className="flex flex-col h-full overflow-y-auto custom-scrollbar">
               {selectedIds.length > 1 ? (
                 <div className="animate-fade-in p-4 space-y-6">
-                  <div className="flex items-center justify-between bg-blue-50 px-3 py-3 rounded-xl mb-4 border border-blue-500/10">
+                  <div className="flex items-center justify-between bg-[var(--color-primary)]/5 px-3 py-3 rounded-xl mb-4 border border-[var(--color-primary)]/50/10">
                     <div className="flex flex-col">
                       <span className="text-[10px] font-bold uppercase tracking-widest text-blue-700 flex items-center gap-2">
                         <span className="material-symbols-outlined text-[15px]">group</span>
                         Bulk Selection
                       </span>
-                      <span className="text-[9px] text-blue-600/70 font-bold">{selectedIds.length} Elements Selected</span>
+                      <span className="text-[9px] text-[var(--color-primary)]/70 font-bold">{selectedIds.length} Elements Selected</span>
                     </div>
                     <button
                       onClick={() => setShowBulkDeleteModal(true)}
@@ -2678,21 +2712,33 @@ export default function LabelEditor() {
               ) : selectedElement ? (
                 <div className="animate-fade-in pb-16 relative">
                   {/* Sticky Global Lock Toggle for the Layer */}
-                  <div className="sticky top-0 z-[20] shadow-sm flex items-center justify-between bg-primary-container px-4 py-2 border-b border-white/20 rounded-b-xl mb-2">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-primary flex items-center gap-2">
-                      <span className="material-symbols-outlined text-[15px]">{selectedElement.locked ? 'lock' : 'lock_open'}</span>
-                      {selectedElement.locked ? 'Layer Secured' : 'Unsecured Layer'}
-                    </span>
-                    <button
-                      onClick={() => {
-                        updateElement(selectedElement.id, { locked: !selectedElement.locked });
-                        commitUpdate();
-                      }}
-                      className={`h-7 px-3 rounded-xl border text-[10px] font-extrabold uppercase transition-all flex items-center gap-2 shadow-sm ${selectedElement.locked ? 'bg-blue-600 border-blue-700 text-white hover:bg-blue-700' : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700'}`}
-                    >
-                      <span className="material-symbols-outlined text-[15px]">{selectedElement.locked ? 'lock_open' : 'lock'}</span>
-                      <span>{selectedElement.locked ? 'Unlock' : 'Lock'}</span>
-                    </button>
+                  <div className="sticky top-0 z-[20] shadow-sm flex flex-col bg-primary-container border-b border-white/20 rounded-b-xl mb-2">
+                    <div className="flex items-center justify-between px-4 py-2">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-primary flex items-center gap-2">
+                        <span className="material-symbols-outlined text-[15px]">{selectedElement.locked ? 'lock' : 'lock_open'}</span>
+                        {selectedElement.locked ? 'Layer Secured' : 'Unsecured Layer'}
+                      </span>
+                      <button
+                        onClick={() => {
+                          updateElement(selectedElement.id, { locked: !selectedElement.locked });
+                          commitUpdate();
+                        }}
+                        className={`h-7 px-3 rounded-xl border text-[10px] font-extrabold uppercase transition-all flex items-center gap-2 shadow-sm ${selectedElement.locked ? 'bg-[var(--color-primary)] border-blue-700 text-white hover:bg-blue-700' : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700'}`}
+                      >
+                        <span className="material-symbols-outlined text-[15px]">{selectedElement.locked ? 'lock_open' : 'lock'}</span>
+                        <span>{selectedElement.locked ? 'Unlock' : 'Lock'}</span>
+                      </button>
+                    </div>
+
+                    {selectedElement.isManaged && (
+                      <div className="px-4 py-1.5 bg-blue-600/10 border-t border-blue-600/5 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="material-symbols-outlined text-[14px] text-blue-600">verified</span>
+                          <span className="text-[9px] font-black text-blue-800 uppercase tracking-widest">Managed Clinical Asset</span>
+                        </div>
+                        <span className="text-[8px] font-bold text-blue-500 uppercase">v{selectedElement.managedVersion || '1.0'}</span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Protected Property Sections */}
@@ -2778,7 +2824,7 @@ export default function LabelEditor() {
                             <label className="text-[9px] font-extrabold uppercase text-primary mb-1.5 block tracking-wider">Field Heading</label>
                             <input
                               type="text"
-                              className="w-full bg-blue-50/50 border border-blue-100 text-[11px] font-bold py-2 px-2.5 focus:border-primary outline-none rounded-lg transition-all"
+                              className="w-full bg-[var(--color-primary)]/5/50 border border-[var(--color-primary)]/10 text-[11px] font-bold py-2 px-2.5 focus:border-primary outline-none rounded-lg transition-all"
                               value={selectedElement.heading ?? ''}
                               onChange={e => updateElement(selectedElement.id, { heading: e.target.value })}
                               onBlur={commitUpdate}
@@ -2796,7 +2842,7 @@ export default function LabelEditor() {
                                   {row.split('|').map((cell, j) => (
                                     <input
                                       key={j}
-                                      className="flex-1 min-w-0 h-7 bg-white border border-slate-200 text-[10px] px-2 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 outline-none transition-all"
+                                      className="flex-1 min-w-0 h-7 bg-white border border-slate-200 text-[10px] px-2 rounded-lg focus:border-[var(--color-primary)]/50 focus:ring-2 focus:ring-[var(--color-primary)]/50/10 outline-none transition-all"
                                       value={cell}
                                       onChange={e => {
                                         const lines = (selectedElement.text || '').split('\n');
@@ -2820,7 +2866,7 @@ export default function LabelEditor() {
                                   updateElement(selectedElement.id, { text: lines.join('\n'), height: (selectedElement.height || 0) + 25 });
                                   commitUpdate();
                                 }}
-                                className="flex-1 h-8 bg-blue-50 hover:bg-blue-100 text-blue-700 text-[10px] font-bold rounded-lg border border-blue-200 transition-colors flex items-center justify-center gap-1.5"
+                                className="flex-1 h-8 bg-[var(--color-primary)]/5 hover:bg-[var(--color-primary)]/10 text-blue-700 text-[10px] font-bold rounded-lg border border-blue-200 transition-colors flex items-center justify-center gap-1.5"
                               >
                                 <span className="material-symbols-outlined text-[16px]">add</span> Add Row
                               </button>
@@ -2831,25 +2877,34 @@ export default function LabelEditor() {
                                   updateElement(selectedElement.id, { text: next.join('\n'), width: (selectedElement.width || 0) + 100 });
                                   commitUpdate();
                                 }}
-                                className="flex-1 h-8 bg-blue-50 hover:bg-blue-100 text-blue-700 text-[10px] font-bold rounded-lg border border-blue-200 transition-colors flex items-center justify-center gap-1.5"
+                                className="flex-1 h-8 bg-[var(--color-primary)]/5 hover:bg-[var(--color-primary)]/10 text-blue-700 text-[10px] font-bold rounded-lg border border-blue-200 transition-colors flex items-center justify-center gap-1.5"
                               >
                                 <span className="material-symbols-outlined text-[16px]">view_column</span> Add Column
                               </button>
                             </div>
                           </div>
                         ) : (
-                          <textarea
-                            className="w-full bg-slate-50 border border-slate-200 text-[12px] py-2 px-2.5 focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none rounded-lg resize-none"
-                            style={{ minHeight: '80px', height: 'auto' }}
-                            value={selectedElement.text || ''}
-                            placeholder={selectedElement.type === 'qrcode' ? 'https://...' : selectedElement.type === 'barcode' ? '123456789012' : 'Enter text…'}
-                            onChange={e => {
-                              updateElement(selectedElement.id, { text: e.target.value });
-                              e.target.style.height = 'auto';
-                              e.target.style.height = e.target.scrollHeight + 'px';
-                            }}
-                            onBlur={commitUpdate}
-                          />
+                          <div className="relative group">
+                            <textarea
+                              disabled={selectedElement.isManaged}
+                              className={`w-full border text-[12px] py-2 px-2.5 focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none rounded-lg resize-none transition-all ${selectedElement.isManaged ? 'bg-slate-100/50 border-slate-200 text-slate-400 cursor-not-allowed' : 'bg-slate-50 border-slate-200'}`}
+                              style={{ minHeight: '80px', height: 'auto' }}
+                              value={selectedElement.text || ''}
+                              placeholder={selectedElement.type === 'qrcode' ? 'https://...' : selectedElement.type === 'barcode' ? '123456789012' : 'Enter text…'}
+                              onChange={e => {
+                                updateElement(selectedElement.id, { text: e.target.value });
+                                e.target.style.height = 'auto';
+                                e.target.style.height = e.target.scrollHeight + 'px';
+                              }}
+                              onBlur={commitUpdate}
+                            />
+                            {selectedElement.isManaged && (
+                              <div className="absolute top-2 right-2 flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-blue-100 text-blue-600 border border-blue-200 shadow-sm animate-pulse">
+                                <span className="material-symbols-outlined text-[12px]">security</span>
+                                <span className="text-[8px] font-black uppercase">Standardized Content</span>
+                              </div>
+                            )}
+                          </div>
                         )}
                       </div>
                     )}
@@ -2922,7 +2977,7 @@ export default function LabelEditor() {
                             <label className="text-[10px] font-bold uppercase text-slate-400 mb-1 block flex justify-between">
                               <span>Size</span><span className="font-mono">{selectedElement.fontSize || 12}px</span>
                             </label>
-                            <input type="range" min="6" max="256" className="w-full accent-blue-600"
+                            <input type="range" min="6" max="256" className="w-full accent-[var(--color-primary)]"
                               value={selectedElement.fontSize || 12}
                               onChange={e => updateElement(selectedElement.id, { fontSize: parseInt(e.target.value) })}
                               onMouseUp={commitUpdate} />
@@ -2931,14 +2986,14 @@ export default function LabelEditor() {
                           <div className="grid grid-cols-2 gap-2">
                             <div>
                               <label className="text-[10px] font-bold uppercase text-slate-400 mb-1 block flex justify-between"><span>Line Height</span><span className="font-mono">{selectedElement.lineHeight || '1.25'}</span></label>
-                              <input type="range" min="1" max="3" step="0.05" className="w-full accent-blue-600"
+                              <input type="range" min="1" max="3" step="0.05" className="w-full accent-[var(--color-primary)]"
                                 value={parseFloat(selectedElement.lineHeight) || 1.25}
                                 onChange={e => updateElement(selectedElement.id, { lineHeight: parseFloat(e.target.value) })}
                                 onMouseUp={commitUpdate} />
                             </div>
                             <div>
                               <label className="text-[10px] font-bold uppercase text-slate-400 mb-1 block flex justify-between"><span>Spacing</span><span className="font-mono">{selectedElement.letterSpacing || 0}px</span></label>
-                              <input type="range" min="-2" max="20" step="0.5" className="w-full accent-blue-600"
+                              <input type="range" min="-2" max="20" step="0.5" className="w-full accent-[var(--color-primary)]"
                                 value={selectedElement.letterSpacing || 0}
                                 onChange={e => updateElement(selectedElement.id, { letterSpacing: parseFloat(e.target.value) })}
                                 onMouseUp={commitUpdate} />
@@ -2958,7 +3013,7 @@ export default function LabelEditor() {
                             <div className="w-[1px] bg-slate-200 mx-0.5"></div>
                             {['left', 'center', 'right'].map(a => (
                               <button key={a} onClick={() => { updateElement(selectedElement.id, { align: a }); commitUpdate(); }}
-                                className={`flex-1 p-1.5 rounded text-center transition-colors ${selectedElement.align === a ? 'bg-blue-100 text-primary' : 'hover:bg-slate-200 text-slate-500'}`}>
+                                className={`flex-1 p-1.5 rounded text-center transition-colors ${selectedElement.align === a ? 'bg-[var(--color-primary)]/10 text-primary' : 'hover:bg-slate-200 text-slate-500'}`}>
                                 <span className="material-symbols-outlined text-[14px]">format_align_{a}</span>
                               </button>
                             ))}
@@ -2983,7 +3038,7 @@ export default function LabelEditor() {
                             <label className="text-[10px] font-bold uppercase text-slate-400 mb-1 flex justify-between">
                               <span>Icon Size</span><span className="font-mono">{selectedElement.fontSize || 48}px</span>
                             </label>
-                            <input type="range" min="12" max="400" className="w-full accent-blue-600"
+                            <input type="range" min="12" max="400" className="w-full accent-[var(--color-primary)]"
                               value={selectedElement.fontSize || 48}
                               onChange={e => updateElement(selectedElement.id, { fontSize: parseInt(e.target.value) })}
                               onMouseUp={commitUpdate} />
@@ -3011,8 +3066,8 @@ export default function LabelEditor() {
                         {/* ── Dynamic Data & Rules Section ────────────────────────────────── */}
                         {(selectedElement.isPlaceholder || (selectedElement.text && selectedElement.text.includes('{{'))) && (
                           <div className="space-y-4 pt-1">
-                            <div className="flex items-center gap-2 mb-2 p-2 bg-blue-50 rounded-xl border border-blue-100">
-                              <span className="material-symbols-outlined text-[18px] text-blue-600">database</span>
+                            <div className="flex items-center gap-2 mb-2 p-2 bg-[var(--color-primary)]/5 rounded-xl border border-[var(--color-primary)]/10">
+                              <span className="material-symbols-outlined text-[18px] text-[var(--color-primary)]">database</span>
                               <span className="text-[10px] font-black uppercase text-blue-800 tracking-tighter">Dynamic Configuration</span>
                             </div>
 
@@ -3022,7 +3077,7 @@ export default function LabelEditor() {
                                 <span className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Render as Barcode</span>
                                 <button
                                   onClick={(e) => { e.stopPropagation(); updateElement(selectedElement.id, { renderAsBarcode: !selectedElement.renderAsBarcode }); commitUpdate(); }}
-                                  className={`w-10 h-5 rounded-full relative transition-all duration-300 border ${selectedElement.renderAsBarcode ? 'bg-blue-600 border-blue-700' : 'bg-slate-200 border-slate-300'}`}
+                                  className={`w-10 h-5 rounded-full relative transition-all duration-300 border ${selectedElement.renderAsBarcode ? 'bg-[var(--color-primary)] border-blue-700' : 'bg-slate-200 border-slate-300'}`}
                                 >
                                   <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow-sm transition-all duration-300 ${selectedElement.renderAsBarcode ? 'right-0.5' : 'left-0.5'}`} />
                                 </button>
@@ -3146,7 +3201,7 @@ export default function LabelEditor() {
                                     });
                                     commitUpdate();
                                   }}
-                                  className="text-[9px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded hover:bg-blue-100 transition-colors"
+                                  className="text-[9px] font-bold text-[var(--color-primary)] bg-[var(--color-primary)]/5 px-2 py-1 rounded hover:bg-[var(--color-primary)]/10 transition-colors"
                                 >
                                   + Add Rule
                                 </button>
@@ -3156,7 +3211,7 @@ export default function LabelEditor() {
                                 <div className="flex gap-2 mb-3 bg-white p-1 rounded-lg border border-slate-200">
                                   {['AND', 'OR'].map(l => (
                                     <button key={l} onClick={() => { updateElement(selectedElement.id, { rulesLogic: l }); commitUpdate(); }}
-                                      className={`flex-1 text-[9px] font-black py-1 rounded ${selectedElement.rulesLogic === l ? 'bg-blue-500 text-white shadow-sm' : 'text-slate-400 hover:bg-slate-100'}`}>
+                                      className={`flex-1 text-[9px] font-black py-1 rounded ${selectedElement.rulesLogic === l ? 'bg-[var(--color-primary)]/50 text-white shadow-sm' : 'text-slate-400 hover:bg-slate-100'}`}>
                                       {l}
                                     </button>
                                   ))}
@@ -3229,12 +3284,12 @@ export default function LabelEditor() {
                             <div>
                               <label className="text-[8px] font-bold uppercase text-slate-400 mb-1.5 block">Resizing Behavior</label>
                               <button onClick={() => { updateElement(selectedElement.id, { lockAspectRatio: selectedElement.lockAspectRatio === false }); commitUpdate(); }}
-                                className={`w-full py-2 px-3 rounded-xl border text-[10px] font-bold uppercase flex items-center justify-between transition-all ${selectedElement.lockAspectRatio !== false ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-slate-50 border-slate-200 text-slate-500'}`}>
+                                className={`w-full py-2 px-3 rounded-xl border text-[10px] font-bold uppercase flex items-center justify-between transition-all ${selectedElement.lockAspectRatio !== false ? 'bg-[var(--color-primary)]/5 border-blue-200 text-blue-700' : 'bg-slate-50 border-slate-200 text-slate-500'}`}>
                                 <span className="flex items-center gap-2">
                                   <span className="material-symbols-outlined text-[16px]">{selectedElement.lockAspectRatio !== false ? 'lock' : 'lock_open'}</span>
                                   {selectedElement.lockAspectRatio !== false ? 'Aspect Ratio Locked' : 'Freeform Resizing'}
                                 </span>
-                                <div className={`w-6 h-3 rounded-full relative transition-all duration-300 border ${selectedElement.lockAspectRatio !== false ? 'bg-blue-500 border-blue-600' : 'bg-slate-200 border-slate-300'}`}>
+                                <div className={`w-6 h-3 rounded-full relative transition-all duration-300 border ${selectedElement.lockAspectRatio !== false ? 'bg-[var(--color-primary)]/50 border-[var(--color-primary)]' : 'bg-slate-200 border-slate-300'}`}>
                                   <div className={`absolute top-0.5 w-1.5 h-1.5 rounded-full bg-white transition-all duration-300 ${selectedElement.lockAspectRatio !== false ? 'right-0.5' : 'left-0.5'}`} />
                                 </div>
                               </button>
@@ -3244,7 +3299,7 @@ export default function LabelEditor() {
                               <div className="grid grid-cols-3 gap-1">
                                 {['contain', 'cover', 'fill'].map(fit => (
                                   <button key={fit} onClick={() => { updateElement(selectedElement.id, { imageFit: fit }); commitUpdate(); }}
-                                    className={`p-1.5 rounded-lg border text-[9px] font-bold capitalize transition-colors ${(selectedElement.imageFit || 'contain') === fit ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-slate-200 bg-slate-50 text-slate-500 hover:bg-slate-100'}`}>
+                                    className={`p-1.5 rounded-lg border text-[9px] font-bold capitalize transition-colors ${(selectedElement.imageFit || 'contain') === fit ? 'border-[var(--color-primary)]/50 bg-[var(--color-primary)]/5 text-blue-700' : 'border-slate-200 bg-slate-50 text-slate-500 hover:bg-slate-100'}`}>
                                     {fit}
                                   </button>
                                 ))}
@@ -3257,13 +3312,13 @@ export default function LabelEditor() {
                         {selectedElement.type === 'table' && (
                           <div className="flex gap-3">
                             <label className="flex items-center gap-1.5 cursor-pointer select-none">
-                              <input type="checkbox" className="accent-blue-600 w-3.5 h-3.5"
+                              <input type="checkbox" className="accent-[var(--color-primary)] w-3.5 h-3.5"
                                 checked={selectedElement.tableHeader !== false}
                                 onChange={e => { updateElement(selectedElement.id, { tableHeader: e.target.checked }); commitUpdate(); }} />
                               <span className="text-[9px] font-bold text-slate-500">Header Row</span>
                             </label>
                             <label className="flex items-center gap-1.5 cursor-pointer select-none">
-                              <input type="checkbox" className="accent-blue-600 w-3.5 h-3.5"
+                              <input type="checkbox" className="accent-[var(--color-primary)] w-3.5 h-3.5"
                                 checked={!!selectedElement.tableStriped}
                                 onChange={e => { updateElement(selectedElement.id, { tableStriped: e.target.checked }); commitUpdate(); }} />
                               <span className="text-[9px] font-bold text-slate-500">Striped Rows</span>
@@ -3326,7 +3381,7 @@ export default function LabelEditor() {
                             <button onClick={() => { updateElement(selectedElement.id, { borderWidth: 0, borderColor: 'transparent' }); commitUpdate(); }} className="text-error hover:underline text-[8px]">Clear</button>
                           </label>
                           <div className="flex gap-2 items-center">
-                            <input type="range" min="0" max="20" className="flex-1 accent-blue-600"
+                            <input type="range" min="0" max="20" className="flex-1 accent-[var(--color-primary)]"
                               value={selectedElement.borderWidth || 0}
                               onChange={e => updateElement(selectedElement.id, { borderWidth: parseInt(e.target.value) })}
                               onMouseUp={commitUpdate} />
@@ -3350,7 +3405,7 @@ export default function LabelEditor() {
                             <label className="text-[8px] font-bold uppercase text-slate-400 mb-1.5 flex justify-between">
                               <span>Corner Radius</span><span className="font-mono">{selectedElement.borderRadius || 0}px</span>
                             </label>
-                            <input type="range" min="0" max="60" className="w-full accent-blue-600"
+                            <input type="range" min="0" max="60" className="w-full accent-[var(--color-primary)]"
                               value={selectedElement.borderRadius || 0}
                               onChange={e => updateElement(selectedElement.id, { borderRadius: parseInt(e.target.value) })}
                               onMouseUp={commitUpdate} />
@@ -3372,7 +3427,7 @@ export default function LabelEditor() {
                                   key={value}
                                   onClick={() => { updateElement(selectedElement.id, { borderStyle: value }); commitUpdate(); }}
                                   className={`p-2 rounded-lg border text-[9px] font-bold flex flex-col items-center gap-1 transition-colors ${(selectedElement.borderStyle || 'solid') === value
-                                    ? 'border-blue-500 bg-blue-50 text-blue-600'
+                                    ? 'border-[var(--color-primary)]/50 bg-[var(--color-primary)]/5 text-[var(--color-primary)]'
                                     : 'border-slate-200 bg-slate-50 text-slate-500 hover:bg-slate-100'
                                     }`}
                                 >
@@ -3385,7 +3440,7 @@ export default function LabelEditor() {
                             <label className="text-[8px] font-bold uppercase text-slate-400 mt-2 mb-1 flex justify-between">
                               <span>Thickness</span><span className="font-mono">{selectedElement.height || 4}px</span>
                             </label>
-                            <input type="range" min="1" max="40" className="w-full accent-blue-600"
+                            <input type="range" min="1" max="40" className="w-full accent-[var(--color-primary)]"
                               value={selectedElement.height || 4}
                               onChange={e => updateElement(selectedElement.id, { height: parseInt(e.target.value) })}
                               onMouseUp={commitUpdate} />
@@ -3397,7 +3452,7 @@ export default function LabelEditor() {
                           <label className="text-[8px] font-bold uppercase text-slate-400 mb-1.5 flex justify-between">
                             <span>Opacity</span><span className="font-mono">{Math.round((selectedElement.opacity !== undefined ? selectedElement.opacity : 1) * 100)}%</span>
                           </label>
-                          <input type="range" min="0" max="1" step="0.01" className="w-full accent-blue-600"
+                          <input type="range" min="0" max="1" step="0.01" className="w-full accent-[var(--color-primary)]"
                             value={selectedElement.opacity !== undefined ? selectedElement.opacity : 1}
                             onChange={e => updateElement(selectedElement.id, { opacity: parseFloat(e.target.value) })}
                             onMouseUp={commitUpdate} />
@@ -3409,7 +3464,7 @@ export default function LabelEditor() {
                             <span>Rotation</span><span className="font-mono">{selectedElement.rotation || 0}°</span>
                           </label>
                           <div className="flex gap-2 items-center">
-                            <input type="range" min="0" max="360" step="1" className="flex-1 accent-blue-600"
+                            <input type="range" min="0" max="360" step="1" className="flex-1 accent-[var(--color-primary)]"
                               value={selectedElement.rotation || 0}
                               onChange={e => {
                                 const rot = parseInt(e.target.value);
@@ -3435,11 +3490,11 @@ export default function LabelEditor() {
                 >
                   <div className="flex flex-col items-center text-center px-4">
                     <motion.div
-                      className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mb-4 shadow-sm"
+                      className="w-16 h-16 bg-[var(--color-primary)]/10 rounded-2xl flex items-center justify-center mb-4 shadow-sm"
                       whileHover={{ scale: 1.05, rotate: 5 }}
                       transition={{ type: "spring", stiffness: 300, damping: 20 }}
                     >
-                      <span className="material-symbols-outlined text-[32px] text-blue-600">settings_overscan</span>
+                      <span className="material-symbols-outlined text-[32px] text-[var(--color-primary)]">settings_overscan</span>
                     </motion.div>
                     <h3 className="text-[13px] font-black text-slate-800 uppercase tracking-widest">Label Settings</h3>
                     <p className="text-[11px] text-slate-500 mt-1.5 leading-tight">Configure global properties for the entire label surface</p>
@@ -3459,7 +3514,7 @@ export default function LabelEditor() {
                             onBlur={commitUpdate} />
                         </div>
                         <div className="flex-1 space-y-1.5">
-                          <input type="text" className="w-full text-[11px] font-mono uppercase px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-blue-500 transition-all font-bold"
+                          <input type="text" className="w-full text-[11px] font-mono uppercase px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-[var(--color-primary)]/50 transition-all font-bold"
                             value={meta.bgColor || '#FFFFFF'}
                             onChange={e => setMeta({ ...meta, bgColor: e.target.value })}
                             onBlur={commitUpdate} />
@@ -3470,7 +3525,7 @@ export default function LabelEditor() {
                                 setMeta(newM);
                                 commitUpdate(elements, newM);
                               }}
-                                className={`w-6 h-6 rounded-full border border-black/10 ring-2 ${meta.bgColor === c ? 'ring-blue-500 ring-offset-2' : 'ring-transparent'}`}
+                                className={`w-6 h-6 rounded-full border border-black/10 ring-2 ${meta.bgColor === c ? 'ring-[var(--color-primary)]/50 ring-offset-2' : 'ring-transparent'}`}
                                 style={{ backgroundColor: c }}
                               />
                             ))}
@@ -3481,7 +3536,7 @@ export default function LabelEditor() {
 
                     <div className="p-5 bg-slate-100 rounded-2xl border border-slate-200 text-center flex flex-col items-center gap-2">
                       <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center border border-slate-200">
-                        <span className="material-symbols-outlined text-[22px] text-blue-500">touch_app</span>
+                        <span className="material-symbols-outlined text-[22px] text-[var(--color-primary)]/50">touch_app</span>
                       </div>
                       <p className="text-[11px] font-extrabold text-slate-700 uppercase tracking-tight">Select an element</p>
                     </div>

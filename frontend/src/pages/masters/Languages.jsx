@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../../services/api';
 import AppLayout from '../../components/common/AppLayout';
 import { useToast } from '../../components/common/ToastContext';
@@ -149,47 +150,56 @@ const Languages = () => {
   return (
     <AppLayout activePage="masters">
       <div className="um-container animate-fade-in">
-        <div className="um-header">
+        <motion.div 
+          className="um-header"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
           <div className="um-header-left">
-            <div className="um-header-icon" style={{ background: 'var(--um-primary-container)' }}>
-              <span className="material-symbols-outlined" style={{ color: 'var(--um-primary)' }}>translate</span>
+            <div className="um-header-icon shadow-xl">
+              <span className="material-symbols-outlined text-[28px] !text-white">translate</span>
             </div>
             <div>
-              <h1>Languages</h1>
-              <p>System-wide supported languages and text directions</p>
+              <p className="text-[var(--color-primary)] font-black text-[10px] uppercase tracking-[0.3em] mb-1 opacity-60">Global Localization Master</p>
+              <h1 className="text-3xl font-black text-[var(--color-primary-dark)] tracking-tighter">Languages</h1>
             </div>
           </div>
-          <button className="um-add-btn" onClick={openAddModal}>
-            <span className="material-symbols-outlined">add</span>
+          <button className="um-add-btn group" onClick={openAddModal}>
+            <span className="material-symbols-outlined group-hover:rotate-90 transition-transform">add_circle</span>
             Add Language
           </button>
-        </div>
+        </motion.div>
 
-        <div className="um-filter-bar">
+        <motion.div 
+          className="um-filter-bar bg-white/40 backdrop-blur-md p-4 rounded-2xl border border-[var(--color-primary-dark)]/5"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+        >
           <div className="um-search-wrap">
-            <span className="um-search-icon material-symbols-outlined">search</span>
+            <span className="um-search-icon material-symbols-outlined opacity-40">search</span>
             <input
               type="text"
-              className="um-search-input"
-              placeholder="Search by name or code..."
+              className="um-search-input bg-white border-none shadow-sm font-bold text-[var(--color-primary-dark)] placeholder:text-[var(--color-primary-dark)]/30"
+              placeholder="Search by language name, ISO code, or territorial reference..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 p-1 bg-white/50 rounded-xl">
             {['ALL', 'ACTIVE', 'INACTIVE'].map(s => (
               <button
                 key={s}
                 onClick={() => setStatusFilter(s)}
-                className={`px-4 py-2 rounded-full text-[11px] font-bold uppercase transition-all ${
-                  statusFilter === s ? 'bg-primary text-white' : 'bg-surface-container text-outline hover:bg-surface-container-high'
+                className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+                  statusFilter === s ? 'bg-[var(--color-primary-dark)] text-white shadow-lg shadow-[var(--color-primary-dark)]/20' : 'text-[var(--color-primary-dark)]/40 hover:bg-[var(--color-primary-dark)]/5'
                 }`}
               >
                 {s}
               </button>
             ))}
           </div>
-        </div>
+        </motion.div>
 
         <div className="um-table-card overflow-visible">
           {loading ? (
@@ -218,89 +228,116 @@ const Languages = () => {
                   
                   return (
                     <React.Fragment key={base.id}>
-                      <tr className={`um-row ${isExpanded ? 'bg-primary/5' : ''} ${!isBaseActive ? 'opacity-60' : ''}`}>
-                        <td className="text-center">
-                          {variants.length > 0 && (
-                            <button
-                              onClick={() => toggleBaseGroup(base.id)}
-                              className={`p-1 rounded hover:bg-black/5 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
-                            >
-                              <span className="material-symbols-outlined text-[18px]">chevron_right</span>
-                            </button>
-                          )}
-                        </td>
-                        <td className="font-bold">
-                          <div className="flex items-center gap-2">
-                             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                               <span className="material-symbols-outlined text-[18px]">language</span>
-                             </div>
-                            {base.name}
-                            {variants.length > 0 && <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">{variants.length} variants</span>}
-                          </div>
-                        </td>
-                        <td><code className="text-blue-600 px-2 py-0.5 bg-blue-50 rounded font-mono text-xs">{base.code}</code></td>
-                        <td className="text-xs text-outline">{base.dateFormat} • {base.currencySymbol}</td>
-                        <td>
-                          <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-1 rounded-full font-bold">
-                            {base.direction}
-                          </span>
-                        </td>
-                        <td>
-                          <span className={`status-badge status-${base.status?.toLowerCase() || 'active'}`}>
-                            {base.status || 'ACTIVE'}
-                          </span>
-                        </td>
-                        <td>
-                          <div className="um-actions" style={{ justifyContent: 'flex-end' }}>
-                            <button className="um-action-btn" title="Add Variant" onClick={() => { openAddModal(); setFormData(prev => ({ ...prev, parentLanguageId: base.id, direction: base.direction, name: `${base.name}-` })); }}>
-                              <span className="material-symbols-outlined">add_circle</span>
-                            </button>
-                            <button className="um-action-btn" onClick={() => openEditModal(base)}>
-                              <span className="material-symbols-outlined">edit</span>
-                            </button>
-                            <button className="um-action-btn um-action-delete" onClick={() => handleDelete(base.id)}>
-                              <span className="material-symbols-outlined">delete</span>
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                      {isExpanded && variants.map(v => (
-                        <tr key={v.id} className="bg-slate-50/50 border-l-2 border-primary/20">
-                          <td />
-                          <td className="pl-10">
-                            <div className="flex items-center gap-2">
-                              <span className="material-symbols-outlined text-[16px] text-primary/40">subdirectory_arrow_right</span>
-                              <div className="w-1.5 h-1.5 rounded-full bg-primary/40 mr-1" />
-                              <span className="font-medium">{v.name}</span>
-                              {v.regionName && <span className="text-[10px] text-outline font-medium">({v.regionName})</span>}
-                              {v.isDefaultVariant && <span className="material-symbols-outlined text-[16px] text-amber-500" title="Primary default variant">star</span>}
-                            </div>
-                          </td>
-                          <td>
-                            <div className="flex items-center gap-1">
-                              <code className="text-blue-600 px-2 py-0.5 bg-blue-50 rounded font-mono text-xs">{v.code}</code>
-                              {v.countryCode && <code className="text-tertiary px-2 py-0.5 bg-tertiary/10 rounded font-mono text-xs">{v.countryCode}</code>}
-                            </div>
-                          </td>
-                          <td className="text-xs text-outline">{v.dateFormat} • {v.timeFormat} • {v.currencySymbol}</td>
-                          <td className="text-[10px] font-bold text-outline-variant">{v.direction}</td>
-                          <td>
-                            <span className={`status-badge status-${v.status?.toLowerCase() || 'active'} scale-90`}>
-                              {v.status || 'ACTIVE'}
-                            </span>
-                          </td>
-                          <td>
-                            <div className="um-actions" style={{ justifyContent: 'flex-end' }}>
-                              <button className="um-action-btn scale-90" onClick={() => openEditModal(v)}>
-                                <span className="material-symbols-outlined text-[18px]">edit</span>
-                              </button>
-                              <button className="um-action-btn um-action-delete scale-90" onClick={() => handleDelete(v.id)}>
-                                <span className="material-symbols-outlined text-[18px]">delete</span>
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
+                    <motion.tr 
+                      key={base.id} 
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: idx * 0.05 + 0.3 }}
+                      className={`um-row ${isExpanded ? 'bg-[var(--color-primary-light)]/20 shadow-inner' : ''} ${!isBaseActive ? 'opacity-40' : ''}`}
+                    >
+                      <td className="text-center">
+                        {variants.length > 0 && (
+                          <button
+                            onClick={() => toggleBaseGroup(base.id)}
+                            className={`p-2 rounded-xl hover:bg-[var(--color-primary-dark)]/5 transition-all ${isExpanded ? 'rotate-90 bg-[var(--color-primary-dark)]/10 text-[var(--color-primary-dark)]' : 'text-[var(--color-primary-dark)]/30'}`}
+                          >
+                            <span className="material-symbols-outlined text-[20px]">chevron_right</span>
+                          </button>
+                        )}
+                      </td>
+                      <td className="font-black">
+                        <div className="flex items-center gap-3">
+                           <div className="w-10 h-10 rounded-xl bg-[var(--color-primary-dark)] text-white shadow-lg flex items-center justify-center">
+                             <span className="material-symbols-outlined text-[20px]">language</span>
+                           </div>
+                           <div className="flex flex-col">
+                             <span className="text-[var(--color-primary-dark)] text-[14px]">{base.name}</span>
+                             {variants.length > 0 && <span className="text-[9px] font-black uppercase text-[var(--color-primary)] opacity-60 tracking-widest">{variants.length} regional variants</span>}
+                           </div>
+                        </div>
+                      </td>
+                      <td><code className="text-[var(--color-primary-dark)] font-black px-3 py-1 bg-[var(--color-primary-light)]/40 rounded-lg font-mono text-[11px] tracking-widest">{base.code}</code></td>
+                      <td className="text-[11px] font-bold text-[var(--color-primary-dark)]/40 uppercase tracking-tighter">{base.dateFormat} • {base.currencySymbol}</td>
+                      <td>
+                        <span className="text-[9px] bg-white border border-[var(--color-primary-dark)]/10 text-[var(--color-primary-dark)] px-3 py-1 rounded-full font-black tracking-widest uppercase">
+                          {base.direction}
+                        </span>
+                      </td>
+                      <td>
+                        <div className={`status-badge status-${base.status?.toLowerCase()} !text-[9px] font-black tracking-widest flex items-center gap-2`}>
+                          <span className={`status-dot !w-2 !h-2 rounded-full ${base.status === 'ACTIVE' ? 'bg-[var(--color-success)]' : 'bg-[var(--color-error)]'} animate-pulse`} />
+                          {base.status}
+                        </div>
+                      </td>
+                      <td>
+                        <div className="um-actions" style={{ justifyContent: 'flex-end' }}>
+                          <button 
+                            className="um-action-btn hover:!bg-[var(--color-primary-dark)] hover:!text-white transition-all shadow-sm" 
+                            title="Add Regional Deployment" 
+                            onClick={() => { openAddModal(); setFormData(prev => ({ ...prev, parentLanguageId: base.id, direction: base.direction, name: `${base.name}-` })); }}
+                          >
+                            <span className="material-symbols-outlined text-[18px]">add_location_alt</span>
+                          </button>
+                          <button className="um-action-btn hover:!bg-[var(--color-primary-dark)] hover:!text-white transition-all shadow-sm" onClick={() => openEditModal(base)}>
+                            <span className="material-symbols-outlined text-[18px]">edit_note</span>
+                          </button>
+                          <button className="um-action-btn hover:!bg-[var(--color-error)] hover:!text-white transition-all shadow-sm um-action-delete" onClick={() => handleDelete(base.id)}>
+                            <span className="material-symbols-outlined text-[18px]">delete_sweep</span>
+                          </button>
+                        </div>
+                      </td>
+                    </motion.tr>
+                      <AnimatePresence>
+                        {isExpanded && variants.map((v, vIdx) => (
+                          <motion.tr 
+                            key={v.id} 
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{ delay: vIdx * 0.03 }}
+                            className="bg-[var(--color-primary-light)]/10 border-l-[3px] border-[var(--color-primary-dark)]"
+                          >
+                            <td />
+                            <td className="pl-12 py-3">
+                              <div className="flex items-center gap-3">
+                                <span className="material-symbols-outlined text-[16px] text-[var(--color-primary-dark)]/30">subdirectory_arrow_right</span>
+                                <div className="flex flex-col">
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-black text-[var(--color-primary-dark)] text-[13px]">{v.name}</span>
+                                    {v.isDefaultVariant && <span className="bg-[var(--color-warning)] text-white text-[8px] font-black uppercase px-2 py-0.5 rounded-full tracking-widest shadow-sm">MASTER</span>}
+                                  </div>
+                                  {v.regionName && <span className="text-[10px] text-[var(--color-primary)] font-black uppercase tracking-widest opacity-40 italic">{v.regionName}</span>}
+                                </div>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="flex items-center gap-2">
+                                <code className="text-[var(--color-primary-dark)] font-black px-2 py-0.5 bg-white rounded-md font-mono text-[10px] tracking-widest shadow-sm">{v.code}</code>
+                                {v.countryCode && <code className="text-white font-black px-2 py-0.5 bg-[var(--color-primary-dark)]/60 rounded-md font-mono text-[10px] tracking-widest">{v.countryCode}</code>}
+                              </div>
+                            </td>
+                            <td className="text-[10px] font-black text-[var(--color-primary-dark)]/40 uppercase tracking-widest">{v.dateFormat} • {v.timeFormat} • {v.currencySymbol}</td>
+                            <td>
+                              <span className="text-[9px] font-black text-[var(--color-primary-dark)]/40 uppercase tracking-widest">{v.direction}</span>
+                            </td>
+                            <td>
+                              <span className={`status-badge status-${v.status?.toLowerCase() || 'active'} !text-[8px] font-black tracking-widest scale-90`}>
+                                {v.status || 'ACTIVE'}
+                              </span>
+                            </td>
+                            <td>
+                              <div className="um-actions" style={{ justifyContent: 'flex-end' }}>
+                                <button className="um-action-btn hover:!bg-[var(--color-primary-dark)] hover:!text-white transition-all scale-90" onClick={() => openEditModal(v)}>
+                                  <span className="material-symbols-outlined text-[18px]">edit</span>
+                                </button>
+                                <button className="um-action-btn um-action-delete hover:!bg-[var(--color-error)] hover:!text-white transition-all scale-90" onClick={() => handleDelete(v.id)}>
+                                  <span className="material-symbols-outlined text-[18px]">delete</span>
+                                </button>
+                              </div>
+                            </td>
+                          </motion.tr>
+                        ))}
+                      </AnimatePresence>
                     </React.Fragment>
                   );
                 })}
@@ -310,13 +347,31 @@ const Languages = () => {
         </div>
       </div>
 
-      {showModal && (
-        <div className="modal-overlay" onClick={closeModal}>
-          <div className="modal-content" style={{ width: '600px' }} onClick={e => e.stopPropagation()}>
-            <div className="um-modal-header">
-              <h2>{isEditing ? 'Edit Localization Details' : 'Configure New Language'}</h2>
-              <button className="um-modal-close" onClick={closeModal}><span className="material-symbols-outlined">close</span></button>
-            </div>
+      <AnimatePresence>
+        {showModal && (
+          <div className="modal-overlay !bg-[var(--color-primary-dark)]/80 backdrop-blur-sm" onClick={closeModal}>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 30 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 30 }}
+              className="modal-content !bg-[var(--color-background)] !rounded-[40px] shadow-[0_32px_120px_rgba(56,36,13,0.3)] border border-white/40" 
+              style={{ width: '600px' }} 
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="um-modal-header !p-10 !border-none !bg-transparent">
+                <div className="flex items-center gap-6">
+                   <div className="w-16 h-16 rounded-[24px] bg-[var(--color-primary-dark)] flex items-center justify-center text-white shadow-2xl">
+                      <span className="material-symbols-outlined text-[32px]">{isEditing ? 'language_us_featured' : 'language'}</span>
+                   </div>
+                   <div>
+                     <p className="text-[var(--color-primary)] font-black text-[11px] uppercase tracking-[0.4em] mb-1 opacity-60">Localization Configuration</p>
+                     <h2 className="text-3xl font-black text-[var(--color-primary-dark)] tracking-tighter">{isEditing ? 'Refine Locale Identity' : 'Initialize New Locale'}</h2>
+                   </div>
+                </div>
+                <button className="w-12 h-12 rounded-2xl flex items-center justify-center text-[var(--color-primary-dark)]/30 hover:bg-[var(--color-primary-dark)]/5 hover:text-[var(--color-primary-dark)] transition-all" onClick={closeModal}>
+                  <span className="material-symbols-outlined">close</span>
+                </button>
+              </div>
             <form onSubmit={handleSubmit}>
               <div className="modal-body">
                 <div className="grid grid-cols-2 gap-4">
@@ -378,28 +433,46 @@ const Languages = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 mt-4 p-3 bg-surface-container rounded-xl border border-outline-variant/30">
-                  <input 
-                    type="checkbox" 
-                    id="isDefaultVariant" 
-                    checked={formData.isDefaultVariant} 
-                    onChange={e => setFormData(prev => ({ ...prev, isDefaultVariant: e.target.checked }))}
-                  />
-                  <label htmlFor="isDefaultVariant" className="text-xs font-bold text-on-surface-variant cursor-pointer">
+                <div className="flex items-center gap-4 mt-6 p-6 bg-[var(--color-primary-light)]/20 rounded-[20px] border border-[var(--color-primary-dark)]/5">
+                  <div className="relative flex items-center">
+                    <input 
+                      type="checkbox" 
+                      id="isDefaultVariant" 
+                      className="w-6 h-6 rounded-lg border-2 border-[var(--color-primary-dark)]/20 checked:bg-[var(--color-primary-dark)] transition-all cursor-pointer accent-[var(--color-primary-dark)]"
+                      checked={formData.isDefaultVariant} 
+                      onChange={e => setFormData(prev => ({ ...prev, isDefaultVariant: e.target.checked }))}
+                    />
+                  </div>
+                  <label htmlFor="isDefaultVariant" className="text-[12px] font-black text-[var(--color-primary-dark)] uppercase tracking-wider cursor-pointer">
                     Set as Primary Default Variant for this language
                   </label>
                 </div>
               </div>
-              <div className="modal-actions">
-                <button type="button" onClick={closeModal} className="btn-ghost">Cancel</button>
-                <button type="submit" className="btn-primary" disabled={actionLoading}>
-                  {actionLoading ? 'Saving config...' : (isEditing ? 'Update Config' : 'Initialize')}
+              <div className="modal-actions !p-10 !bg-transparent !border-none">
+                <button type="button" onClick={closeModal} className="h-16 px-8 rounded-2xl font-black uppercase tracking-widest text-[11px] text-[var(--color-primary-dark)]/40 hover:bg-[var(--color-primary-dark)]/5 transition-all">Cancel Operation</button>
+                <button 
+                  type="submit" 
+                  className="h-16 px-10 bg-[var(--color-primary-dark)] hover:bg-[var(--color-primary)] text-white rounded-[24px] shadow-2xl shadow-[var(--color-primary-dark)]/20 flex items-center justify-center gap-4 transition-all font-black uppercase tracking-[0.2em] text-[12px] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none group"
+                  disabled={actionLoading}
+                >
+                  {actionLoading ? (
+                    <div className="flex items-center gap-3">
+                       <div className="um-spinner !w-5 !h-5 !border-[3px] !border-white/20 !border-t-white" />
+                       <span>Synchronizing...</span>
+                    </div>
+                  ) : (
+                    <>
+                      <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">verified</span>
+                      {isEditing ? 'Commit Configuration' : 'Initialize Locale'}
+                    </>
+                  )}
                 </button>
               </div>
             </form>
-          </div>
+          </motion.div>
         </div>
-      )}
+        )}
+      </AnimatePresence>
     </AppLayout>
   );
 };

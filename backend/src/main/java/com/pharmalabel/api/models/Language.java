@@ -50,7 +50,7 @@ public class Language {
 
     @Builder.Default
     @Column(name = "is_default_variant")
-    private boolean isDefaultVariant = false;
+    private Boolean isDefaultVariant = false;
 
     @Builder.Default
     @Column(nullable = false)
