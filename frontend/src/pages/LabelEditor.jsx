@@ -4,6 +4,8 @@ import BarcodeUnified from '../components/common/BarcodeUnified';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../services/api';
 import { Link, useNavigate } from 'react-router-dom';
+import GlobalHeader from '../components/common/GlobalHeader';
+import GlobalSecondaryToolbar from '../components/common/GlobalSecondaryToolbar';
 import { useLabel } from '../context/LabelContext';
 import { Rnd } from 'react-rnd';
 import html2canvas from 'html2canvas';
@@ -989,337 +991,209 @@ export default function LabelEditor() {
         </div>
       )}
 
-      {/* ── Premium Top Nav ──────────────────────────────────────────────────── */}
-      <motion.header
-        className="h-16 glass-header flex items-center justify-between px-6 shrink-0 z-[2000]"
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-      >
-        {/* Left: File Menu + Title */}
-        <div className="flex items-center gap-4">
-          <Link to="/" className="text-xl font-extrabold tracking-tighter text-gradient shrink-0">Pharma Label Design</Link>
-          <div className="w-[1px] h-6 bg-outline-variant/30 mx-1"></div>
-
-          {/* File Dropdown */}
+      {/* ── Global Dual-Header System (Primary) ────────────────────────── */}
+      <GlobalHeader
+        activePage="editor"
+        leftContent={
           <div className="relative" onClick={e => e.stopPropagation()}>
             <button
               onClick={() => setShowFileMenu(v => !v)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-semibold text-slate-700 hover:bg-slate-100 transition-colors"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[13px] font-bold text-white hover:bg-white/10 active:bg-white/20 transition-all"
             >
-              <span className="material-symbols-outlined text-[16px]">folder_open</span>
+              <span className="material-symbols-outlined text-[18px]">folder_open</span>
               File
-              <span className="material-symbols-outlined text-[14px]">{showFileMenu ? 'expand_less' : 'expand_more'}</span>
+              <span className="material-symbols-outlined text-[16px] opacity-60">{showFileMenu ? 'expand_less' : 'expand_more'}</span>
             </button>
-            {showFileMenu && (
-              <div className="absolute top-full left-0 mt-1 w-52 bg-white rounded-xl shadow-xl border border-outline-variant/20 overflow-hidden z-[2100] animate-fade-in">
-                {[
-                  { label: 'New File', icon: 'add_circle', action: triggerNewFile },
-                  { label: 'Open File (.json)', icon: 'folder_open', action: () => jsonInputRef.current?.click() },
-                  null,
-                  { label: 'Save', icon: 'save', action: () => { saveFile(); setShowFileMenu(false); }, shortcut: 'Ctrl+S' },
-                  { label: 'Save as File (.json)', icon: 'download', action: () => { exportJSON(); setShowFileMenu(false); } }
-                ].map((item, i) => item === null
-                  ? <div key={`sep-${i}`} className="h-[1px] bg-outline-variant/15 my-0.5" />
-                  : (
-                    <button key={item.label} onClick={item.action} className="w-full flex items-center justify-between px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors">
-                      <span className="flex items-center gap-2">
-                        <span className="material-symbols-outlined text-[15px] text-slate-500">{item.icon}</span>
-                        {item.label}
-                      </span>
-                      {item.shortcut && <span className="text-[9px] font-mono text-slate-400">{item.shortcut}</span>}
-                    </button>
-                  )
-                )}
-              </div>
-            )}
+            <AnimatePresence>
+              {showFileMenu && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                  className="absolute top-[calc(100%+8px)] left-0 w-64 bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] border border-slate-200 overflow-hidden z-[2100]"
+                >
+                  <div className="p-2 border-b border-slate-100 bg-slate-50/50">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 px-3 py-1">Document Actions</p>
+                  </div>
+                  <div className="p-1.5">
+                    {[
+                      { label: 'New Design', icon: 'add_circle', action: triggerNewFile, shortcut: 'Alt+N' },
+                      { label: 'Open File', icon: 'folder_open', action: () => jsonInputRef.current?.click(), shortcut: 'Ctrl+O' },
+                      { type: 'sep' },
+                      { label: 'Save Changes', icon: 'save', action: () => { saveFile(); setShowFileMenu(false); }, shortcut: 'Ctrl+S' },
+                      { label: 'Duplicate File', icon: 'content_copy', action: () => { setShowSaveAs(true); setShowFileMenu(false); } },
+                      { label: 'Export JSON', icon: 'download', action: () => { exportJSON(); setShowFileMenu(false); } }
+                    ].map((item, i) => item.type === 'sep'
+                      ? <div key={`sep-${i}`} className="h-[1px] bg-slate-100 my-1 mx-2" />
+                      : (
+                        <button key={item.label} onClick={item.action} className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-[12px] font-bold text-slate-700 hover:bg-slate-50 hover:text-[var(--color-primary-dark)] transition-all group">
+                          <span className="flex items-center gap-3">
+                            <span className="material-symbols-outlined text-[18px] text-slate-400 group-hover:text-[var(--color-primary-dark)] transition-colors">{item.icon}</span>
+                            {item.label}
+                          </span>
+                          {item.shortcut && <span className="text-[9px] font-mono text-slate-400 opacity-60">{item.shortcut}</span>}
+                        </button>
+                      )
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
-
-          <div className="w-[1px] h-5 bg-outline-variant/30 mx-1"></div>
-
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-black text-slate-900 tracking-tight truncate max-w-[200px]">{meta.fileName || 'Untitled Label'}</span>
-            <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full ${savedStatus === 'saved' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'} text-[10px] font-black uppercase tracking-wider shadow-sm`}>
-              <span className={`material-symbols-outlined text-[14px] ${savedStatus === 'saving' ? 'animate-spin' : ''}`}>{statusIcon}</span>
-              {statusLabel}
+        }
+        rightContent={
+          <div className="flex items-center gap-5">
+            <div className="flex flex-col items-end">
+              <span className="text-[13px] font-bold text-white tracking-tight leading-none mb-1">{meta.fileName || 'Untitled Label'}</span>
+              <div className={`flex items-center gap-1.5 ${savedStatus === 'saved' ? 'text-[var(--color-primary-light)]' : 'text-amber-300'} text-[9px] font-black uppercase tracking-wider`}>
+                <span className={`material-symbols-outlined text-[14px] ${savedStatus === 'saving' ? 'animate-spin' : ''}`}>{statusIcon}</span>
+                {statusLabel}
+              </div>
             </div>
-          </div>
-        </div>
-
-        {/* Center: Nav links */}
-        <nav className="hidden xl:flex absolute left-1/2 -translate-x-1/2 items-center gap-1 bg-slate-100/80 p-1 rounded-xl border border-slate-200/50 shadow-sm">
-          <Link to="/" className="px-5 py-1.5 rounded-lg text-[12px] font-bold text-slate-500 hover:text-slate-900 hover:bg-white/90 transition-all">Dashboard</Link>
-          <Link to="/assets" className="px-5 py-1.5 rounded-lg text-[12px] font-bold text-slate-500 hover:text-slate-900 hover:bg-white/90 transition-all">Templates</Link>
-          <Link to="/editor" className="px-5 py-1.5 rounded-lg text-[12px] font-bold bg-white text-primary shadow-sm border border-slate-200/50 forced-active">Label Editor</Link>
-          <Link to="/translation" className="px-5 py-1.5 rounded-lg text-[12px] font-bold text-slate-500 hover:text-slate-900 hover:bg-white/90 transition-all">Translation</Link>
-        </nav>
-
-        {/* Right: Toolset */}
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <button
-              onClick={(e) => { e.stopPropagation(); setShowExportMenu(!showExportMenu); setShowFileMenu(false); }}
-              className="h-9 px-5 bg-slate-900 text-white rounded-xl text-[11px] font-black uppercase tracking-[0.05em] shadow-sm flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all"
-            >
-              Export
-              <span className="material-symbols-outlined text-[18px]">{showExportMenu ? 'arrow_drop_up' : 'arrow_drop_down'}</span>
-            </button>
-
-            {showExportMenu && (
-              <div className="absolute top-10 right-0 w-44 bg-white border border-outline-variant/30 shadow-lg rounded-xl py-1.5 z-[9999] animate-fade-in origin-top-right">
-                {[
-                  { label: 'Export PNG', icon: 'image', action: () => { handleExportPNG(); setShowExportMenu(false); } },
-                  { label: 'Export PDF', icon: 'picture_as_pdf', action: () => { handleExportPDF(); setShowExportMenu(false); } },
-                  {
-                    label: 'Save as Template', icon: 'auto_awesome_motion', action: () => {
-                      const name = prompt('Enter a name for this template:', meta.fileName || 'New Template');
-                      if (name) saveAsTemplate(name);
-                      setShowExportMenu(false);
-                    }
-                  },
-                  null,
-                  { label: 'Print Label', icon: 'print', action: () => { handlePrint(); setShowExportMenu(false); } }
-                ].map((item, i) => item === null ? (
-                  <div key={`sep-${i}`} className="h-[1px] bg-slate-100 my-1" />
-                ) : (
-                  <button key={item.label} onClick={item.action} className="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] font-semibold text-slate-700 hover:bg-slate-50 hover:text-blue-700 transition-colors text-left tracking-tight">
-                    <span className="material-symbols-outlined text-[18px] text-slate-500">{item.icon}</span>
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      </motion.header>
-
-      {/* ── Premium Secondary Toolbar ────────────────────────────────────────── */}
-      <motion.div
-        className="h-14 glass-header border-b border-white/20 flex items-center px-4 gap-4 shrink-0 relative z-[100] shadow-sm select-none"
-        initial={{ y: -10, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.1, type: "spring", stiffness: 300, damping: 30 }}
-      >
-        {/* Column 1: Precision Controls (Left) */}
-        <div className="flex-1 flex items-center justify-start">
-          <div className="flex items-center gap-1.5 bg-slate-100/80 p-1 rounded-xl border border-slate-200/50 shadow-sm h-10">
-            <motion.button
-              onClick={undo}
-              disabled={historyIndex <= 0}
-              title="Undo (Ctrl+Z)"
-              className="w-8 h-8 rounded-lg hover:bg-white disabled:opacity-20 text-slate-600 transition-all flex items-center justify-center shadow-sm"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7v6h6" /><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13" /></svg>
-            </motion.button>
-            <motion.button
-              onClick={redo}
-              disabled={historyIndex >= historyLength - 1}
-              title="Redo (Ctrl+Y)"
-              className="w-8 h-8 rounded-lg hover:bg-white disabled:opacity-20 text-slate-600 transition-all flex items-center justify-center shadow-sm"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 7v6h-6" /><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13" /></svg>
-            </motion.button>
-
-            <div className="w-[1px] h-4 bg-slate-300 mx-1"></div>
-
-            <button onClick={() => setZoomLevel(z => Math.max(0.1, +(z - 0.1).toFixed(2)))} className="w-8 h-8 rounded-lg hover:bg-white text-slate-500 flex items-center justify-center transition-colors">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /><line x1="8" y1="11" x2="14" y2="11" /></svg>
-            </button>
-            <button
-              onClick={handleFitToScreen}
-              className="text-[10px] font-black font-mono text-slate-700 min-w-12 text-center select-none py-1.5 hover:bg-white/10 rounded-md transition-colors"
-            >
-              {Math.round(zoomLevel * 100)}%
-            </button>
-            <button onClick={() => setZoomLevel(z => Math.min(4, +(z + 0.1).toFixed(2)))} className="w-8 h-8 rounded-lg hover:bg-white text-slate-500 flex items-center justify-center transition-colors">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /><line x1="11" y1="8" x2="11" y2="14" /><line x1="8" y1="11" x2="14" y2="11" /></svg>
-            </button>
-          </div>
-        </div>
-
-        {/* Column 2: Workspace Options (Center) */}
-        <div className="flex-1 flex items-center justify-center">
-          <div className="flex items-center gap-4">
-            {/* Quick Alignment Toolbar */}
-            {selectedIds.length > 0 && (
-              <div className="flex items-center gap-1 bg-slate-100/80 p-1 rounded-xl border border-slate-200/50 shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-300">
-                {[
-                  { id: 'left', icon: 'align_horizontal_left', title: 'Align Left' },
-                  { id: 'centerH', icon: 'align_horizontal_center', title: 'Align Center Horizontal' },
-                  { id: 'right', icon: 'align_horizontal_right', title: 'Align Right' },
-                  { id: 'sep1', type: 'sep' },
-                  { id: 'top', icon: 'align_vertical_top', title: 'Align Top' },
-                  { id: 'centerV', icon: 'align_vertical_center', title: 'Align Center Vertical' },
-                  { id: 'bottom', icon: 'align_vertical_bottom', title: 'Align Bottom' },
-                ].map((btn) => btn.type === 'sep' ? (
-                  <div key={btn.id} className="w-[1px] h-5 bg-slate-200 mx-1" />
-                ) : (
-                  <button
-                    key={btn.id}
-                    onClick={() => alignElements(btn.id)}
-                    className="w-8 h-8 rounded-lg hover:bg-white text-slate-500 hover:text-primary transition-all flex items-center justify-center"
-                    title={btn.title}
-                  >
-                    <span className="material-symbols-outlined text-[18px]">{btn.icon}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-
-            <div className="w-[1px] h-4 bg-slate-200 mx-1 hidden md:block"></div>
 
             <div className="relative">
               <button
-                onClick={(e) => { e.stopPropagation(); setShowEditorViewSettings(!showEditorViewSettings); }}
-                className={`h-10 px-4 rounded-xl text-[10px] font-black uppercase tracking-[0.05em] transition-all flex items-center gap-2 border shadow-sm ${showEditorViewSettings ? 'bg-primary/5 border-primary/30 text-primary' : 'bg-slate-100/80 border-slate-200/50 text-slate-600 hover:border-primary/40'}`}
+                onClick={(e) => { e.stopPropagation(); setShowExportMenu(!showExportMenu); setShowFileMenu(false); }}
+                className="h-10 px-5 bg-[var(--color-primary-light)] text-[var(--color-text-dark)] rounded-xl text-[12px] font-black uppercase tracking-wider shadow-[0_4px_12px_rgba(152,251,203,0.2)] flex items-center gap-2 hover:scale-[1.03] transition-all"
               >
-                <span className="material-symbols-outlined text-[18px]">grid_guides</span>
-                View Options
-                <span className="material-symbols-outlined text-[16px]">{showEditorViewSettings ? 'expand_less' : 'expand_more'}</span>
+                <span className="material-symbols-outlined text-[20px]">ios_share</span>
+                Export
+                <span className="material-symbols-outlined text-[16px] opacity-60">{showExportMenu ? 'arrow_drop_up' : 'arrow_drop_down'}</span>
               </button>
-
-              {showEditorViewSettings && (
-                <div
-                  onClick={(e) => e.stopPropagation()}
-                  className="absolute top-11 left-1/2 -translate-x-1/2 w-64 bg-white/95 backdrop-blur-xl border border-slate-200 shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-2xl p-2 z-[9999] animate-in fade-in slide-in-from-top-2 duration-300"
-                >
-                  <div className="px-3 py-2 mb-1">
-                    <p className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-400">Environment & Snapping</p>
-                  </div>
-
-                  {[
-                    { id: 'guides', label: 'Smart Guidelines', desc: 'Alignment & distance lines', icon: 'grid_guides', active: showGuidelines, toggle: () => setShowGuidelines(!showGuidelines) },
-                    { id: 'grid', label: 'Visual Grid', desc: 'Static document grid', icon: 'grid_4x4', active: showGrid, toggle: () => setShowGrid(!showGrid) },
-                    { id: 'magnet', label: 'Snap to Objects', desc: 'Magnetic positioning', active: snapToGuides, toggle: () => setSnapToGuides(!snapToGuides), isSVG: true },
-                    { id: 'snapGrid', label: 'Snap to Grid', desc: 'Lock to grid lines', icon: 'grid_guides', active: snapToGrid, toggle: () => setSnapToGrid(!snapToGrid) },
-                  ].map((item) => (
-                    <button
-                      key={item.id}
-                      onClick={(e) => { e.stopPropagation(); item.toggle(); }}
-                      className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 transition-all group"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${item.active ? 'bg-primary/10 text-primary' : 'bg-slate-100 text-slate-400'}`}>
-                          {item.isSVG ? (
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 10v4a7 7 0 0 0 14 0v-4" /><path d="M15 10V5a3 3 0 0 0-6 0v5" /><path d="M12 2v3" /></svg>
-                          ) : (
-                            <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
-                          )}
-                        </div>
-                        <div className="flex flex-col items-start gap-0.5">
-                          <span className={`text-[12px] font-bold ${item.active ? 'text-slate-900' : 'text-slate-500'}`}>{item.label}</span>
-                          <span className="text-[10px] text-slate-400 font-medium">{item.desc}</span>
-                        </div>
-                      </div>
-                      <div className={`w-9 h-5 rounded-full relative transition-all duration-300 border shadow-inner ${item.active ? 'bg-primary border-primary shadow-indigo-600/20' : 'bg-slate-200 border-slate-300'}`}>
-                        <div className={`absolute top-0.5 w-3.5 h-3.5 rounded-full bg-white shadow-md transition-all duration-300 ${item.active ? 'right-1' : 'left-1'}`} />
-                      </div>
-                    </button>
-                  ))}
-
-                  <div className="px-3 py-3">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Grid Density</span>
-                      <span className="text-[10px] font-bold text-primary font-mono bg-primary/10 px-2 py-0.5 rounded-md">{gridSize}px</span>
-                    </div>
-                    <input
-                      type="range"
-                      min="5"
-                      max="50"
-                      step="5"
-                      value={gridSize}
-                      onChange={(e) => setGridSize(Number(e.target.value))}
-                      className="w-full h-1 bg-slate-200 rounded-lg accent-primary"
-                    />
-                  </div>
-
-                  <div className="h-[1px] bg-slate-100 my-2 mx-2" />
-
-                  <div className="px-3 py-2">
-                    <p className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-400">Display Units</p>
-                    <div className="flex bg-slate-100 p-1 rounded-xl gap-1">
-                      {[UNITS.MM, UNITS.CM, UNITS.IN, UNITS.PX].map(u => (
-                        <button
-                          key={u}
-                          onClick={(e) => { e.stopPropagation(); setUnit(u); }}
-                          className={`flex-1 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all ${meta.unit === u ? 'bg-white text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-                        >
-                          {u}
+              <AnimatePresence>
+                {showExportMenu && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    className="absolute top-[calc(100%+8px)] right-0 w-52 bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] border border-slate-200 overflow-hidden z-[2100]"
+                  >
+                    <div className="p-1.5">
+                      {[
+                        { label: 'Download PNG', icon: 'image', action: () => { handleExportPNG(); setShowExportMenu(false); } },
+                        { label: 'Download PDF', icon: 'picture_as_pdf', action: () => { handleExportPDF(); setShowExportMenu(false); } },
+                        { label: 'Save as Template', icon: 'auto_awesome_motion', action: () => {
+                          const name = prompt('Enter a name for this template:', meta.fileName || 'New Template');
+                          if (name) saveAsTemplate(name);
+                          setShowExportMenu(false);
+                        }},
+                        { type: 'sep' },
+                        { label: 'Send to Printer', icon: 'print', action: () => { handlePrint(); setShowExportMenu(false); } }
+                      ].map((item, i) => item.type === 'sep' ? (
+                        <div key={`sep-${i}`} className="h-[1px] bg-slate-100 my-1 mx-2" />
+                      ) : (
+                        <button key={item.label} onClick={item.action} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[12px] font-bold text-slate-700 hover:bg-slate-50 hover:text-[var(--color-primary-dark)] transition-all group">
+                          <span className="material-symbols-outlined text-[18px] text-slate-400 group-hover:text-[var(--color-primary-dark)] transition-colors">{item.icon}</span>
+                          {item.label}
                         </button>
                       ))}
                     </div>
-                  </div>
-
-                  <div className="h-[1px] bg-slate-100 my-2 mx-2" />
-
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setManualGuidelines([]); setShowEditorViewSettings(false); }}
-                    className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-red-50 text-red-500 transition-all group"
-                  >
-                    <div className="w-9 h-9 rounded-xl bg-red-100/50 flex items-center justify-center group-hover:bg-red-500 group-hover:text-white transition-colors">
-                      <span className="material-symbols-outlined text-[18px]">delete_sweep</span>
-                    </div>
-                    <span className="text-[12px] font-bold">Purge Manual Guides</span>
-                  </button>
-                </div>
-              )}
-            </div>
-
-            <div className="w-[1px] h-4 bg-outline-variant/20 mx-1"></div>
-
-            {/* Consolidated Tools & Modes Dropdown */}
-            <div className="relative">
-              <button
-                onClick={(e) => { e.stopPropagation(); setShowToolsMenu(!showToolsMenu); }}
-                className={`h-10 px-4 rounded-xl text-[10px] font-black uppercase tracking-[0.05em] transition-all flex items-center gap-2 border shadow-sm ${showToolsMenu ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-slate-100/80 border-slate-200/50 text-slate-600 hover:border-indigo-400'}`}
-              >
-                <span className="material-symbols-outlined text-[18px]">build</span>
-                Editor Tools
-                <span className="material-symbols-outlined text-[16px]">{showToolsMenu ? 'expand_less' : 'expand_more'}</span>
-              </button>
-
-              {showToolsMenu && (
-                <div
-                  onClick={(e) => e.stopPropagation()}
-                  className="absolute top-11 left-1/2 -translate-x-1/2 w-72 bg-white/95 backdrop-blur-xl border border-slate-200 shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-2xl p-2 z-[9999] animate-in fade-in slide-in-from-top-2 duration-300"
-                >
-                  <div className="px-3 py-2 mb-1">
-                    <p className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-400">Content & Interaction</p>
-                  </div>
-
-                  <button onClick={() => { setShowWordArtModal(true); setShowToolsMenu(false); }} className="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-slate-50 transition-all group">
-                    <div className="w-11 h-11 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform"><span className="material-symbols-outlined text-[24px]">abc</span></div>
-                    <div className="flex flex-col items-start gap-0.5"><span className="text-[13px] font-bold text-slate-900 uppercase tracking-tight">WordArt</span><span className="text-[10px] text-slate-400 font-medium">Add stylized decorative text</span></div>
-                  </button>
-
-                  <button onClick={() => { setIsDrawingMode(!isDrawingMode); setShowToolsMenu(false); }} className={`w-full flex items-center gap-4 p-3 rounded-xl transition-all group ${isDrawingMode ? 'bg-indigo-50' : 'hover:bg-slate-50'}`}>
-                    <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform ${isDrawingMode ? 'bg-indigo-600 text-white shadow-glow' : 'bg-slate-100 text-slate-400'}`}><span className="material-symbols-outlined text-[24px]">edit_note</span></div>
-                    <div className="flex flex-col items-start gap-0.5"><span className={`text-[13px] font-bold uppercase tracking-tight ${isDrawingMode ? 'text-indigo-700' : 'text-slate-900'}`}>Freehand</span><span className="text-[10px] text-slate-400 font-medium text-left">Draw or write on the label</span></div>
-                  </button>
-
-                  <div className="h-[1px] bg-slate-100 my-2 mx-2" />
-
-                  <button onClick={() => { handleValidate(); setShowToolsMenu(false); }} className="w-full flex items-center gap-4 p-3 rounded-xl hover:bg-indigo-50 transition-all group">
-                    <div className="w-11 h-11 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform"><span className="material-symbols-outlined text-[24px]">fact_check</span></div>
-                    <div className="flex flex-col items-start gap-0.5"><span className="text-[13px] font-bold text-indigo-700 uppercase tracking-tight">Validate</span><span className="text-[10px] text-slate-400 font-medium">Check for compliance errors</span></div>
-                  </button>
-                </div>
-              )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
+        }
+      />
+
+      {/* ── Global Secondary Toolbar (Contextual Actions) ──────────────────── */}
+      <GlobalSecondaryToolbar>
+        {/* Precision Controls */}
+        <div className="flex items-center gap-1.5 p-1 bg-white/30 rounded-xl border border-white/40 shadow-sm backdrop-blur-sm">
+          <motion.button
+            onClick={undo}
+            disabled={historyIndex <= 0}
+            title="Undo (Ctrl+Z)"
+            className="w-8 h-8 rounded-lg hover:bg-white active:scale-95 disabled:opacity-30 text-[var(--color-primary-dark)] transition-all flex items-center justify-center"
+            whileHover={{ scale: 1.05 }}
+          >
+            <span className="material-symbols-outlined text-[20px]">undo</span>
+          </motion.button>
+          <motion.button
+            onClick={redo}
+            disabled={historyIndex >= historyLength - 1}
+            title="Redo (Ctrl+Y)"
+            className="w-8 h-8 rounded-lg hover:bg-white active:scale-95 disabled:opacity-30 text-[var(--color-primary-dark)] transition-all flex items-center justify-center"
+            whileHover={{ scale: 1.05 }}
+          >
+            <span className="material-symbols-outlined text-[20px]">redo</span>
+          </motion.button>
+
+          <div className="w-[1px] h-4 bg-[var(--color-primary-dark)]/20 mx-1"></div>
+
+          <button 
+            onClick={() => setZoomLevel(z => Math.max(0.1, +(z - 0.1).toFixed(2)))} 
+            className="w-8 h-8 rounded-lg hover:bg-white text-[var(--color-primary-dark)]/70 flex items-center justify-center"
+          >
+            <span className="material-symbols-outlined text-[18px]">zoom_out</span>
+          </button>
+          <button
+            onClick={handleFitToScreen}
+            className="text-[11px] font-black font-mono text-[var(--color-primary-dark)] min-w-[50px] text-center select-none py-1 hover:bg-white/40 rounded-lg transition-colors border border-transparent hover:border-[var(--color-primary-dark)]/10"
+          >
+            {Math.round(zoomLevel * 100)}%
+          </button>
+          <button 
+            onClick={() => setZoomLevel(z => Math.min(4, +(z + 0.1).toFixed(2)))} 
+            className="w-8 h-8 rounded-lg hover:bg-white text-[var(--color-primary-dark)]/70 flex items-center justify-center"
+          >
+            <span className="material-symbols-outlined text-[18px]">zoom_in</span>
+          </button>
         </div>
 
-        {/* Column 3: Design Review (Right) */}
-        <div className="flex-1 flex items-center justify-end gap-2 pr-1">
+        {/* Contextual Alignment Tools */}
+        <AnimatePresence mode="wait">
+          {selectedIds.length > 0 ? (
+            <motion.div 
+              key="alignment"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              className="flex items-center gap-1.5 p-1 bg-white/30 rounded-xl border border-white/40 shadow-sm backdrop-blur-sm"
+            >
+              {[
+                { id: 'left', icon: 'align_horizontal_left', title: 'Align Left' },
+                { id: 'centerH', icon: 'align_horizontal_center', title: 'Align Center Horizontal' },
+                { id: 'right', icon: 'align_horizontal_right', title: 'Align Right' },
+                { type: 'sep' },
+                { id: 'top', icon: 'align_vertical_top', title: 'Align Top' },
+                { id: 'centerV', icon: 'align_vertical_center', title: 'Align Center Vertical' },
+                { id: 'bottom', icon: 'align_vertical_bottom', title: 'Align Bottom' },
+              ].map((btn, i) => btn.type === 'sep' ? (
+                <div key={`sep-${i}`} className="w-[1px] h-4 bg-[var(--color-primary-dark)]/20 mx-1" />
+              ) : (
+                <button
+                  key={btn.id}
+                  onClick={() => alignElements(btn.id)}
+                  className="w-8 h-8 rounded-lg hover:bg-white text-[var(--color-primary-dark)]/70 hover:text-[var(--color-primary-dark)] flex items-center justify-center transition-all"
+                  title={btn.title}
+                >
+                  <span className="material-symbols-outlined text-[18px]">{btn.icon}</span>
+                </button>
+              ))}
+            </motion.div>
+          ) : (
+            <motion.div 
+              key="default"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex items-center gap-3 px-3 py-1 bg-white/10 rounded-lg border border-white/20"
+            >
+              <span className="material-symbols-outlined text-[16px] text-[var(--color-primary-dark)]/40">info</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-[var(--color-primary-dark)]/50">Select elements to align</span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <div className="flex-1" />
+
+        {/* Design Review Controls (Right) */}
+        <div className="flex items-center gap-3">
           {/* Label Size Info */}
-          <div className="flex bg-slate-100/80 border border-slate-200/50 rounded-xl p-0.5 shadow-sm">
+          <div className="flex bg-white/30 border border-white/40 rounded-xl p-0.5 shadow-sm backdrop-blur-sm">
             <button
               onClick={() => setModalStep('labelsize')}
-              className="flex items-center gap-2 h-9 px-3 rounded-lg text-[10px] font-black text-slate-500 hover:text-primary hover:bg-white/50 transition-all"
+              className="flex items-center gap-2 h-8 px-3 rounded-lg text-[10px] font-black text-[var(--color-primary-dark)]/60 hover:text-[var(--color-primary-dark)] hover:bg-white/50 transition-all"
               title="Edit label dimensions"
             >
               <span className="material-symbols-outlined text-[16px]">aspect_ratio</span>
@@ -1327,38 +1201,95 @@ export default function LabelEditor() {
                 {Math.round(AW / 3.7795275591)}×{Math.round(AH / 3.7795275591)}mm
               </span>
             </button>
-            <div className="w-[1px] h-4 bg-slate-200 self-center mx-0.5" />
+            <div className="w-[1px] h-4 bg-[var(--color-primary-dark)]/10 self-center mx-0.5" />
             <button
               onClick={toggleOrientation}
-              className="flex items-center gap-2 h-9 px-3 rounded-lg text-[10px] font-black text-slate-500 hover:text-blue-600 hover:bg-blue-50/50 transition-all"
+              className="flex items-center gap-2 h-8 px-3 rounded-lg text-[10px] font-black text-[var(--color-primary-dark)]/60 hover:text-blue-600 hover:bg-blue-50/50 transition-all"
               title="Toggle Portrait/Landscape"
             >
               <span className="material-symbols-outlined text-[16px]">screen_rotation</span>
             </button>
           </div>
 
+          <div className="w-[1px] h-4 bg-[var(--color-primary-dark)]/10"></div>
+
           {/* Live Review Group */}
-          <div className="flex items-center gap-1.5 px-1.5 py-1 bg-slate-100/50 rounded-xl border border-slate-200/50 shadow-sm h-10">
+          <div className="flex items-center gap-1 p-1 bg-white/30 rounded-xl border border-white/40 shadow-sm backdrop-blur-sm h-10">
             <button
               onClick={() => setPreviewMode(!previewMode)}
               title={previewMode ? "Show Raw Placeholders" : "Show Live Trial Data"}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all h-8 ${previewMode ? 'bg-blue-600 text-white shadow-lg' : 'bg-white text-slate-500 shadow-sm border border-slate-200'}`}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all h-8 ${previewMode ? 'bg-[var(--color-primary-dark)] text-white shadow-md' : 'bg-white text-slate-500 shadow-sm border border-slate-100'}`}
             >
               <span className="material-symbols-outlined text-[16px]">{previewMode ? 'database' : 'toll'}</span>
-              {previewMode ? 'Live Data' : 'Tokens'}
+              {previewMode ? 'Live' : 'Tokens'}
             </button>
-            <div className="w-[1px] h-3 bg-slate-300"></div>
             <button
               onClick={() => setShowPreviewModal(true)}
               title="Print Preview"
-              className="flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider text-slate-500 hover:bg-white transition-all h-8"
+              className="flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider text-[var(--color-primary-dark)]/60 hover:bg-white/60 transition-all h-8"
             >
               <span className="material-symbols-outlined text-[16px]">visibility</span>
               Preview
             </button>
           </div>
         </div>
-      </motion.div>
+
+        {/* View Settings */}
+        <div className="relative">
+          <button
+            onClick={(e) => { e.stopPropagation(); setShowEditorViewSettings(!showEditorViewSettings); }}
+            className={`h-9 px-4 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all flex items-center gap-2 border shadow-sm ${
+              showEditorViewSettings 
+                ? 'bg-[var(--color-primary-dark)] border-[var(--color-primary-dark)] text-white' 
+                : 'bg-white/40 border-white/60 text-[var(--color-primary-dark)] hover:bg-white/60'
+            }`}
+          >
+            <span className="material-symbols-outlined text-[18px]">visibility_off</span>
+            View
+            <span className="material-symbols-outlined text-[16px] opacity-60">{showEditorViewSettings ? 'expand_less' : 'expand_more'}</span>
+          </button>
+
+          <AnimatePresence>
+            {showEditorViewSettings && (
+              <motion.div
+                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                className="absolute top-[calc(100%+8px)] right-0 w-64 bg-white/95 backdrop-blur-xl border border-slate-200 shadow-2xl rounded-2xl p-2 z-[9999]"
+                onClick={e => e.stopPropagation()}
+              >
+                <div className="px-3 py-2 border-b border-slate-100 mb-1">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Editor Environment</p>
+                </div>
+
+                {[
+                  { id: 'guides', label: 'Smart Guidelines', desc: 'Alignment markers', icon: 'grid_guides', active: showGuidelines, toggle: () => setShowGuidelines(!showGuidelines) },
+                  { id: 'grid', label: 'Document Grid', desc: 'Visual background grid', icon: 'grid_4x4', active: showGrid, toggle: () => setShowGrid(!showGrid) },
+                  { id: 'magnet', label: 'Object Snapping', desc: 'Magnetic positioning', icon: 'magic_button', active: snapToGuides, toggle: () => setSnapToGuides(!snapToGuides) },
+                  { id: 'snapGrid', label: 'Grid Snapping', desc: 'Lock to grid lines', icon: 'grid_view', active: snapToGrid, toggle: () => setSnapToGrid(!snapToGrid) },
+                ].map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={item.toggle}
+                    className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 transition-all group"
+                  >
+                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${item.active ? 'bg-[var(--color-primary-dark)] text-white' : 'bg-slate-100 text-slate-400 group-hover:bg-slate-200'}`}>
+                      <span className="material-symbols-outlined text-[18px]">{item.icon}</span>
+                    </div>
+                    <div className="flex flex-col text-left">
+                      <span className={`text-[12px] font-bold ${item.active ? 'text-slate-900' : 'text-slate-500'}`}>{item.label}</span>
+                      <span className="text-[9px] font-medium text-slate-400 leading-none mt-0.5">{item.desc}</span>
+                    </div>
+                    {item.active && <span className="material-symbols-outlined ml-auto text-emerald-500 text-[18px]">check_circle</span>}
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </GlobalSecondaryToolbar>
+
+
 
       {/* ── Premium Main 3-Column Area ──────────────────────────────────────────── */}
       <motion.main

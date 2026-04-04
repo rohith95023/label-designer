@@ -23,6 +23,14 @@
   --color-error-container: #fef2f2;
   --color-success: #10b981;
   --color-success-container: #ecfdf5;
+
+  /* Minty Fresh Palette (Canva Inspired) */
+  --color-primary-dark: #558B71;   /* Main header */
+  --color-primary-light: #98FBCB;  /* Secondary header */
+  --color-primary-mid: #7FCFA8;    /* Active/hover states */
+  --color-text-dark: #0F172A;
+  --color-text-light: #FFFFFF;
+  --color-border-soft: rgba(0,0,0,0.08);
   
   --radius-sm: 8px;
   --radius-md: 12px;

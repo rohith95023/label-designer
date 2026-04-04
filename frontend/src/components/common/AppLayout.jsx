@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useLabel } from '../../context/LabelContext';
+import GlobalHeader from './GlobalHeader';
+import GlobalSecondaryToolbar from './GlobalSecondaryToolbar';
 
 const NAV_ITEMS = [
   { key: 'dashboard', to: '/', icon: 'grid_view', label: 'Dashboard', roles: ['ADMIN', 'REVIEWER', 'OPERATOR', 'EXTERNAL'], permission: 'dashboard' },
@@ -79,100 +81,53 @@ export default function AppLayout({ children, activePage = '', searchBar = null 
         </div>
       )}
 
-      {/* ── Top Header ─────────────────────────────────────────────────── */}
-      <header className="fixed top-0 w-full z-50 glass-header h-16 flex items-center justify-between px-6 gap-4">
-        {/* Left: burger + logo */}
-        <div className="flex items-center gap-3 min-w-0">
+      {/* ── Global Dual-Header System ──────────────────────────────────── */}
+      <GlobalHeader 
+        activePage={activePage} 
+        leftContent={
           <button
             onClick={() => setCollapsed(c => !c)}
-            className="p-2 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors shrink-0"
+            className="p-2 rounded-xl text-white/60 hover:bg-white/10 hover:text-white transition-all shrink-0"
             aria-label="Toggle sidebar"
           >
             <span className="material-symbols-outlined text-xl">
               {collapsed ? 'menu_open' : 'menu'}
             </span>
           </button>
+        }
+      />
+      
+      <GlobalSecondaryToolbar>
+        {/* Left: Section Identity / Breadcrumbs */}
+        <div className="flex items-center gap-2 px-3 py-1 bg-white/20 rounded-xl border border-white/40 shadow-sm backdrop-blur-sm">
+          <span className="material-symbols-outlined text-[18px] text-[var(--color-primary-dark)]/60">
+            {NAV_ITEMS.find(n => n.key === activePage)?.icon || 'explore'}
+          </span>
+          <span className="text-[11px] font-black uppercase tracking-widest text-[var(--color-primary-dark)]">
+            {activePage}
+          </span>
+        </div>
 
-          {/* Brand wordmark */}
-          <button
-            onClick={() => navigate('/')}
-            className="flex items-center gap-2 group"
+        <div className="flex-1" />
+
+        {/* Center: Search / Pagination / Filters Slot */}
+        {searchBar && (
+          <div className="max-w-md w-full animate-in fade-in slide-in-from-top-2">
+            {searchBar}
+          </div>
+        )}
+
+        <div className="flex-1" />
+
+        {/* Right: Page Actions Slot */}
+        <div className="flex items-center gap-2">
+          <button 
+            className="h-8 px-4 bg-white/40 border border-white/60 rounded-xl text-[10px] font-black uppercase tracking-widest text-[var(--color-primary-dark)] hover:bg-white/60 transition-all shadow-sm"
           >
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-tertiary flex items-center justify-center shadow-glow-sm shrink-0">
-              <span className="material-symbols-outlined text-white text-lg"
-                style={{ fontVariationSettings: "'FILL' 1, 'wght' 700" }}>
-                medical_services
-              </span>
-            </div>
-            <span className="hidden sm:block font-extrabold text-[16px] tracking-tight text-gradient select-none">
-              Clinical Label Design
-            </span>
+            Refresh
           </button>
         </div>
-
-        <div className="hidden md:flex flex-1 items-center justify-center gap-1 bg-surface-container-low/60 backdrop-blur-md px-1.5 py-1.5 border border-outline-variant/10 rounded-full max-w-xl mx-auto">
-          {filteredNavItems.filter(n => ['dashboard', 'assets', 'editor', 'translation'].includes(n.key)).map(item => (
-            <Link
-              key={item.key}
-              to={item.to}
-              className={`px-4 py-1.5 rounded-full text-[13px] font-semibold tracking-tight transition-all duration-200 ${activePage === item.key
-                  ? 'bg-primary text-on-primary shadow-glow-sm'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                }`}
-            >
-              {item.label}
-            </Link>
-          ))}
-        </div>
-
-        {/* Right: search + theme toggle + User */}
-        <div className="flex items-center gap-2 shrink-0">
-          {searchBar && (
-            <div className="hidden md:block">
-              {searchBar}
-            </div>
-          )}
-
-          {/* User Profile Dropdown */}
-          <div className="relative">
-            <button 
-              onClick={() => setUserMenuOpen(!userMenuOpen)}
-              className="flex items-center gap-2 p-1 pl-3 rounded-full hover:bg-surface-container transition-all"
-            >
-              <div className="flex flex-col items-end text-right hidden sm:flex">
-                <span className="text-[12px] font-bold leading-none">{user?.username}</span>
-                <span className="text-[10px] text-outline font-medium uppercase tracking-wider">{user?.role}</span>
-              </div>
-              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm border border-primary/20">
-                {user?.username?.charAt(0).toUpperCase()}
-              </div>
-            </button>
-
-            {userMenuOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-surface-container-high border border-outline-variant/30 rounded-2xl shadow-glow-lg p-2 animate-in fade-in slide-in-from-top-2">
-                <div className="px-3 py-2 border-b border-outline-variant/20 mb-1">
-                  <p className="text-[11px] font-bold text-outline uppercase tracking-widest">System Identity</p>
-                  <p className="text-[13px] font-medium truncate">{user?.email}</p>
-                </div>
-                <button 
-                  onClick={() => navigate('/settings')}
-                  className="w-full flex items-center gap-3 px-3 py-2 text-[13px] font-medium hover:bg-surface-container rounded-xl transition-colors"
-                >
-                  <span className="material-symbols-outlined text-lg">account_circle</span>
-                  Security Profile
-                </button>
-                <button 
-                  onClick={logout}
-                  className="w-full flex items-center gap-3 px-3 py-2 text-[13px] font-medium text-error hover:bg-error/10 rounded-xl transition-colors"
-                >
-                  <span className="material-symbols-outlined text-lg">logout</span>
-                  Logout
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </header>
+      </GlobalSecondaryToolbar>
 
       {/* ── Body ───────────────────────────────────────────────────────── */}
       <div className="flex pt-16 h-screen overflow-hidden">

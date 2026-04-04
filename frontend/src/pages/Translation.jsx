@@ -5,6 +5,7 @@ import { useToast } from '../components/common/ToastContext';
 import { GEO_LANGUAGE_DATA, ELEMENT_TYPE_LABELS, TRANSLATABLE_TYPES } from '../data/geoLanguages';
 import { translateBatch } from '../services/translation.service';
 import { calcAutoFitFontSize } from '../utils/autoFitFont';
+import AppLayout from '../components/common/AppLayout';
 
 const TYPE_COLORS = {
   text: 'text-blue-700 bg-blue-50 border-blue-200',
@@ -131,34 +132,10 @@ export default function Translation() {
   }, [draftTranslations, translatableElements, selectedLang]);
 
   return (
-    <div className="bg-[#F1F3F6] text-on-surface antialiased min-h-screen transition-colors">
-
-      {/* ── Top Nav ─────────────────────────────────────────────────────────── */}
-      <header className="fixed top-0 w-full z-50 bg-[#F8FAFC] border-b border-black/5 h-14 flex items-center justify-between px-6">
-        <div className="flex items-center gap-3">
-          <Link to="/" className="text-lg font-extrabold tracking-tighter text-blue-900">Pharma Label Design</Link>
-          <div className="w-[1px] h-5 bg-slate-200 mx-1" />
-        </div>
-
-        <nav className="hidden lg:flex absolute left-1/2 -translate-x-1/2 items-center gap-6 text-[15px] font-semibold">
-          <Link to="/" className="text-slate-500 hover:text-slate-800 transition-colors">Dashboard</Link>
-          <Link to="/assets" className="text-slate-500 hover:text-slate-800 transition-colors">Template Library</Link>
-          <Link to="/editor" className="text-slate-500 hover:text-slate-800 transition-colors">Label Editor</Link>
-          <Link to="/translation" className="text-blue-700 font-bold border-b-2 border-blue-600 pb-1">Translation</Link>
-        </nav>
-        
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
-            <span className="material-symbols-outlined text-[14px]">edit_document</span>
-            {projectName}
-          </div>
-        </div>
-      </header>
-
-      <div className="pt-14 flex min-h-screen">
-
+    <AppLayout activePage="translation">
+      <div className="flex h-[calc(100vh-112px)] overflow-hidden">
         {/* ── Left Sidebar: Source ─────────────────────────────────────────── */}
-        <aside className="w-[340px] shrink-0 bg-[#F8FAFC] border-r border-black/5 flex flex-col overflow-hidden sticky top-14 h-[calc(100vh-56px)]">
+        <aside className="w-[340px] shrink-0 bg-[#F8FAFC] border-r border-black/5 flex flex-col overflow-hidden h-full">
           {/* Header */}
           <div className="px-5 py-4 border-b border-black/5 bg-slate-50/80 shrink-0">
             <div className="flex items-center justify-between mb-1">
@@ -492,6 +469,6 @@ export default function Translation() {
           </div>
         </main>
       </div>
-    </div>
+    </AppLayout>
   );
 }

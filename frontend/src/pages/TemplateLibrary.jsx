@@ -46,15 +46,25 @@ export default function TemplateLibrary() {
   };
 
   const searchBar = (
-    <div className="relative group w-72">
-      <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline/80 group-focus-within:text-primary transition-colors text-[20px]">search</span>
+    <div className="relative group w-full max-w-sm mx-auto">
+      <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center pointer-events-none">
+        <span className="material-symbols-outlined text-[18px] text-[var(--color-primary-dark)] opacity-40 group-focus-within:opacity-100 group-focus-within:scale-110 transition-all duration-300">search</span>
+      </div>
       <input
         value={searchQuery}
         onChange={e => setSearchQuery(e.target.value)}
-        className="input-premium pl-12 pr-4 py-2.5 w-full rounded-full text-[13px] border-outline-variant/30 focus:border-primary/50 transition-all shadow-sm group-hover:shadow-md"
-        placeholder="Search medical templates..."
+        className="w-full bg-white/80 hover:bg-white/90 focus:bg-white backdrop-blur-sm pl-11 pr-10 py-2 rounded-xl text-[12px] font-bold text-[var(--color-primary-dark)] placeholder:text-[var(--color-primary-dark)] placeholder:opacity-50 border border-white focus:border-[var(--color-primary-dark)]/20 focus:ring-4 focus:ring-[var(--color-primary-dark)]/10 transition-all outline-none shadow-[0_2px_10px_rgba(0,0,0,0.03)]"
+        placeholder="Search clinical assets, templates, or files..."
         type="text"
       />
+      {searchQuery && (
+        <button 
+          onClick={() => setSearchQuery('')}
+          className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-lg hover:bg-white/20 text-[var(--color-primary-dark)]/40 hover:text-[var(--color-primary-dark)] transition-all"
+        >
+          <span className="material-symbols-outlined text-[16px]">close</span>
+        </button>
+      )}
     </div>
   );
 
