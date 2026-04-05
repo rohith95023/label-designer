@@ -171,20 +171,20 @@ export const AuthProvider = ({ children }) => {
           loop
           muted
           playsInline
-          className="absolute inset-0 z-0 w-full h-full object-cover grayscale-[0.2] brightness-[0.2] saturate-[0.8]"
+          className="absolute inset-0 z-0 w-full h-full object-cover grayscale-[0.2] brightness-[0.4] saturate-[0.8]"
         >
           <source src="/login background.mp4" type="video/mp4" />
         </video>
 
         {/* Glassmorphic Overlay */}
-        <div className="absolute inset-0 z-[1] bg-black/50 backdrop-blur-[2px]"></div>
+        <div className="absolute inset-0 z-[1] bg-black/30 backdrop-blur-[1px]"></div>
 
         <div className="relative z-10 bg-white rounded-[44px] p-12 text-center shadow-[0_40px_100px_rgba(0,0,0,0.8)] border border-white/20 animate-in fade-in zoom-in duration-500 flex flex-col items-center">
           <div className="w-16 h-16 rounded-[24px] bg-red-500/10 flex items-center justify-center text-red-500 mb-10 border border-red-500/10 shadow-inner">
             <span className="material-symbols-outlined text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>gpp_maybe</span>
           </div>
           
-          <h2 className="text-2xl font-black text-[#1E40AF] tracking-tight mb-8 leading-none italic uppercase">Session Expired</h2>
+          <h2 className="text-2xl font-black text-[#0F172A] tracking-tighter mb-8 leading-none uppercase">Session Expired</h2>
 
           <button 
             id="reauth-btn"
@@ -195,9 +195,9 @@ export const AuthProvider = ({ children }) => {
                 setSessionLostByTab(false);
                 navigate('/login', { replace: true });
             }}
-            className="h-11 px-10 bg-[#1E40AF] hover:bg-[#1D4ED8] text-white font-black uppercase tracking-[0.25em] text-[10px] rounded-[22px] shadow-2xl transition-all active:scale-[0.98] flex items-center justify-center gap-2.5"
+            className="h-11 px-10 bg-[#1E40AF] hover:bg-[#1D4ED8] text-white font-black uppercase tracking-[0.1em] text-[12px] rounded-[22px] shadow-2xl transition-all active:scale-[0.98] flex items-center justify-center gap-3"
           >
-            <span className="material-symbols-outlined text-base">login</span>
+            <span className="material-symbols-outlined text-[18px]">login</span>
             RE-LOGIN
           </button>
         </div>

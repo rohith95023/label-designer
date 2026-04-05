@@ -151,11 +151,9 @@ export default function Dashboard() {
         >
           <p className="text-[var(--color-primary-mid)] font-black text-[11px] uppercase tracking-[0.3em] mb-3">Workspace Overview</p>
           <h1 className="text-4xl md:text-6xl font-black tracking-tighter leading-none text-[var(--color-primary-dark)] mb-4">
-            Welcome to <span className="text-[var(--color-secondary)]">Design</span>
+            Welcome to <span className="text-[var(--color-secondary)]">Dashboard</span>
           </h1>
-          <p className="text-[var(--color-on-surface-variant)] text-sm max-w-md font-medium leading-relaxed">
-            Manage, design, and export pharmaceutical labels â€” all in one place with clinical precision.
-          </p>
+        
         </motion.div>
 
         {labelLoading ? (
