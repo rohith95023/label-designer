@@ -89,7 +89,7 @@ export default function GlobalHeader({
           >
             <div className="flex flex-col items-end text-right hidden sm:flex">
                 <span className="text-[11px] font-black text-white/90 leading-none mb-0.5">{user?.username}</span>
-                <span className="text-[9px] text-[var(--color-primary)] font-black uppercase tracking-[0.2em] opacity-100">{user?.role}</span>
+                <span className="text-[9px] text-white/50 font-black uppercase tracking-[0.2em]">{user?.role}</span>
             </div>
             <div className="w-8 h-8 rounded-full bg-[var(--color-primary)] flex items-center justify-center text-white font-black text-sm border-2 border-white/20 shadow-lg group-hover:scale-110 transition-transform">
               {user?.username?.charAt(0).toUpperCase()}

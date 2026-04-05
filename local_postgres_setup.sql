@@ -9,6 +9,15 @@
 -- Supabase usually has an 'extensions' schema. We ensure pgcrypto is available.
 CREATE EXTENSION IF NOT EXISTS "pgcrypto" WITH SCHEMA extensions;
 
+-- Function for automatic updated_at timestamps
+CREATE OR REPLACE FUNCTION set_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
 -- =============================================================================
 -- SECTION 1: CORE TABLES & AUTH PROFILES
 -- =============================================================================
@@ -118,10 +127,20 @@ CREATE TABLE IF NOT EXISTS public.label_versions (
     label_id      UUID        REFERENCES public.labels(id) ON DELETE CASCADE,
     version_no    INTEGER     NOT NULL,
     design_json   JSONB       NOT NULL,
+    notes         TEXT,
     created_by    UUID        REFERENCES public.users(id),
     created_at    TIMESTAMPTZ DEFAULT now(),
     UNIQUE(label_id, version_no)
 );
+
+-- ── 3.3 Automate Updated At ───────────────────────────────────────────────────
+CREATE TRIGGER trigger_update_labels
+  BEFORE UPDATE ON public.labels
+  FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+CREATE TRIGGER trigger_update_system_config
+  BEFORE UPDATE ON public.system_config
+  FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
 -- =============================================================================
 -- SECTION 4: WORKFLOW & SYSTEM TABLES
@@ -197,11 +216,11 @@ CREATE POLICY "Users Profile - Update" ON public.users FOR UPDATE USING (auth.ui
 CREATE POLICY "Labels - Access" ON public.labels FOR ALL TO authenticated USING (true);
 CREATE POLICY "Label Versions - Access" ON public.label_versions FOR ALL TO authenticated USING (true);
 
--- Master Data: Read-only for authenticated, write for admins (heuristic policy)
-CREATE POLICY "Master Data - Select" ON public.languages FOR SELECT USING (true);
-CREATE POLICY "Master Data - Select" ON public.label_stocks FOR SELECT USING (true);
-CREATE POLICY "Master Data - Select" ON public.objects FOR SELECT USING (true);
-CREATE POLICY "Master Data - Select" ON public.placeholders FOR SELECT USING (true);
+-- Master Data Policies
+CREATE POLICY "Languages - Authenticated Select" ON public.languages FOR SELECT USING (true);
+CREATE POLICY "Label Stocks - Authenticated Select" ON public.label_stocks FOR SELECT USING (true);
+CREATE POLICY "Objects - Authenticated Select" ON public.objects FOR SELECT USING (true);
+CREATE POLICY "Placeholders - Authenticated Select" ON public.placeholders FOR SELECT USING (true);
 
 -- Audit Logs: Insert only for authenticated users (system logs)
 CREATE POLICY "Audit Logs - Insert" ON public.audit_logs FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
@@ -224,7 +243,7 @@ BEGIN
   );
   RETURN new;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 -- Trigger to call the function on signup
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
@@ -233,7 +252,17 @@ CREATE TRIGGER on_auth_user_created
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 -- =============================================================================
--- SECTION 7: SEED DATA
+-- SECTION 7: REALTIME ENABLEMENT
+-- =============================================================================
+
+-- Enable Realtime for standard clinical tables
+ALTER PUBLICATION supabase_realtime ADD TABLE public.labels;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.label_versions;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.audit_logs;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.system_config;
+
+-- =============================================================================
+-- SECTION 8: SEED DATA
 -- =============================================================================
 
 -- Roles

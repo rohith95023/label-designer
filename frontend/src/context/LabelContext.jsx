@@ -511,6 +511,47 @@ export const LabelProvider = ({ children }) => {
     });
   }, [meta.labelSize, setElements]);
 
+  const restoreVersion = async (targetFile, versionData) => {
+    if (isSavingRef.current) return;
+    try {
+      setSavedStatus('saving');
+      // 1. Prepare design payload from the historical version
+      const payload = {
+        designJson: versionData.designJson || {
+          elementsData: versionData.elementsData || [],
+          labelSize: versionData.labelSize || meta.labelSize,
+          bgColor: versionData.bgColor || meta.bgColor,
+          labelStockId: versionData.labelStockId || meta.labelStockId
+        },
+        labelStockId: versionData.labelStockId || targetFile.labelStockId,
+        notes: `Restored to version ${versionData.versionNo || 'previous'} on ${new Date().toLocaleString()}`
+      };
+
+      // 2. Commit as NEW version record
+      const response = await api.saveLabelVersion(targetFile.id, payload);
+      
+      // 3. Hydrate state for the editor
+      const fresh = await api.getLabel(targetFile.id);
+      openFileById(targetFile.id);
+      setElements(payload.designJson.elementsData);
+      setMeta(m => ({
+        ...m,
+        ...payload.designJson,
+        versionNo: response.versionNo
+      }));
+
+      setSavedStatus('saved');
+      showToast(`Restored to v${versionData.versionNo} as new version ✓`, 'success');
+      return true;
+    } catch (err) {
+      console.error('Restore failed:', err);
+      showToast('Restore version failed', 'error');
+      return false;
+    } finally {
+      setSavedStatus('unsaved');
+    }
+  };
+
   const setLabelSize = (w, h) => {
     if (w < 10 || h < 10) return; // Prevent invalid sizes
     scaleElements(w, h);
@@ -545,7 +586,7 @@ export const LabelProvider = ({ children }) => {
     }));
   };
 
-  const saveFile = async () => {
+  const saveFile = async (comment = '') => {
     if (!meta.fileId) {
       showToast('Please name your file first', 'warning');
       return;
@@ -554,7 +595,7 @@ export const LabelProvider = ({ children }) => {
     isSavingRef.current = true;
     try {
       setSavedStatus('saving');
-      await api.saveLabelVersion(meta.fileId, {
+      const response = await api.saveLabelVersion(meta.fileId, {
         designJson: {
           elementsData: elements,
           labelSize: meta.labelSize,
@@ -562,10 +603,15 @@ export const LabelProvider = ({ children }) => {
           labelStockId: meta.labelStockId
         },
         labelStockId: meta.labelStockId,
-        notes: meta.notes
+        notes: comment || meta.notes
       });
+      
+      if (response && response.versionNo) {
+        setMeta(m => ({ ...m, versionNo: response.versionNo }));
+      }
+      
       setSavedStatus('saved');
-      showToast('New version saved ✓', 'success');
+      showToast(comment ? `Version ${response?.versionNo || ''} saved with audit note ✓` : 'New version saved ✓', 'success');
     } catch (err) {
       console.error('Manual save failed', err);
       showToast('Manual save failed', 'error');
@@ -1027,14 +1073,14 @@ export const LabelProvider = ({ children }) => {
     elements, setElements,
     selectedIds, setSelectedIds,
     zoomLevel, setZoomLevel,
-    savedStatus, toast,
+    savedStatus, toast, showToast,
     historyIndex, historyLength: history.length,
     hydrated, loading,
     settings, updateSettings,
     activityLogs,
     // File ops
     newFile, setFileName, setLabelSize,
-    saveFile, saveFileAs,
+    saveFile, saveFileAs, restoreVersion,
     openFileById, openFileFromJSON, deleteUserTemplate,
     exportJSON, getAllFiles,
     getTemplateHistory, getTemplateById,

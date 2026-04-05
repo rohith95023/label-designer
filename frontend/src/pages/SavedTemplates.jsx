@@ -17,14 +17,31 @@ export default function SavedTemplates() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(null); // { id, name }
 
+  const [sortBy, setSortBy] = useState('modified'); // 'created', 'modified', 'name'
+  const [sortOrder, setSortOrder] = useState('desc'); // 'asc', 'desc'
+
   const isAdmin = user?.role === 'ADMIN';
 
   const filteredFiles = useMemo(() => {
-    return userFiles.filter(f =>
+    let filtered = userFiles.filter(f =>
       f.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (isAdmin && f.createdByUsername?.toLowerCase().includes(searchQuery.toLowerCase()))
     );
-  }, [userFiles, searchQuery, isAdmin]);
+
+    filtered.sort((a, b) => {
+      let comparison = 0;
+      if (sortBy === 'name') {
+        comparison = a.name.localeCompare(b.name);
+      } else if (sortBy === 'created') {
+        comparison = new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
+      } else if (sortBy === 'modified') {
+        comparison = new Date(a.updatedAt || 0) - new Date(b.updatedAt || 0);
+      }
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
+
+    return filtered;
+  }, [userFiles, searchQuery, isAdmin, sortBy, sortOrder]);
 
   const handleOpen = (file) => {
     const isDirty = (elements && elements.length > 0) || (meta.fileName && meta.fileName !== 'Untitled Label') || (meta.fileId && meta.fileId !== 'new');
@@ -61,15 +78,12 @@ export default function SavedTemplates() {
     }
   };
 
-  const formatDate = (dateStr) => {
-    if (!dateStr) return 'Unknown';
-    return new Date(dateStr).toLocaleDateString(undefined, {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+  const formatDateTime = (dateStr) => {
+    if (!dateStr) return { date: 'Unknown', time: '' };
+    const d = new Date(dateStr);
+    const date = d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+    const time = d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+    return { date, time };
   };
 
   const searchBar = (
@@ -109,6 +123,31 @@ export default function SavedTemplates() {
             <p className="text-[var(--color-on-surface-variant)] text-sm max-w-lg font-medium leading-relaxed">
               Manage and deploy your high-resolution pharmaceutical label designs from your secure repository.
             </p>
+          </div>
+
+          <div className="flex items-center gap-2 mb-1">
+            <div className="relative flex items-center bg-white/60 backdrop-blur border border-[var(--color-secondary)]/20 rounded-xl px-3 py-2 shadow-sm">
+              <span className="material-symbols-outlined text-[16px] text-[var(--color-primary-dark)]/50 mr-2">sort</span>
+              <select
+                value={sortBy}
+                onChange={e => setSortBy(e.target.value)}
+                className="bg-transparent text-[11px] font-black uppercase tracking-wider text-[var(--color-primary-dark)] outline-none cursor-pointer appearance-none pr-4"
+              >
+                <option value="modified">Last Modified</option>
+                <option value="created">Creation Date</option>
+                <option value="name">Alphabetical Name</option>
+              </select>
+            </div>
+            
+            <button
+              onClick={() => setSortOrder(o => o === 'asc' ? 'desc' : 'asc')}
+              className="w-9 h-9 flex items-center justify-center bg-white/60 backdrop-blur border border-[var(--color-secondary)]/20 rounded-xl hover:bg-[var(--color-primary)] hover:text-white transition-all shadow-sm group"
+              title={`Toggle sort order (Currently ${sortOrder === 'asc' ? 'Ascending' : 'Descending'})`}
+            >
+              <span className="material-symbols-outlined text-[18px] text-[var(--color-primary-dark)] group-hover:text-white transition-colors">
+                {sortOrder === 'asc' ? 'arrow_upward' : 'arrow_downward'}
+              </span>
+            </button>
           </div>
         </motion.div>
 
@@ -167,7 +206,8 @@ export default function SavedTemplates() {
                     <th className="px-8 py-5 text-[10px] font-black text-white uppercase tracking-[0.2em]">Clinical Asset Name</th>
                     {isAdmin && <th className="px-8 py-5 text-[10px] font-black text-white uppercase tracking-[0.2em]">Custodian</th>}
                     <th className="px-8 py-5 text-[10px] font-black text-white uppercase tracking-[0.2em]">Label Dimensions</th>
-                    <th className="px-8 py-5 text-[10px] font-black text-white uppercase tracking-[0.2em]">Modified Integrity</th>
+                    <th className="px-8 py-5 text-[10px] font-black text-white uppercase tracking-[0.2em]">Creation Date</th>
+                    <th className="px-8 py-5 text-[10px] font-black text-white uppercase tracking-[0.2em]">Last Modified</th>
                     <th className="px-8 py-5 text-[10px] font-black text-white uppercase tracking-[0.2em] text-right">Deployment</th>
                   </tr>
                 </thead>
@@ -213,8 +253,14 @@ export default function SavedTemplates() {
                       </td>
                       <td className="px-8 py-6">
                         <div className="flex flex-col">
-                          <p className="text-[12px] font-black text-slate-800">{formatDate(file.updatedAt).split(',')[0]}</p>
-                          <p className="text-[10px] font-bold text-slate-500 uppercase">{formatDate(file.updatedAt).split(',')[1]}</p>
+                          <p className="text-[12px] font-black text-slate-800">{formatDateTime(file.createdAt)?.date}</p>
+                          <p className="text-[10px] font-bold text-slate-500 uppercase">{formatDateTime(file.createdAt)?.time}</p>
+                        </div>
+                      </td>
+                      <td className="px-8 py-6">
+                        <div className="flex flex-col">
+                          <p className="text-[12px] font-black text-slate-800">{formatDateTime(file.updatedAt)?.date}</p>
+                          <p className="text-[10px] font-bold text-slate-500 uppercase">{formatDateTime(file.updatedAt)?.time}</p>
                         </div>
                       </td>
                       <td className="px-8 py-6 text-right">

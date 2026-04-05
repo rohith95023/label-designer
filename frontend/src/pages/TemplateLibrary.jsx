@@ -69,8 +69,7 @@ export default function TemplateLibrary() {
   );
 
   return (
-    <AppLayout activePage="assets" searchBar={searchBar}>
-      <div className="p-6 lg:p-10 pb-24">
+    <div className="p-6 lg:p-10 pb-24">
 
         {/* Hero */}
         <motion.div 
@@ -277,7 +276,6 @@ export default function TemplateLibrary() {
             ))}
           </div>
         )}
-      </div>
 
       {/* Template Conflict Resolution Modal */}
       <TemplateConflictModal
@@ -297,6 +295,7 @@ export default function TemplateLibrary() {
         canvasName={meta.fileName || 'Untitled Label'}
         title="How would you like to load this template?"
       />
-    </AppLayout>
+    </div>
   );
 }
+

@@ -201,6 +201,9 @@ export default function AppLayout({ children, activePage = '', searchBar = null 
           </nav>
 
           {/* Bottom: version badge */}
+          <div className="p-3 mt-auto border-t border-slate-100 flex justify-center">
+            <span className="bg-slate-100 text-slate-400 text-[9px] font-black uppercase tracking-[0.2em] px-3 py-1 rounded-full border border-slate-200/50 cursor-help transition-all hover:bg-white hover:text-slate-600">v1.1.0-STABLE</span>
+          </div>
         </aside>
 
         {/* ── Main Content ─────────────────────────────────────────────── */}

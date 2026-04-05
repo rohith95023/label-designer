@@ -291,7 +291,7 @@ export default function LabelEditor() {
     zoomLevel, setZoomLevel,
     undo, redo, historyIndex, historyLength,
     settings, updateSettings,
-    savedStatus, toast, hydrated,
+    savedStatus, toast, showToast, hydrated,
     validateLabel,
     saveFile, saveFileAs, openFileById, openFileFromJSON, exportJSON, getAllFiles,
     setUnit,
@@ -380,6 +380,7 @@ export default function LabelEditor() {
   const [modalStep, setModalStep] = useState('none');
   const [pendingFlow, setPendingFlow] = useState(null); // 'new' | 'template'
   const [showSaveAs, setShowSaveAs] = useState(false);
+  const [showVersionModal, setShowVersionModal] = useState(false);
   const [saveAsName, setSaveAsName] = useState('');
   const [editingElementId, setEditingElementId] = useState(null);
   const [formatActiveStates, setFormatActiveStates] = useState({});
@@ -687,7 +688,17 @@ export default function LabelEditor() {
 
   // ── Modal Handlers ──────────────────────────────────────────────────────────
   const handleFileNameConfirm = (name) => {
-    // If it's a dedicated "New File" flow, we reset only AFTER we have a name
+    const trimmed = name.trim().toLowerCase();
+    const allFiles = getAllFiles();
+    const exists = allFiles.find(f => f.name.toLowerCase() === trimmed);
+
+    if (exists) {
+      if (pendingFlow === 'new' || !meta.fileId || exists.id !== meta.fileId) {
+        showToast(`A label named "${name.trim()}" already exists. Please choose a different name.`, 'error');
+        return;
+      }
+    }
+
     if (pendingFlow === 'new') {
       newFile();
     }
@@ -850,6 +861,52 @@ export default function LabelEditor() {
         />,
         document.body
       )}
+
+      {showVersionModal && createPortal(
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-6 animate-fade-in">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowVersionModal(false)}></div>
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="relative w-full max-w-md bg-white rounded-[32px] shadow-2xl overflow-hidden border border-slate-100"
+          >
+            <div className="bg-[var(--color-primary-dark)] p-8 text-white">
+              <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center mb-4 text-white">
+                <span className="material-symbols-outlined text-2xl">published_with_changes</span>
+              </div>
+              <h3 className="text-xl font-bold tracking-tight">Audit Trail Requirement</h3>
+              <p className="text-sm text-white/60 font-medium mt-1">Version {meta.versionNo ? `v${(parseFloat(meta.versionNo) + 1).toFixed(1)}` : 'v1.1'} initialization</p>
+            </div>
+            <div className="p-8">
+              <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2">Reason for modification (Mandatory)</label>
+              <textarea 
+                autoFocus
+                id="version-comment-box"
+                className="w-full h-32 bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm font-semibold text-slate-800 focus:border-[var(--color-primary)] focus:bg-white transition-all outline-none resize-none placeholder:text-slate-300"
+                placeholder="Summarize the adjustments made to fields, layout, or content..."
+              />
+              <div className="grid grid-cols-2 gap-3 mt-6">
+                <button onClick={() => setShowVersionModal(false)} className="px-6 py-3 rounded-2xl text-[12px] font-bold text-slate-500 hover:bg-slate-100 transition-all border border-slate-100">Cancel</button>
+                <button 
+                  onClick={() => {
+                    const comment = document.getElementById('version-comment-box')?.value;
+                    if (!comment?.trim()) {
+                      showToast('Audit comment required for compliance', 'error');
+                      return;
+                    }
+                    saveFile(comment.trim());
+                    setShowVersionModal(false);
+                  }}
+                  className="px-6 py-3 rounded-2xl text-[12px] font-bold text-white bg-[var(--color-primary-dark)] hover:shadow-glow-sm shadow-xl shadow-black/10 transition-all active:scale-95"
+                >
+                  Commit Version
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>,
+        document.body
+      )}
       {modalStep === 'labelsize' && createPortal(
         <LabelSizeModal
           onConfirm={handleLabelSizeConfirm}
@@ -943,7 +1000,21 @@ export default function LabelEditor() {
             />
             <div className="flex gap-3">
               <button onClick={() => setShowSaveAs(false)} className="flex-1 py-2 rounded-xl border text-sm text-slate-600 hover:bg-slate-100">Cancel</button>
-              <button disabled={saveAsName.trim().length < 3} onClick={() => { saveFileAs(saveAsName); setShowSaveAs(false); }} className="flex-1 py-2 rounded-xl btn-gradient text-white text-sm font-bold disabled:opacity-40">Save Copy</button>
+              <button 
+                disabled={saveAsName.trim().length < 3} 
+                onClick={() => { 
+                  const trimmed = saveAsName.trim().toLowerCase();
+                  if (getAllFiles().some(f => f.name.toLowerCase() === trimmed)) {
+                    showToast(`A label named "${saveAsName.trim()}" already exists.`, 'error');
+                    return;
+                  }
+                  saveFileAs(saveAsName); 
+                  setShowSaveAs(false); 
+                }} 
+                className="flex-1 py-2 rounded-xl btn-gradient text-white text-sm font-bold disabled:opacity-40"
+              >
+                Save Copy
+              </button>
             </div>
           </div>
         </div>
@@ -980,7 +1051,7 @@ export default function LabelEditor() {
 
       {/* ── Toast ───────────────────────────────────────────────────────────── */}
       {toast && (
-        <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[1000] px-5 py-3 rounded-xl shadow-lg text-sm font-semibold flex items-center gap-2 transition-all ${toast.type === 'error' ? 'bg-error text-white' : 'bg-slate-800 text-white'}`}>
+        <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[999999] px-5 py-3 rounded-xl shadow-lg text-sm font-semibold flex items-center gap-2 transition-all ${toast.type === 'error' ? 'bg-error text-white' : 'bg-slate-800 text-white'}`}>
           <span className="material-symbols-outlined text-sm">{toast.type === 'error' ? 'error' : 'check_circle'}</span>
           {toast.msg}
         </div>
@@ -1030,7 +1101,7 @@ export default function LabelEditor() {
                       { label: 'New Design', icon: 'add_circle', action: triggerNewFile, shortcut: 'Alt+N' },
                       { label: 'Open File', icon: 'folder_open', action: () => jsonInputRef.current?.click(), shortcut: 'Ctrl+O' },
                       { type: 'sep' },
-                      { label: 'Save Changes', icon: 'save', action: () => { saveFile(); setShowFileMenu(false); }, shortcut: 'Ctrl+S' },
+                      { label: 'Save Changes', icon: 'published_with_changes', action: () => { setShowVersionModal(true); setShowFileMenu(false); }, shortcut: 'Ctrl+S' },
                       { label: 'Duplicate File', icon: 'content_copy', action: () => { setShowSaveAs(true); setShowFileMenu(false); } },
                       { label: 'Export JSON', icon: 'download', action: () => { exportJSON(); setShowFileMenu(false); } }
                     ].map((item, i) => item.type === 'sep'
@@ -1054,8 +1125,11 @@ export default function LabelEditor() {
         rightContent={
           <div className="flex items-center gap-5">
             <div className="flex flex-col items-end">
-              <span className="text-[13px] font-bold text-white tracking-tight leading-none mb-1">{meta.fileName || 'Untitled Label'}</span>
-              <div className={`flex items-center gap-1.5 ${savedStatus === 'saved' ? 'text-[var(--color-primary-light)]' : 'text-amber-300'} text-[9px] font-black uppercase tracking-wider`}>
+              <div className="flex items-center gap-2">
+                <span className="bg-white text-slate-900 text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-lg border border-white/20 leading-none shadow-sm">v{meta.versionNo || '1.0'}</span>
+                <span className="text-[14px] font-bold text-white tracking-tight leading-none group/title cursor-default">{meta.fileName || 'Untitled Label'}</span>
+              </div>
+              <div className={`flex items-center gap-1.5 ${savedStatus === 'saved' ? 'text-[var(--color-primary-light)]' : 'text-amber-300'} text-[9px] font-black uppercase tracking-wider mt-1`}>
                 <span className={`material-symbols-outlined text-[14px] ${savedStatus === 'saving' ? 'animate-spin' : ''}`}>{statusIcon}</span>
                 {statusLabel}
               </div>
@@ -1076,12 +1150,15 @@ export default function LabelEditor() {
                     initial={{ opacity: 0, y: 10, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                    className="absolute top-[calc(100%+8px)] right-0 w-52 bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] border border-slate-200 overflow-hidden z-[2100]"
+                    className="absolute top-[calc(100%+8px)] right-0 w-64 bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] border border-slate-200 overflow-hidden z-[2100]"
                   >
+                    <div className="p-2 border-b border-slate-100 bg-slate-50/50">
+                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 px-3 py-1">Export Options</p>
+                    </div>
                     <div className="p-1.5">
                       {[
-                        { label: 'Download PNG', icon: 'image', action: () => { handleExportPNG(); setShowExportMenu(false); } },
-                        { label: 'Download PDF', icon: 'picture_as_pdf', action: () => { handleExportPDF(); setShowExportMenu(false); } },
+                        { label: 'Download PNG', icon: 'image', action: handleExportPNG, desc: 'High resolution image' },
+                        { label: 'Download PDF', icon: 'picture_as_pdf', action: handleExportPDF, desc: 'Professional vector PDF' },
                         { label: 'Save as Template', icon: 'auto_awesome_motion', action: () => {
                           const name = prompt('Enter a name for this template:', meta.fileName || 'New Template');
                           if (name) saveAsTemplate(name);
@@ -1356,11 +1433,11 @@ export default function LabelEditor() {
         {/* ── Canva-style Sidebar System ────────────────────────────────────────── */}
           <div 
           ref={sidebarRef} 
-          className="flex h-full relative z-[999] bg-white border-r border-slate-200" 
+          className="flex h-full relative z-[999] bg-[#F1F5F9] border-r border-slate-200" 
           onMouseLeave={() => setHoveredIcon(null)}
         >
           {/* 1. Icon Rail (Fixed width: 72px) */}
-          <aside className="w-[72px] bg-[var(--color-primary-light)]/5 border-r border-[var(--color-primary-dark)]/5 flex flex-col items-center py-6 gap-3 flex-shrink-0">
+          <aside className="w-[72px] bg-white border-r border-slate-200 flex flex-col items-center py-6 gap-3 flex-shrink-0">
             {ICON_RAIL_ITEMS.map((item) => {
               const isActive = activeTab === item.id;
               const isLocked = lockedIcon === item.id;
@@ -1410,7 +1487,7 @@ export default function LabelEditor() {
                 animate={{ x: 0, opacity: 1 }}
                 exit={{ x: -12, opacity: 0 }}
                 transition={{ duration: 0.15, ease: "easeOut" }}
-                className="w-[320px] bg-white border-r border-slate-200 flex flex-col overflow-hidden shadow-2xl h-full"
+                className="w-[320px] bg-[#F1F5F9] border-r border-slate-200 flex flex-col overflow-hidden shadow-2xl h-full"
               >
                 {/* Panel Header */}
                 <div className="p-6 border-b border-[var(--color-primary-dark)]/5 flex items-center justify-between shrink-0 bg-[var(--color-background)]/80 backdrop-blur-md">
@@ -1616,12 +1693,44 @@ export default function LabelEditor() {
                             {basicShapes.map(s => (
                               <motion.button
                                 key={s.id}
-                                onClick={() => setShapeDrawingTool(s.id)}
-                                className={`flex flex-col items-center p-4 rounded-2xl border transition-all ${
-                                  shapeDrawingTool === s.id 
-                                    ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-white shadow-lg' 
-                                    : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'
-                                }`}
+                                draggable
+                                onDragStart={(e) => {
+                                  e.dataTransfer.setData('application/json', JSON.stringify(s.payload));
+                                  
+                                  const ghost = document.createElement('div');
+                                  ghost.id = 'drag-ghost-' + s.id;
+                                  const p = s.payload;
+                                  ghost.style.width = p.width + 'px';
+                                  ghost.style.height = p.height + 'px';
+                                  ghost.style.position = 'absolute';
+                                  ghost.style.top = '-9999px';
+                                  ghost.style.left = '-9999px';
+                                  ghost.style.boxSizing = 'border-box';
+                                  ghost.style.backgroundColor = p.shapeType === 'line' ? 'transparent' : (p.bgColor || 'transparent');
+                                  if (p.shapeType === 'line') {
+                                    ghost.style.borderTop = `${p.height}px solid ${p.bgColor || '#191c1e'}`;
+                                  } else {
+                                    ghost.style.border = `${p.borderWidth}px solid ${p.borderColor || 'transparent'}`;
+                                  }
+                                  ghost.style.borderRadius = p.shapeType === 'circle' ? '50%' : `${p.borderRadius || 0}px`;
+                                  
+                                  document.body.appendChild(ghost);
+                                  e.dataTransfer.setDragImage(ghost, p.width / 2, p.height / 2);
+                                }}
+                                onDragEnd={() => {
+                                  const ghost = document.getElementById('drag-ghost-' + s.id);
+                                  if (ghost) document.body.removeChild(ghost);
+                                }}
+                                onClick={() => {
+                                  const centerX = AW / 2;
+                                  const centerY = AH / 2;
+                                  addElement({
+                                    ...s.payload,
+                                    x: centerX - (s.payload.width / 2),
+                                    y: centerY - (s.payload.height / 2)
+                                  });
+                                }}
+                                className="flex flex-col items-center p-4 rounded-2xl border transition-all bg-slate-50 border-slate-200 text-slate-500 hover:bg-white hover:border-[var(--color-primary)]/50/50 hover:shadow-sm cursor-grab active:cursor-grabbing"
                                 whileHover={{ y: -2 }}
                               >
                                 <span className="material-symbols-outlined text-3xl mb-2">{s.render}</span>
@@ -2711,7 +2820,7 @@ export default function LabelEditor() {
 
         {/* ── Premium Right Properties Panel ────────────────────────────────────── */}
         <motion.aside
-          className="bg-white border-l border-slate-200 flex flex-col overflow-hidden shrink-0 relative shadow-sm"
+          className="bg-[#F1F5F9] border-l border-slate-200 flex flex-col overflow-hidden shrink-0 relative shadow-sm"
           initial={false}
           animate={{
             width: rightSidebarCollapsed ? 48 : rightWidth,

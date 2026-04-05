@@ -3,31 +3,31 @@ export const basicShapes = [
     id: 'rect', 
     name: 'Rectangle', 
     render: 'crop_square', 
-    payload: { type: 'shape', shapeType: 'rectangle', width: 120, height: 80, bgColor: '#f1f5f9', borderColor: '#94a3b8', borderWidth: 2, borderRadius: 0 } 
+    payload: { type: 'shape', shapeType: 'rectangle', width: 120, height: 80, bgColor: 'transparent', borderColor: '#191c1e', borderWidth: 2, borderStyle: 'solid', borderRadius: 0 } 
   },
   { 
     id: 'circ', 
     name: 'Circle', 
     render: 'radio_button_unchecked', 
-    payload: { type: 'shape', shapeType: 'circle', width: 80, height: 80, bgColor: '#f1f5f9', borderColor: '#94a3b8', borderWidth: 2, borderRadius: 50 } 
+    payload: { type: 'shape', shapeType: 'circle', width: 80, height: 80, bgColor: 'transparent', borderColor: '#191c1e', borderWidth: 2, borderStyle: 'solid', borderRadius: 50 } 
   },
   { 
     id: 'line', 
     name: 'Divider Line', 
     render: 'horizontal_rule', 
-    payload: { type: 'shape', shapeType: 'line', width: 250, height: 4, bgColor: '#191c1e', borderColor: 'transparent', borderWidth: 0, borderRadius: 0 } 
+    payload: { type: 'shape', shapeType: 'line', width: 250, height: 4, bgColor: '#191c1e', borderColor: 'transparent', borderWidth: 0, borderStyle: 'solid', borderRadius: 0 } 
   },
   { 
     id: 'pill', 
     name: 'Pill / Badge', 
     render: 'medication', 
-    payload: { type: 'shape', shapeType: 'rectangle', width: 150, height: 40, bgColor: '#f1f5f9', borderColor: '#94a3b8', borderWidth: 2, borderRadius: 20 } 
+    payload: { type: 'shape', shapeType: 'rectangle', width: 150, height: 40, bgColor: 'transparent', borderColor: '#191c1e', borderWidth: 2, borderStyle: 'solid', borderRadius: 20 } 
   },
   { 
     id: 'square', 
     name: 'Square', 
     render: 'square', 
-    payload: { type: 'shape', shapeType: 'rectangle', width: 100, height: 100, bgColor: '#e2e8f0', borderColor: '#64748b', borderWidth: 2, borderRadius: 0 } 
+    payload: { type: 'shape', shapeType: 'rectangle', width: 100, height: 100, bgColor: 'transparent', borderColor: '#191c1e', borderWidth: 2, borderStyle: 'solid', borderRadius: 0 } 
   },
 ];
 

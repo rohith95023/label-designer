@@ -140,8 +140,7 @@ export default function Dashboard() {
   const quickActions = QUICK_ACTIONS(handleNewFile, navigate, handleNoopUpload);
 
   return (
-    <AppLayout activePage="dashboard">
-      <div className="p-6 lg:p-10 pb-24 max-w-6xl mx-auto">
+    <div className="p-6 lg:p-10 pb-24 max-w-6xl mx-auto">
 
         {/* â”€â”€ Hero â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <motion.div 
@@ -288,6 +287,5 @@ export default function Dashboard() {
         )}
 
       </div>
-    </AppLayout>
   );
 }

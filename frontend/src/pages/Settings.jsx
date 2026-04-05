@@ -7,7 +7,7 @@ function SectionCard({ icon, iconGrad, title, children }) {
   return (
     <div className="glass-card rounded-2xl p-6">
       <div className="flex items-center gap-3 mb-6 pb-4 border-b border-outline-variant/20">
-        <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${iconGrad} flex items-center justify-center shrink-0`}>
+        <div className={`w-9 h-9 rounded-xl ${iconGrad} flex items-center justify-center shrink-0`}>
           <span className="material-symbols-outlined text-white text-lg"
             style={{ fontVariationSettings: "'FILL' 1" }}>
             {icon}
@@ -31,7 +31,7 @@ function Toggle({ label, desc, value, onChange }) {
         onClick={() => onChange(!value)}
         className={`relative w-12 h-6 rounded-full transition-all duration-300 ease-spring shrink-0 focus:outline-none focus:ring-2 focus:ring-primary/40 ${
           value
-            ? 'bg-gradient-to-r from-primary to-tertiary shadow-glow-sm'
+            ? 'bg-primary shadow-glow-sm'
             : 'bg-surface-container-high'
         }`}
       >
@@ -127,7 +127,7 @@ export default function Settings() {
         {/* Hero */}
         <div className="mb-10 animate-slide-up">
           <p className="text-primary font-bold text-[11px] uppercase tracking-[0.2em] mb-2">Preferences</p>
-          <h1 className="text-4xl font-extrabold tracking-tighter text-gradient mb-2">Settings</h1>
+          <h1 className="text-4xl font-extrabold tracking-tighter text-primary-dark mb-2">Settings</h1>
           <p className="text-on-surface-variant text-sm max-w-lg">
             Customize your workspace, editor defaults, and compliance rules.
           </p>
@@ -136,7 +136,7 @@ export default function Settings() {
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
 
           {/* User Settings */}
-          <SectionCard icon="person" iconGrad="from-blue-500 to-blue-700" title="User Settings">
+          <SectionCard icon="person" iconGrad="bg-blue-600" title="User Settings">
             <div className="mb-4">
               <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-2">Profile Name</label>
               <input
@@ -151,7 +151,7 @@ export default function Settings() {
               className={`mt-4 w-full py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-all duration-250 ${
                 saved
                   ? 'bg-secondary text-on-secondary shadow-[0_0_0_3px_rgba(5,150,105,0.2)]'
-                  : 'btn-gradient'
+                  : 'bg-primary text-white hover:bg-primary-dark shadow-glow-sm'
               }`}
             >
               {saved ? (
@@ -163,7 +163,7 @@ export default function Settings() {
           </SectionCard>
 
           {/* Editor Settings */}
-          <SectionCard icon="tune" iconGrad="from-violet-500 to-purple-700" title="Editor Settings">
+          <SectionCard icon="tune" iconGrad="bg-violet-600" title="Editor Settings">
             <div className="mb-4">
               <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-2">Default Label Size</label>
               <select
@@ -183,7 +183,7 @@ export default function Settings() {
                     onClick={() => updateSettings({ units: u })}
                     className={`flex-1 py-2 rounded-xl text-xs font-bold border transition-all duration-200 ${
                       settings.units === u
-                        ? 'bg-gradient-to-br from-primary to-primary-container text-on-primary border-transparent shadow-glow-sm'
+                        ? 'bg-primary text-on-primary border-transparent shadow-glow-sm'
                         : 'border-outline-variant text-on-surface-variant hover:border-primary/50 hover:bg-surface-container'
                     }`}
                   >
@@ -203,7 +203,7 @@ export default function Settings() {
           </SectionCard>
 
           {/* Translation Settings */}
-          <SectionCard icon="translate" iconGrad="from-sky-500 to-cyan-600" title="Translation Settings">
+          <SectionCard icon="translate" iconGrad="bg-sky-600" title="Translation Settings">
             <div className="mb-4">
               <label className="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-2">Default Language</label>
               <select
@@ -230,14 +230,14 @@ export default function Settings() {
           </SectionCard>
 
           {/* Compliance Settings */}
-          <SectionCard icon="verified_user" iconGrad="from-emerald-500 to-teal-700" title="Compliance Settings">
+          <SectionCard icon="verified_user" iconGrad="bg-emerald-600" title="Compliance Settings">
             <Toggle
               label="FDA Validation Rules"
               desc="Enforce FDA compliance checks when validating labels"
               value={settings.fdaValidation}
               onChange={v => updateSettings({ fdaValidation: v })}
             />
-            <div className="mt-4 p-4 rounded-xl bg-gradient-to-br from-amber-500/8 to-orange-500/6 border border-amber-200/60">
+            <div className="mt-4 p-4 rounded-xl bg-amber-50 border border-amber-200/60">
               <div className="flex items-start gap-2">
                 <span className="material-symbols-outlined text-amber-500 text-base mt-0.5 shrink-0"
                   style={{ fontVariationSettings: "'FILL' 1" }}>
@@ -252,7 +252,7 @@ export default function Settings() {
 
           {/* Storage Management */}
           <div className="xl:col-span-2">
-            <SectionCard icon="storage" iconGrad="from-slate-500 to-slate-700" title="Storage Management">
+            <SectionCard icon="storage" iconGrad="bg-slate-600" title="Storage Management">
               <div className="flex flex-wrap gap-3 mb-4">
                 <button
                   onClick={handleExportAll}
