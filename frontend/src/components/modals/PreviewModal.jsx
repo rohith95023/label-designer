@@ -5,7 +5,7 @@ export default function PreviewModal({ isOpen, onClose, elements, meta, title })
   if (!isOpen) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/60 backdrop-blur-md animate-fade-in p-4 lg:p-10">
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 backdrop-blur-md animate-fade-in p-4 lg:p-10">
       <div className="glass-card bg-white rounded-3xl shadow-float max-w-5xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-scale-in">
         {/* Header */}
         <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between shrink-0">

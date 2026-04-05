@@ -34,7 +34,7 @@ export default function LabelSizeModal({ onConfirm, onCancel, onSkip, currentSiz
   const preset = LABEL_PRESETS.find(p => p.id === selected);
 
   return (
-    <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/50 backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-2xl w-[520px] p-8 flex flex-col gap-6 animate-fade-in">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-primary-fixed/30 flex items-center justify-center">

@@ -892,7 +892,7 @@ export default function LabelEditor() {
 
       {/* Bulk Delete Dialog */}
       {showBulkDeleteModal && createPortal(
-        <div className="fixed inset-0 z-[1002] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm animate-fade-in">
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm animate-fade-in">
           <div className="bg-white border border-slate-200 rounded-2xl shadow-xl w-[360px] p-6 flex flex-col gap-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-600 shrink-0">
@@ -930,7 +930,7 @@ export default function LabelEditor() {
 
       {/* Save As Dialog */}
       {showSaveAs && (
-        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-2xl w-[380px] p-6 flex flex-col gap-4 animate-fade-in">
             <h2 className="text-sm font-bold text-slate-800">Save As New File</h2>
             <input
