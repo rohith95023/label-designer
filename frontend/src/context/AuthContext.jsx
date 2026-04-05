@@ -179,12 +179,16 @@ export const AuthProvider = ({ children }) => {
         {/* Glassmorphic Overlay */}
         <div className="absolute inset-0 z-[1] bg-black/30 backdrop-blur-[1px]"></div>
 
-        <div className="relative z-10 bg-white rounded-[44px] p-12 text-center shadow-[0_40px_100px_rgba(0,0,0,0.8)] border border-white/20 animate-in fade-in zoom-in duration-500 flex flex-col items-center">
-          <div className="w-16 h-16 rounded-[24px] bg-red-500/10 flex items-center justify-center text-red-500 mb-10 border border-red-500/10 shadow-inner">
-            <span className="material-symbols-outlined text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>gpp_maybe</span>
+        <div className="relative z-10 bg-white/95 backdrop-blur-sm rounded-[32px] p-10 text-center shadow-[0_32px_80px_rgba(0,0,0,0.5)] border border-slate-200/50 animate-in fade-in zoom-in duration-500 flex flex-col items-center max-w-sm w-full mx-6">
+          <div className="w-14 h-14 rounded-2xl bg-red-50 flex items-center justify-center text-red-600 mb-6 border border-red-100/50">
+            <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>gpp_maybe</span>
           </div>
           
-          <h2 className="text-2xl font-black text-[#0F172A] tracking-tighter mb-8 leading-none uppercase">Session Expired</h2>
+          <h2 className="text-xl font-bold text-slate-950 tracking-tight mb-6 leading-none uppercase">Session Expired</h2>
+
+          <p className="text-[11px] text-slate-500 font-medium mb-8 leading-relaxed px-4">
+            For GxP regulatory compliance, your session has been invalidated. Please log in again to continue working.
+          </p>
 
           <button 
             id="reauth-btn"
@@ -195,9 +199,9 @@ export const AuthProvider = ({ children }) => {
                 setSessionLostByTab(false);
                 navigate('/login', { replace: true });
             }}
-            className="h-11 px-10 bg-[#1E40AF] hover:bg-[#1D4ED8] text-white font-black uppercase tracking-[0.1em] text-[12px] rounded-[22px] shadow-2xl transition-all active:scale-[0.98] flex items-center justify-center gap-3"
+            className="h-9 px-8 bg-[var(--color-primary-dark)] hover:bg-[var(--color-primary-mid)] text-white font-bold uppercase tracking-wider text-[10px] rounded-full shadow-lg hover:shadow-xl transition-all active:scale-[0.98] flex items-center justify-center gap-2"
           >
-            <span className="material-symbols-outlined text-[18px]">login</span>
+            <span className="material-symbols-outlined text-[16px]">login</span>
             RE-LOGIN
           </button>
         </div>

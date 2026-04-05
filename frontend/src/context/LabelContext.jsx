@@ -218,17 +218,21 @@ export const LabelProvider = ({ children }) => {
     });
   }, [user, effectiveId]);
 
-  // ── Debounced auto-save ──
+  // ── Debounced clinical auto-save ──
   useEffect(() => {
     if (!meta.fileId || !hydrated) return;
+    
+    // Mark as unsaved immediately to provide real-time UI synchronization
     setSavedStatus('unsaved');
+    
     if (debounceRef.current) clearTimeout(debounceRef.current);
+    
     debounceRef.current = setTimeout(async () => {
       if (isSavingRef.current) return;
       isSavingRef.current = true;
       try {
         setSavedStatus('saving');
-        await api.saveLabelVersion(meta.fileId, {
+        const response = await api.saveLabelVersion(meta.fileId, {
           designJson: {
             elementsData: elements,
             labelSize: meta.labelSize,
@@ -238,14 +242,20 @@ export const LabelProvider = ({ children }) => {
           labelStockId: meta.labelStockId,
           notes: meta.notes
         });
+        
+        // Update version reference if provided by backend
+        if (response && response.versionNo) {
+          setMeta(m => ({ ...m, versionNo: response.versionNo }));
+        }
+        
         setSavedStatus('saved');
       } catch (err) {
-        console.error('Auto-save failed', err);
+        console.error('Auto-save engine failed:', err);
         setSavedStatus('unsaved');
       } finally {
         isSavingRef.current = false;
       }
-    }, 60000);
+    }, 1000); // Trigger save 1 second after last change
   }, [elements, meta, hydrated]);
 
   // ── History ──

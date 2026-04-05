@@ -312,6 +312,7 @@ export default function LabelEditor() {
   const richTextEditorRef = useRef(null);
   const navigate = useNavigate();
   const artboardContainerRef = useRef(null);
+  const hydratedRef = useRef(false);
   const AW = meta.labelSize.w;
   const AH = meta.labelSize.h;
 
@@ -611,14 +612,28 @@ export default function LabelEditor() {
     }
   };
 
-  // Show FileNameModal only AFTER hydration is complete and no saved file exists
+  // Modal Flow Management: Auto-dismiss when file context is established
   useEffect(() => {
-    if (!hydrated) return;     // Wait for localStorage restore
-    if (!meta.fileName) {
-      setPendingFlow('initial'); // Forced entry
+    if (!hydrated) return;
+    
+    // CASE 1: Initial hydration prompt (only if strictly empty)
+    if (!meta.fileName && modalStep === 'none' && !hydratedRef.current) {
+      setPendingFlow('initial'); 
       setModalStep('filename');
     }
-  }, [hydrated]);
+    
+    // Mark as initially processed so it doesn't pop up again even if name is cleared
+    if (!hydratedRef.current) {
+      hydratedRef.current = true;
+    }
+
+    // CASE 2: Auto-dismiss if identity is established while modal is blocking
+    // This allows sidebar template selection to "answer" the initial prompt
+    if (meta.fileName && modalStep === 'filename' && pendingFlow === 'initial') {
+      setModalStep('none');
+      setPendingFlow(null);
+    }
+  }, [hydrated, meta.fileName, modalStep, pendingFlow]);
 
   // Close file menu on outside click
   useEffect(() => {
@@ -1933,9 +1948,15 @@ export default function LabelEditor() {
                                 <span className="material-symbols-outlined text-[16px] text-slate-500">edit_note</span>
                                 <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-none">Label Notes</span>
                               </div>
-                              <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-600 text-[8px] font-black uppercase tracking-wider border border-emerald-500/20">
-                                <span className="material-symbols-outlined text-[12px] animate-pulse">sync</span>
-                                Auto-saved
+                              <div className={`flex items-center gap-1.5 px-2 py-1 rounded-full transition-all duration-300 border ${
+                                savedStatus === 'saved' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' :
+                                savedStatus === 'saving' ? 'bg-blue-500/10 text-blue-600 border-blue-500/20' :
+                                'bg-amber-500/10 text-amber-600 border-amber-500/20'
+                              } text-[8px] font-black uppercase tracking-wider`}>
+                                <span className={`material-symbols-outlined text-[12px] ${savedStatus === 'saving' ? 'animate-spin' : ''}`}>
+                                  {savedStatus === 'saved' ? 'check_circle' : savedStatus === 'saving' ? 'sync' : 'history'}
+                                </span>
+                                {savedStatus === 'saved' ? 'Auto-saved' : savedStatus === 'saving' ? 'Saving...' : 'Draft (Unsaved)'}
                               </div>
                             </div>
                             <textarea
