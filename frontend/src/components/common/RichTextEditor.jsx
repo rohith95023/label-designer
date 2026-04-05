@@ -9,6 +9,7 @@ const RichTextEditor = forwardRef(({
   onChange, 
   onBlur, 
   onResize,
+  onSelectionChange,
   placeholder = 'Enter text...', 
   style = {},
   autoFocus = true
@@ -18,27 +19,64 @@ const RichTextEditor = forwardRef(({
 
   // Expose format method to parent
   useImperativeHandle(ref, () => ({
-    format: (cmd, value = null) => {
+    format: (cmd, value = null, savedRange = null) => {
       console.log(`[RichTextEditor] Formatting command: ${cmd}, value: ${value}`);
       if (editorRef.current) {
-        // Restore focus
-        editorRef.current.focus();
-        
-        // Restore selection if focus was briefly lost
-        if (selectionRef.current) {
+        // Determine the range to restore
+        const rangeToRestore = savedRange || selectionRef.current;
+
+        // Restore selection BEFORE focusing, so focus doesn't clobber it
+        if (rangeToRestore) {
+          editorRef.current.focus();
           const sel = window.getSelection();
           sel.removeAllRanges();
-          sel.addRange(selectionRef.current);
+          sel.addRange(rangeToRestore);
+        } else {
+          editorRef.current.focus();
+        }
+
+        // hiliteColor requires styleWithCSS:true; toggle around the command
+        if (cmd === 'hiliteColor') {
+          document.execCommand('styleWithCSS', false, true);
         }
 
         const success = document.execCommand(cmd, false, value);
         console.log(`[RichTextEditor] Formatting success: ${success}`);
+
+        // Restore styleWithCSS to false (use tags, not inline styles)
+        if (cmd === 'hiliteColor') {
+          document.execCommand('styleWithCSS', false, false);
+        }
         
-        // Final sync
-        const newHtml = editorRef.current.innerHTML;
-        const newText = editorRef.current.innerText;
-        onChange({ html: newHtml, text: newText });
+        // Use setTimeout to ensure DOM is updated before querying state
+        setTimeout(() => {
+          // Final sync
+          const newHtml = editorRef.current.innerHTML;
+          const newText = editorRef.current.innerText;
+          onChange({ html: newHtml, text: newText });
+          
+          // Update active states after formatting
+          if (onSelectionChange) {
+            onSelectionChange({
+              bold: document.queryCommandState('bold'),
+              italic: document.queryCommandState('italic'),
+              underline: document.queryCommandState('underline'),
+              strikeThrough: document.queryCommandState('strikeThrough'),
+            });
+          }
+        }, 0);
       }
+    },
+    queryCommandState: (cmd) => {
+      return document.queryCommandState(cmd);
+    },
+    getActiveStates: () => {
+      return {
+        bold: document.queryCommandState('bold'),
+        italic: document.queryCommandState('italic'),
+        underline: document.queryCommandState('underline'),
+        strikeThrough: document.queryCommandState('strikeThrough'),
+      };
     }
   }));
 
@@ -47,8 +85,16 @@ const RichTextEditor = forwardRef(({
     const sel = window.getSelection();
     if (sel.rangeCount > 0 && editorRef.current && editorRef.current.contains(sel.getRangeAt(0).commonAncestorContainer)) {
       selectionRef.current = sel.getRangeAt(0).cloneRange();
+      if (onSelectionChange) {
+        onSelectionChange({
+          bold: document.queryCommandState('bold'),
+          italic: document.queryCommandState('italic'),
+          underline: document.queryCommandState('underline'),
+          strikeThrough: document.queryCommandState('strikeThrough'),
+        });
+      }
     }
-  }, []);
+  }, [onSelectionChange]);
 
   // Initial mount sync - ALWAYS set content once
   useEffect(() => {
@@ -91,6 +137,15 @@ const RichTextEditor = forwardRef(({
         case 'i': e.preventDefault(); document.execCommand('italic', false, null); break;
         case 'u': e.preventDefault(); document.execCommand('underline', false, null); break;
         default: break;
+      }
+      // Update active states after keyboard formatting
+      if (onSelectionChange) {
+        onSelectionChange({
+          bold: document.queryCommandState('bold'),
+          italic: document.queryCommandState('italic'),
+          underline: document.queryCommandState('underline'),
+          strikeThrough: document.queryCommandState('strikeThrough'),
+        });
       }
       handleInput(); // Sync
     }

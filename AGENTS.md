@@ -1,0 +1,11 @@
+- make careful refactors to not override existing features, especially for the UI
+- follow basic intuitive user behavior patterns for label editor, like for text formatting, the toolbar should be above the text editor, and the text editor should be editable, and the toolbar should be updated based on the text editor content , should be reactive.
+- follow islands principle, components should be as independent as possible, and should be able to be used in different contexts.
+- always keep a global shared state for highly used hot points or common functionality
+- Use relative offsets with parent editor blank sheet, not absolute positioning, so that it can be scaled properly. use relative positioning everywhere.
+- Always keep performance considerations in mind, use SVG based wherever possible.
+- majorly keep emplate and styling as overriding style classes
+- make everything print compatible
+- make sure mouse events and drag and drop are handled gracefully
+- make sure the editor is responsive and works on different screen sizes
+- Make sure common actions like text formatting are intuitive and easy to use. and should ahve proper keybindings for common actions.

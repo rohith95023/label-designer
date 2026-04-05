@@ -379,6 +379,7 @@ export default function LabelEditor() {
   const [showSaveAs, setShowSaveAs] = useState(false);
   const [saveAsName, setSaveAsName] = useState('');
   const [editingElementId, setEditingElementId] = useState(null);
+  const [formatActiveStates, setFormatActiveStates] = useState({});
   const [editingCell, setEditingCell] = useState(null); // { r, c }
   const [showTableModal, setShowTableModal] = useState(false);
   const [showWordArtModal, setShowWordArtModal] = useState(false);
@@ -1196,11 +1197,14 @@ export default function LabelEditor() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
               >
-                <FormattingToolbar onCommand={(cmd, val) => {
-                  if (richTextEditorRef.current) {
-                    richTextEditorRef.current.format(cmd, val);
-                  }
-                }} />
+                <FormattingToolbar 
+                  activeStates={formatActiveStates}
+                  onCommand={(cmd, val, savedRange) => {
+                    if (richTextEditorRef.current) {
+                      richTextEditorRef.current.format(cmd, val, savedRange);
+                    }
+                  }} 
+                />
               </motion.div>
             )}
           </AnimatePresence>
@@ -2589,6 +2593,7 @@ export default function LabelEditor() {
                               html={el.html || el.text || ''}
                               onChange={({ html, text }) => updateElement(el.id, { html, text })}
                               onResize={({ height }) => updateElement(el.id, { height })}
+                              onSelectionChange={setFormatActiveStates}
                               onBlur={null}
                               style={{
                                 fontFamily: 'inherit',
