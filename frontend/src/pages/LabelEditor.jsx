@@ -335,9 +335,12 @@ export default function LabelEditor() {
 
       // Delete selected
       if (e.key === 'Delete' || e.key === 'Backspace') {
-        if (selectedIds.length > 0 && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) {
-          selectedIds.forEach(id => deleteElement(id));
-          setSelectedIds([]);
+        const isEditing = document.activeElement && (
+          ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName) ||
+          document.activeElement.isContentEditable
+        );
+        if (selectedIds.length > 0 && !isEditing) {
+          setShowBulkDeleteModal(true);
         }
       }
     };
@@ -628,7 +631,10 @@ export default function LabelEditor() {
   useEffect(() => {
     const handler = (e) => {
       const key = e.key.toLowerCase();
-      const isInput = ['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName);
+      const isInput = document.activeElement && (
+        ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName) ||
+        document.activeElement.isContentEditable
+      );
 
       if ((e.ctrlKey || e.metaKey) && key === 's') {
         e.preventDefault();
@@ -1198,9 +1204,34 @@ export default function LabelEditor() {
                 exit={{ opacity: 0, y: -10 }}
               >
                 <FormattingToolbar 
-                  activeStates={formatActiveStates}
+                  activeStates={{
+                    ...formatActiveStates,
+                    justifyLeft: formatActiveStates.justifyLeft || elements.find(el => el.id === editingElementId)?.align === 'left' || (!formatActiveStates.justifyCenter && !formatActiveStates.justifyRight && elements.find(el => el.id === editingElementId)?.align === undefined),
+                    justifyCenter: formatActiveStates.justifyCenter || elements.find(el => el.id === editingElementId)?.align === 'center',
+                    justifyRight: formatActiveStates.justifyRight || elements.find(el => el.id === editingElementId)?.align === 'right',
+                    italic: formatActiveStates.italic || elements.find(el => el.id === editingElementId)?.fontStyle === 'italic',
+                    underline: formatActiveStates.underline || elements.find(el => el.id === editingElementId)?.textDecoration === 'underline',
+                    bold: formatActiveStates.bold || ['bold', '600', '700', '800', '900'].includes(String(elements.find(el => el.id === editingElementId)?.fontWeight)),
+                  }}
                   onCommand={(cmd, val, savedRange) => {
-                    if (richTextEditorRef.current) {
+                    const alignMaps = { justifyLeft: 'left', justifyCenter: 'center', justifyRight: 'right' };
+                    const styleMaps = { 
+                      bold: { prop: 'fontWeight', activeVal: 'bold', inactiveVal: '400', isActive: ['bold', '600', '700', '800', '900'].includes(String(elements.find(el => el.id === editingElementId)?.fontWeight)) },
+                      italic: { prop: 'fontStyle', activeVal: 'italic', inactiveVal: 'normal', isActive: elements.find(el => el.id === editingElementId)?.fontStyle === 'italic' },
+                      underline: { prop: 'textDecoration', activeVal: 'underline', inactiveVal: 'none', isActive: elements.find(el => el.id === editingElementId)?.textDecoration === 'underline' }
+                    };
+
+                    if (alignMaps[cmd]) {
+                      updateElement(editingElementId, { align: alignMaps[cmd] });
+                      commitUpdate();
+                    } else if (styleMaps[cmd]) {
+                      const map = styleMaps[cmd];
+                      updateElement(editingElementId, { [map.prop]: map.isActive ? map.inactiveVal : map.activeVal });
+                      commitUpdate();
+                    } else if (cmd === 'foreColor') {
+                      updateElement(editingElementId, { color: val });
+                      commitUpdate();
+                    } else if (richTextEditorRef.current) {
                       richTextEditorRef.current.format(cmd, val, savedRange);
                     }
                   }} 
@@ -2269,7 +2300,8 @@ export default function LabelEditor() {
                       size={{ width: elW, height: elH }}
                       position={{ x: el.x, y: el.y }}
                       bounds={undefined}
-                      disableDragging={el.locked}
+                      cancel=".rich-text-editor"
+                      disableDragging={el.locked || editingElementId === el.id}
                       enableResizing={el.locked ? false : {
                         top: isSelected, left: isSelected, bottom: isSelected, right: isSelected,
                         topLeft: isSelected, topRight: isSelected, bottomLeft: isSelected, bottomRight: isSelected,
@@ -3111,10 +3143,16 @@ export default function LabelEditor() {
 
                           <div className="flex gap-1 bg-slate-50 p-1 rounded-lg border border-slate-200">
                             {[
+                              ['fontWeight', 'bold', 'format_bold', ['bold', '600', '700', '800', '900'].includes(String(selectedElement.fontWeight))],
                               ['fontStyle', 'italic', 'format_italic', selectedElement.fontStyle === 'italic'],
                               ['textDecoration', 'underline', 'format_underlined', selectedElement.textDecoration === 'underline'],
                             ].map(([prop, val, icon, active]) => (
-                              <button key={prop} onClick={() => { updateElement(selectedElement.id, { [prop]: active ? (prop === 'fontStyle' ? 'normal' : 'none') : val }); commitUpdate(); }}
+                               <button key={prop} onClick={() => { 
+                                 let newVal = val;
+                                 if (active) newVal = prop === 'fontWeight' ? '400' : (prop === 'fontStyle' ? 'normal' : 'none');
+                                 updateElement(selectedElement.id, { [prop]: newVal }); 
+                                 commitUpdate(); 
+                               }}
                                 className={`flex-1 p-1.5 rounded text-center transition-colors ${active ? 'btn-gradient shadow-sm text-white' : 'hover:bg-slate-200 text-slate-500'}`}>
                                 <span className="material-symbols-outlined text-[14px]">{icon}</span>
                               </button>
