@@ -799,38 +799,50 @@ input[type="color"]::-webkit-color-swatch {
   border-radius: 3px 0 0 3px;
 }
 
-/* Navigation & Layout logical properties */
-[dir="rtl"] .ml-auto { margin-right: auto; margin-left: 0; }
-[dir="rtl"] .mr-auto { margin-left: auto; margin-right: 0; }
-[dir="rtl"] .text-left { text-align: right; }
-[dir="rtl"] .text-right { text-align: left; }
-
-/* Toast position for RTL */
-[dir="rtl"] .toast-container {
-  right: auto;
-  left: 2rem;
-}
-[dir="rtl"] .toast {
-  animation: toastSlideInRTL 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  border-left: none;
-  border-right: 4px solid #ddd;
-}
-[dir="rtl"] .toast.success { border-right-color: #10b981; }
-[dir="rtl"] .toast.error   { border-right-color: #ef4444; }
-[dir="rtl"] .toast.warning { border-right-color: #f59e0b; }
-[dir="rtl"] .toast.info    { border-right-color: #6366f1; }
-
-@keyframes toastSlideInRTL {
-  from { opacity: 0; transform: translateX(-30px) scale(0.9); }
-  to { opacity: 1; transform: translateX(0) scale(1); }
+/* ═══════════════════════════════════════════════════════════════════════════
+   RICH TEXT EDITOR FORCED OVERRIDES
+   Ensures formatting works despite artboard inheritance
+   ═══════════════════════════════════════════════════════════════════════════ */
+.rich-text-editor b, .rich-text-editor strong {
+  font-weight: 700 !important;
 }
 
-/* Header logical order */
-[dir="rtl"] header {
-  flex-direction: row-reverse;
+.rich-text-editor i, .rich-text-editor em {
+  font-style: italic !important;
 }
 
-/* Custom Scrollbar for RTL */
-[dir="rtl"] ::-webkit-scrollbar-track {
-  direction: ltr;
+.rich-text-editor u {
+  text-decoration: underline !important;
+}
+
+.rich-text-editor strike, .rich-text-editor s {
+  text-decoration: line-through !important;
+}
+
+.rich-text-editor sup {
+  vertical-align: super !important;
+  font-size: 0.6em !important;
+}
+
+.rich-text-editor sub {
+  vertical-align: sub !important;
+  font-size: 0.6em !important;
+}
+
+.rich-text-editor [style*="text-align: center"] {
+  text-align: center !important;
+  display: block;
+  width: 100%;
+}
+
+.rich-text-editor [style*="text-align: right"] {
+  text-align: right !important;
+  display: block;
+  width: 100%;
+}
+
+.rich-text-editor [style*="text-align: left"] {
+  text-align: left !important;
+  display: block;
+  width: 100%;
 }

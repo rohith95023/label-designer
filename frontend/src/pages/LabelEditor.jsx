@@ -25,6 +25,8 @@ import { calculateAlignmentGuides } from '../utils/alignment';
 import { UNITS, toPx, fromPx, PX_PER_UNIT, getTickIntervals } from '../utils/units';
 import { resolveElementData, SAMPLE_TRIAL_DATA } from '../utils/dynamicData';
 import { resolveUrl } from '../utils/url';
+import RichTextEditor from '../components/common/RichTextEditor';
+import FormattingToolbar from '../components/common/FormattingToolbar';
 
 const ICON_RAIL_ITEMS = [
   { id: 'elements', label: 'Basics', icon: 'category' },
@@ -306,6 +308,7 @@ export default function LabelEditor() {
   const drawingCanvasRef = useRef(null);
   const fileInputRef = useRef(null);
   const jsonInputRef = useRef(null);
+  const richTextEditorRef = useRef(null);
   const navigate = useNavigate();
   const artboardContainerRef = useRef(null);
   const AW = meta.labelSize.w;
@@ -1185,7 +1188,23 @@ export default function LabelEditor() {
           )}
         </AnimatePresence>
 
-        <div className="flex-1" />
+        <div className="flex-1 flex justify-center h-full items-center">
+          <AnimatePresence>
+            {editingElementId && elements.find(el => el.id === editingElementId) && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+              >
+                <FormattingToolbar onCommand={(cmd, val) => {
+                  if (richTextEditorRef.current) {
+                    richTextEditorRef.current.format(cmd, val);
+                  }
+                }} />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
         {/* Design Review Controls (Right) */}
         <div className="flex items-center gap-3">
@@ -1965,8 +1984,8 @@ export default function LabelEditor() {
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ delay: 0.5, type: "spring", stiffness: 300, damping: 30 }}
               onClick={e => {
-                // If we click the artboard itself (not an element), deselect
-                if (e.target.id === 'pharma-artboard') {
+                // Only deselect if the click was directly on the artboard background, not bubbled from a child element
+                if (e.target === e.currentTarget || e.target.id === 'pharma-artboard') {
                   setSelectedIds([]);
                   if (editingElementId) {
                     setEditingElementId(null);
@@ -2286,34 +2305,47 @@ export default function LabelEditor() {
                         updateElement(el.id, { width: newW, height: newH, ...clamped });
                         commitUpdate();
                       }}
+                      onMouseDown={e => {
+                        // If already editing this element, let the event pass naturally to the contenteditable
+                        if (editingElementId === el.id) return;
+                        // Only handle primary button clicks
+                        if (e.button !== 0) return;
+                        e.stopPropagation();
+                        if (e.shiftKey) {
+                          setSelectedIds(prev => prev.some(id => String(id) === String(el.id)) 
+                            ? prev.filter(id => String(id) !== String(el.id)) 
+                            : [...prev, el.id]);
+                        } else if (!selectedIds.some(id => String(id) === String(el.id))) {
+                          setSelectedIds([el.id]);
+                        }
+                        if (editingElementId && String(editingElementId) !== String(el.id)) {
+                          setEditingElementId(null);
+                          commitUpdate();
+                        }
+                      }}
                       onClick={e => {
                         e.stopPropagation();
-                        if (!el.locked && selectedIds.includes(el.id) && ['text', 'warnings', 'manufacturing', 'dosage', 'storage', 'subtext', 'shape', 'table'].includes(el.type)) {
+                        // allow editing if already selected OR it is the element we just clicked
+                        const isElementSelected = selectedIds.some(id => String(id) === String(el.id));
+                        if (!el.locked && isElementSelected && ['text', 'warnings', 'manufacturing', 'dosage', 'storage', 'subtext', 'shape', 'table', 'brand', 'dynamic'].includes(el.type)) {
                           setEditingElementId(el.id);
-                        } else {
-                          if (e.shiftKey) {
-                            setSelectedIds(prev => prev.includes(el.id) ? prev.filter(id => id !== el.id) : [...prev, el.id]);
-                          } else {
-                            setSelectedIds([el.id]);
-                          }
-                          if (editingElementId && editingElementId !== el.id) {
-                            setEditingElementId(null);
-                            commitUpdate();
-                          }
                         }
                       }}
                       onDoubleClick={e => {
-                        if (!el.locked && ['barcode', 'qrcode'].includes(el.type)) {
-                          e.stopPropagation();
+                        e.stopPropagation();
+                        // Allow immediate edit on double click regardless of selection state to bypass async state update
+                        if (!el.locked && ['text', 'warnings', 'manufacturing', 'dosage', 'storage', 'subtext', 'shape', 'table', 'brand', 'dynamic'].includes(el.type)) {
+                          setEditingElementId(el.id);
+                          setSelectedIds([el.id]);
                         }
                       }}
                     >
                       {isSelected && (
-                        <div className={`absolute left-0 bg-white shadow-xl min-w-max px-2 py-1.5 rounded-lg border border-slate-200 flex items-center gap-1 z-[500] pointer-events-auto transform transition-all origin-top-left ${(el.y * zoomLevel > AH * zoomLevel - 60 || (el.rotation > 110 && el.rotation < 250))
+                        <div className={`absolute left-1/2 -translate-x-1/2 bg-white shadow-xl min-w-max px-2 py-1.5 rounded-lg border border-slate-200 flex items-center gap-1 z-[500] pointer-events-auto transform transition-all origin-center ${(el.y * zoomLevel > AH * zoomLevel - 60 || (el.rotation > 110 && el.rotation < 250))
                             ? '-top-[56px]'
                             : 'top-[calc(100%+8px)]'
                           }`}
-                          style={{ transform: `scale(${1 / zoomLevel}) rotate(${- (el.rotation || 0)}deg)` }}
+                          style={{ transform: `translateX(-50%) scale(${1 / zoomLevel})` }}
                           onMouseDown={e => e.stopPropagation()}
                         >
 
@@ -2378,7 +2410,7 @@ export default function LabelEditor() {
                       )}
                       <div
                         data-id={el.id}
-                        className={`w-full h-full relative text-content-wrapper overflow-visible ${editingElementId === el.id ? '' : 'select-none'} ${isSelected ? 'outline outline-2 outline-[var(--color-primary)]/50 outline-offset-0 ring-4 ring-[var(--color-primary)]/50/10' : ''}`}
+                        className={`w-full h-full relative text-content-wrapper overflow-visible group ${editingElementId === el.id ? 'select-text cursor-text' : 'select-none'} ${isSelected ? 'outline outline-2 outline-[var(--color-primary)]/50 outline-offset-0 ring-4 ring-[var(--color-primary)]/50/10' : ''}`}
                         style={{
                           transform: `rotate(${el.rotation || 0}deg)`,
                           transformOrigin: '50% 50%',
@@ -2398,14 +2430,7 @@ export default function LabelEditor() {
                           ),
                           borderRadius: el.type === 'shape' && el.shapeType === 'circle' ? '50%' : `${el.borderRadius || 0}px`,
                           // Auto-fit font size for non-editing text to fit within element bounds
-                          fontSize: (() => {
-                            const isEditing = editingElementId === el.id;
-                            const isTextType = !['barcode', 'qrcode', 'image', 'icon', 'IconsIcon', 'shape', 'path', 'table'].includes(el.type);
-                            if (!isEditing && isTextType && el.text) {
-                              return `${calcAutoFitFontSize(el.text, el.width || 120, el.height || 40, el.fontSize || 16)}px`;
-                            }
-                            return `${el.fontSize || 16}px`;
-                          })(),
+                          fontSize: `${el.fontSize || 16}px`,
                           fontFamily: el.fontFamily || 'Inter, sans-serif',
                           fontWeight: el.fontWeight || '400',
                           fontStyle: el.fontStyle || 'normal',
@@ -2435,7 +2460,7 @@ export default function LabelEditor() {
                                 strokeWidth={el.penWidth || 3} fill="none" strokeLinecap="round" strokeLinejoin="round" />
                             </svg>
                           )}
-                          {(el.heading !== undefined || isSelected) && isSelected ? (
+                          {(el.heading !== undefined) && isSelected ? (
                             <input
                               type="text"
                               value={el.heading ?? ''}
@@ -2463,7 +2488,7 @@ export default function LabelEditor() {
                                 padding: '0',
                               }}
                             />
-                          ) : el.heading ? (
+                          ) : el.heading && !isSelected ? (
                             <span style={{ display: 'block', fontSize: '8px', fontWeight: '800', fontFamily: 'Inter, sans-serif', textTransform: 'uppercase', color: el.alertColor || '#717783', marginBottom: '2px', letterSpacing: '1.2px' }}>
                               {el.heading}
                             </span>
@@ -2559,38 +2584,21 @@ export default function LabelEditor() {
                               </tbody>
                             </table>
                           ) : editingElementId === el.id ? (
-                            <textarea
-                              autoFocus
-                              className="flex-1 w-full bg-transparent outline-none resize-none border-none p-0 m-0 overflow-y-auto custom-scrollbar"
-                              value={el.text || ''}
-                              onChange={e => {
-                                updateElement(el.id, { text: e.target.value });
-                                // Precise height adjustment
-                                const target = e.target;
-                                target.style.height = '0px';
-                                const sh = target.scrollHeight;
-                                target.style.height = '100%';
-                                // Add balance for heading if present
-                                const headingBuffer = el.heading ? 18 : 0;
-                                const newHeight = Math.max(22, sh + headingBuffer);
-                                if (el.type !== 'shape' && Math.abs(newHeight - (el.height || 0)) > 2) {
-                                  updateElement(el.id, { height: newHeight });
-                                }
-                              }}
-                              onBlur={() => { setEditingElementId(null); commitUpdate(); }}
-                              onFocus={e => e.target.setSelectionRange(e.target.value.length, e.target.value.length)}
+                            <RichTextEditor
+                              ref={richTextEditorRef}
+                              html={el.html || el.text || ''}
+                              onChange={({ html, text }) => updateElement(el.id, { html, text })}
+                              onResize={({ height }) => updateElement(el.id, { height })}
+                              onBlur={null}
                               style={{
                                 fontFamily: 'inherit',
                                 fontSize: 'inherit',
-                                fontWeight: 'inherit',
-                                fontStyle: 'inherit',
-                                textDecoration: 'inherit',
+                                // Do not force bold/italic/underline to inherit so document.execCommand works
                                 color: 'inherit',
                                 lineHeight: 'inherit',
-                                overflowY: 'auto',
-                                height: 'auto',
-                                width: '100%',
-                                textAlign: el.align || 'inherit',
+                                textAlign: 'inherit', // Let editor's inner divs/tags handle alignment
+                                minHeight: '100%',
+                                width: '100%'
                               }}
                             />
                           ) : el.renderAsBarcode ? (
@@ -2604,12 +2612,12 @@ export default function LabelEditor() {
                               />
                             </div>
                           ) : (
-                            <span className="block w-full" style={{
+                            <span className="block w-full min-h-[1em]" style={{
                               wordBreak: 'break-word',
                               textAlign: el.align || (el.type === 'shape' ? 'center' : 'left'),
-                            }}>
-                              {el.resolvedText || el.text}
-                            </span>
+                            }}
+                            dangerouslySetInnerHTML={{ __html: el.html || el.text || (isSelected ? '' : '&nbsp;') }}
+                            />
                           )}
                         </div>
                         {isSelected && !el.locked && (
@@ -2985,7 +2993,10 @@ export default function LabelEditor() {
                               value={selectedElement.text || ''}
                               placeholder={selectedElement.type === 'qrcode' ? 'https://...' : selectedElement.type === 'barcode' ? '123456789012' : 'Enter text…'}
                               onChange={e => {
-                                updateElement(selectedElement.id, { text: e.target.value });
+                                updateElement(selectedElement.id, { 
+                                  text: e.target.value,
+                                  html: e.target.value.replace(/\n/g, '<br/>') // Sync HTML for artboard visibility
+                                });
                                 e.target.style.height = 'auto';
                                 e.target.style.height = e.target.scrollHeight + 'px';
                               }}
@@ -3111,9 +3122,77 @@ export default function LabelEditor() {
                               </button>
                             ))}
                           </div>
+
+                          <div className="grid grid-cols-2 gap-3 mt-3">
+                            <div>
+                              <label className="text-[10px] font-bold uppercase text-slate-400 mb-1 block">Text Color</label>
+                              <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg p-1">
+                                <input type="color" className="w-8 h-8 border-none bg-transparent cursor-pointer"
+                                  value={selectedElement.color || '#000000'}
+                                  onChange={e => { updateElement(selectedElement.id, { color: e.target.value }); commitUpdate(); }} />
+                                <span className="text-[9px] font-mono text-slate-400">{selectedElement.color || '#000000'}</span>
+                              </div>
+                            </div>
+                            <div>
+                               <label className="text-[10px] font-bold uppercase text-slate-400 mb-1 block">Background</label>
+                               <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg p-1">
+                                <input type="color" className="w-8 h-8 border-none bg-transparent cursor-pointer"
+                                  value={selectedElement.bgColor || 'transparent'}
+                                  onChange={e => { updateElement(selectedElement.id, { bgColor: e.target.value }); commitUpdate(); }} />
+                                <span className="text-[9px] font-mono text-slate-400">{selectedElement.bgColor || 'None'}</span>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </motion.div>
                     )}
+
+                    {/* ── Borders & Shapes Section ────────────────────────────────────────── */}
+                    <motion.div
+                      className="p-5 border-b border-white/20 space-y-4"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.25 }}
+                    >
+                      <span className="text-[11px] font-bold uppercase tracking-widest text-slate-500 block">Borders & Corners</span>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-[10px] font-bold uppercase text-slate-400 mb-1 block">Style</label>
+                          <select className="w-full bg-slate-50 border border-slate-200 text-[11px] py-1.5 px-1.5 rounded-lg outline-none cursor-pointer"
+                            value={selectedElement.borderStyle || 'none'}
+                            onChange={e => { updateElement(selectedElement.id, { borderStyle: e.target.value }); commitUpdate(); }}>
+                            <option value="none">None</option>
+                            <option value="solid">Solid</option>
+                            <option value="dashed">Dashed</option>
+                            <option value="dotted">Dotted</option>
+                            <option value="double">Double</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-bold uppercase text-slate-400 mb-1 block">Width (px)</label>
+                          <input type="number" min="0" max="20" className="w-full bg-slate-50 border border-slate-200 text-[11px] py-1 px-2 rounded-lg outline-none"
+                            value={selectedElement.borderWidth || 0}
+                            onChange={e => { updateElement(selectedElement.id, { borderWidth: parseInt(e.target.value) || 0 }); commitUpdate(); }} />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-[10px] font-bold uppercase text-slate-400 mb-1 block">Border Color</label>
+                          <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg p-1">
+                            <input type="color" className="w-8 h-8 border-none bg-transparent cursor-pointer"
+                              value={selectedElement.borderColor || '#000000'}
+                              onChange={e => { updateElement(selectedElement.id, { borderColor: e.target.value }); commitUpdate(); }} />
+                            <span className="text-[9px] font-mono text-slate-400">{selectedElement.borderColor || '#000000'}</span>
+                          </div>
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-bold uppercase text-slate-400 mb-1 block">Radius (px)</label>
+                          <input type="number" min="0" max="100" className="w-full bg-slate-50 border border-slate-200 text-[11px] py-1 px-2 rounded-lg outline-none"
+                            value={selectedElement.borderRadius || 0}
+                            onChange={e => { updateElement(selectedElement.id, { borderRadius: parseInt(e.target.value) || 0 }); commitUpdate(); }} />
+                        </div>
+                      </div>
+                    </motion.div>
 
                     {/* ── Premium Appearance Section ──────────────────────────────────────── */}
                     {selectedElement.type !== 'image' && (

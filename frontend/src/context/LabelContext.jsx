@@ -836,7 +836,17 @@ export const LabelProvider = ({ children }) => {
   // ── Element CRUD ──
   const addElement = (data) => {
     const maxZ = elements.reduce((mx, el) => Math.max(mx, el.zIndex || 0), 10);
-    const el = { id: uuidv4(), x: 20, y: 20, zIndex: maxZ + 1, ...data };
+    const el = { 
+      id: uuidv4(), 
+      x: 20, 
+      y: 20, 
+      zIndex: maxZ + 1, 
+      borderStyle: 'none',
+      borderWidth: 0,
+      borderColor: '#000000',
+      borderRadius: 0,
+      ...data 
+    };
     const next = [...elements, el];
     setElements(next);
     saveToHistory(next);
@@ -963,7 +973,10 @@ export const LabelProvider = ({ children }) => {
 
     // 1. Basic FDA Compliance
     if (!has(e => e.type === 'barcode' || e.type === 'qrcode')) errors.push('Missing Barcode / QR Code.');
-    if (!has(e => (e.text || '').toLowerCase().includes('exp') || (e.text || '').toLowerCase().includes('expiry')))
+    if (!has(e => {
+      const content = (e.text || e.html || '').toLowerCase();
+      return content.includes('exp') || content.includes('expiry');
+    }))
       errors.push('Missing Expiry Date field.');
     if (!has(e => (e.fontSize || 0) > 18 || e.subtype === 'brand')) errors.push('Missing prominent Brand Name.');
     if (!has(e => e.type === 'warnings')) errors.push('Missing Safety / Rx Warning.');
@@ -985,7 +998,7 @@ export const LabelProvider = ({ children }) => {
     // 3. Dynamic Field Validation (AC 10)
     const validKeys = Object.keys(SAMPLE_TRIAL_DATA);
     elements.forEach(el => {
-      const text = el.text || '';
+      const text = el.text || el.html || '';
       const placeholders = [...text.matchAll(/\{\{([\w\d_]+)\}\}/g)].map(m => m[1]);
 
       placeholders.forEach(key => {
