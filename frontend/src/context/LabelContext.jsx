@@ -62,13 +62,15 @@ export const LabelProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [userFiles, setUserFiles] = useState([]);
   const [labelStocks, setLabelStocks] = useState([]);
-  const defaultStockIdRef = useRef(null);
+  
+  const debounceRef = useRef(null);
   const isSavingRef = useRef(false);
+  const lastSavedRef = useRef(""); // Store stringified state hash
+  const defaultStockIdRef = useRef(null);
 
   const { user, accessToken } = useAuth();
   const guestId = getGuestId();
   const effectiveId = user?.id || guestId;
-  const debounceRef = useRef(null);
 
   // ── Toast helper ──
   const showToast = (msg, type = 'info') => {
@@ -222,17 +224,53 @@ export const LabelProvider = ({ children }) => {
   useEffect(() => {
     if (!meta.fileId || !hydrated) return;
     
-    // Mark as unsaved immediately to provide real-time UI synchronization
+    // Comparison hash to prevent loops on meta/version updates
+    const currentStateHash = JSON.stringify({
+      elements,
+      labelSize: meta.labelSize,
+      bgColor: meta.bgColor,
+      notes: meta.notes
+    });
+
+    // 1. SILENT INITIALIZATION: Capture baseline state upon first hydration or file change
+    if (!lastSavedRef.current) {
+        lastSavedRef.current = currentStateHash;
+        setSavedStatus('saved');
+        return;
+    }
+
+    // 2. EQUALITY GUARD: If state matches last known save, do nothing.
+    if (lastSavedRef.current === currentStateHash) {
+      // If we were showing 'unsaved', but they undid back to the saved state, sync status
+      if (savedStatus === 'unsaved') setSavedStatus('saved');
+      return;
+    }
+
+    // 3. DIRTY STATE: Update UI to unsaved and prepare sync
     setSavedStatus('unsaved');
     
     if (debounceRef.current) clearTimeout(debounceRef.current);
     
-    debounceRef.current = setTimeout(async () => {
-      if (isSavingRef.current) return;
+    const triggerAutoSave = async () => {
+      if (isSavingRef.current || !meta.fileId) return;
+
+      const currentHash = JSON.stringify({
+        elements,
+        labelSize: meta.labelSize,
+        bgColor: meta.bgColor,
+        notes: meta.notes
+      });
+
+      if (lastSavedRef.current === currentHash) {
+          setSavedStatus('saved');
+          return;
+      }
+
+      let currentSuccess = false;
       isSavingRef.current = true;
       try {
         setSavedStatus('saving');
-        const response = await api.saveLabelVersion(meta.fileId, {
+        const response = await api.updateLatestVersion(meta.fileId, {
           designJson: {
             elementsData: elements,
             labelSize: meta.labelSize,
@@ -243,20 +281,41 @@ export const LabelProvider = ({ children }) => {
           notes: meta.notes
         });
         
-        // Update version reference if provided by backend
+        lastSavedRef.current = currentHash; 
+
         if (response && response.versionNo) {
           setMeta(m => ({ ...m, versionNo: response.versionNo }));
         }
         
         setSavedStatus('saved');
+        currentSuccess = true;
       } catch (err) {
         console.error('Auto-save engine failed:', err);
         setSavedStatus('unsaved');
       } finally {
         isSavingRef.current = false;
+        
+        // ONLY RECURSE ON SUCCESS: If the user changed things DURING the API call 
+        // AND the last call was successful, then schedule a catch-up.
+        // If the call FAILED (e.g. 500), we STOP to prevent a crash loop.
+        if (currentSuccess) {
+           const actualHash = JSON.stringify({
+             elements,
+             labelSize: meta.labelSize,
+             bgColor: meta.bgColor,
+             notes: meta.notes
+           });
+           
+           if (actualHash !== lastSavedRef.current) {
+             setSavedStatus('unsaved');
+             debounceRef.current = setTimeout(triggerAutoSave, 2000);
+           }
+        }
       }
-    }, 1000); // Trigger save 1 second after last change
-  }, [elements, meta, hydrated]);
+    };
+
+    debounceRef.current = setTimeout(triggerAutoSave, 1500); 
+  }, [elements, meta.fileId, meta.labelSize, meta.bgColor, meta.notes, hydrated]);
 
   // ── History ──
   const saveToHistory = useCallback((newEls) => {
@@ -467,6 +526,29 @@ export const LabelProvider = ({ children }) => {
     }));
   };
 
+  const finalizeFile = async (comment = '') => {
+    if (!meta.fileId) {
+      showToast('Please name your file first', 'warning');
+      return;
+    }
+    try {
+      setSavedStatus('saving');
+      // 1. Create a final version record first
+      await saveFile(comment || 'Finalized version for production');
+      
+      // 2. Lock the label
+      await api.updateLabel(meta.fileId, { status: 'LOCKED' });
+      
+      setMeta(m => ({ ...m, status: 'LOCKED' }));
+      showToast('Label successfully FINALIZED and LOCKED ✓', 'success');
+    } catch (err) {
+      console.error('Finalize failed', err);
+      showToast('Finalize failed', 'error');
+    } finally {
+      setSavedStatus('saved');
+    }
+  };
+
   const saveFile = async (comment = '') => {
     if (!meta.fileId) {
       showToast('Please name your file first', 'warning');
@@ -487,6 +569,13 @@ export const LabelProvider = ({ children }) => {
         notes: comment || meta.notes
       });
       
+      lastSavedRef.current = JSON.stringify({
+        elements,
+        labelSize: meta.labelSize,
+        bgColor: meta.bgColor,
+        notes: comment || meta.notes
+      });
+
       if (response && response.versionNo) {
         setMeta(m => ({ ...m, versionNo: response.versionNo }));
       }
@@ -961,7 +1050,7 @@ export const LabelProvider = ({ children }) => {
     activityLogs,
     // File ops
     newFile, setFileName, setLabelSize,
-    saveFile, saveFileAs, restoreVersion,
+    saveFile, saveFileAs, finalizeFile, restoreVersion,
     openFileById, openFileFromJSON, deleteUserTemplate,
     exportJSON, getAllFiles,
     getTemplateHistory, getTemplateById,

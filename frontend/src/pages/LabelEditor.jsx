@@ -294,7 +294,7 @@ export default function LabelEditor() {
     settings, updateSettings,
     savedStatus, toast, showToast, hydrated,
     validateLabel,
-    saveFile, saveFileAs, openFileById, openFileFromJSON, exportJSON, getAllFiles,
+    saveFile, saveFileAs, finalizeFile, openFileById, openFileFromJSON, exportJSON, getAllFiles,
     setUnit,
     setLabelStock,
     labelStocks,
@@ -383,6 +383,7 @@ export default function LabelEditor() {
   const [pendingFlow, setPendingFlow] = useState(null); // 'new' | 'template'
   const [showSaveAs, setShowSaveAs] = useState(false);
   const [showVersionModal, setShowVersionModal] = useState(false);
+  const [modalType, setModalType] = useState('version'); // 'version' | 'finalize'
   const [saveAsName, setSaveAsName] = useState('');
   const [editingElementId, setEditingElementId] = useState(null);
   const [formatActiveStates, setFormatActiveStates] = useState({});
@@ -890,20 +891,26 @@ export default function LabelEditor() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             className="relative w-full max-w-md bg-white rounded-[32px] shadow-2xl overflow-hidden border border-slate-100"
           >
-            <div className="bg-[var(--color-primary-dark)] p-8 text-white">
+            <div className={`p-8 text-white ${modalType === 'finalize' ? 'bg-indigo-600' : 'bg-emerald-600'}`}>
               <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center mb-4 text-white">
-                <span className="material-symbols-outlined text-2xl">published_with_changes</span>
+                <span className="material-symbols-outlined text-2xl">{modalType === 'finalize' ? 'lock_person' : 'published_with_changes'}</span>
               </div>
-              <h3 className="text-xl font-bold tracking-tight">Audit Trail Requirement</h3>
-              <p className="text-sm text-white/60 font-medium mt-1">Version {meta.versionNo ? `v${(parseFloat(meta.versionNo) + 1).toFixed(1)}` : 'v1.1'} initialization</p>
+              <h3 className="text-xl font-bold tracking-tight">{modalType === 'finalize' ? 'Final Sign-off' : 'Audit Trail Requirement'}</h3>
+              <p className="text-sm text-white/60 font-medium mt-1">
+                {modalType === 'finalize' 
+                  ? 'Prepare clinical master for production locking' 
+                  : `Commit new version v${(parseFloat(meta.versionNo || '1.0') + 1).toFixed(1)}`}
+              </p>
             </div>
             <div className="p-8">
-              <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2">Reason for modification (Mandatory)</label>
+              <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2">
+                {modalType === 'finalize' ? 'Production Release Notes' : 'Reason for modification'} (Mandatory)
+              </label>
               <textarea 
                 autoFocus
                 id="version-comment-box"
                 className="w-full h-32 bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-sm font-semibold text-slate-800 focus:border-[var(--color-primary)] focus:bg-white transition-all outline-none resize-none placeholder:text-slate-300"
-                placeholder="Summarize the adjustments made to fields, layout, or content..."
+                placeholder={modalType === 'finalize' ? 'Document the final validated state of this clinical asset...' : 'Summarize the adjustments made to fields, layout, or content...'}
               />
               <div className="grid grid-cols-2 gap-3 mt-6">
                 <button onClick={() => setShowVersionModal(false)} className="px-6 py-3 rounded-2xl text-[12px] font-bold text-slate-500 hover:bg-slate-100 transition-all border border-slate-100">Cancel</button>
@@ -914,12 +921,18 @@ export default function LabelEditor() {
                       showToast('Audit comment required for compliance', 'error');
                       return;
                     }
-                    saveFile(comment.trim());
+                    if (modalType === 'finalize') {
+                      finalizeFile(comment.trim());
+                    } else {
+                      saveFile(comment.trim());
+                    }
                     setShowVersionModal(false);
                   }}
-                  className="px-6 py-3 rounded-2xl text-[12px] font-bold text-white bg-[var(--color-primary-dark)] hover:shadow-glow-sm shadow-xl shadow-black/10 transition-all active:scale-95"
+                  className={`px-6 py-3 rounded-2xl text-[12px] font-bold text-white shadow-xl transition-all active:scale-95 ${
+                    modalType === 'finalize' ? 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-500/20' : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/20'
+                  }`}
                 >
-                  Commit Version
+                  {modalType === 'finalize' ? 'Finalize & Lock' : 'Commit Version'}
                 </button>
               </div>
             </div>
@@ -1099,11 +1112,11 @@ export default function LabelEditor() {
           <div className="relative" onClick={e => e.stopPropagation()}>
             <button
               onClick={() => setShowFileMenu(v => !v)}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[13px] font-bold text-white hover:bg-white/10 active:bg-white/20 transition-all"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12px] font-bold text-white hover:bg-white/10 active:bg-white/20 transition-all border border-white/5"
             >
               <span className="material-symbols-outlined text-[18px]">folder_open</span>
               File
-              <span className="material-symbols-outlined text-[16px] opacity-60">{showFileMenu ? 'expand_less' : 'expand_more'}</span>
+              <span className="material-symbols-outlined text-[14px] opacity-40">{showFileMenu ? 'expand_less' : 'expand_more'}</span>
             </button>
             <AnimatePresence>
               {showFileMenu && (
@@ -1111,7 +1124,7 @@ export default function LabelEditor() {
                   initial={{ opacity: 0, y: 10, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                  className="absolute top-[calc(100%+8px)] left-0 w-64 bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] border border-slate-200 overflow-hidden z-[2100]"
+                  className="absolute top-[calc(100%+8px)] left-0 w-60 bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] border border-slate-200 overflow-hidden z-[2100]"
                 >
                   <div className="p-2 border-b border-slate-100 bg-slate-50/50">
                     <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 px-3 py-1">Document Actions</p>
@@ -1121,18 +1134,18 @@ export default function LabelEditor() {
                       { label: 'New Design', icon: 'add_circle', action: triggerNewFile, shortcut: 'Alt+N' },
                       { label: 'Open File', icon: 'folder_open', action: () => jsonInputRef.current?.click(), shortcut: 'Ctrl+O' },
                       { type: 'sep' },
-                      { label: 'Save Changes', icon: 'published_with_changes', action: () => { setShowVersionModal(true); setShowFileMenu(false); }, shortcut: 'Ctrl+S' },
+                      { label: 'Save Changes', icon: 'published_with_changes', action: () => { setShowVersionModal(true); setModalType('version'); setShowFileMenu(false); }, shortcut: 'Ctrl+S' },
                       { label: 'Duplicate File', icon: 'content_copy', action: () => { setShowSaveAs(true); setShowFileMenu(false); } },
                       { label: 'Export JSON', icon: 'download', action: () => { exportJSON(); setShowFileMenu(false); } }
                     ].map((item, i) => item.type === 'sep'
                       ? <div key={`sep-${i}`} className="h-[1px] bg-slate-100 my-1 mx-2" />
                       : (
-                        <button key={item.label} onClick={item.action} className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-[12px] font-bold text-slate-700 hover:bg-slate-50 hover:text-[var(--color-primary-dark)] transition-all group">
+                        <button key={item.label} onClick={item.action} className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-[12px] font-bold text-slate-700 hover:bg-slate-50 hover:text-[var(--color-primary-dark)] transition-all group">
                           <span className="flex items-center gap-3">
                             <span className="material-symbols-outlined text-[18px] text-slate-400 group-hover:text-[var(--color-primary-dark)] transition-colors">{item.icon}</span>
                             {item.label}
                           </span>
-                          {item.shortcut && <span className="text-[9px] font-mono text-slate-400 opacity-60">{item.shortcut}</span>}
+                          {item.shortcut && <span className="text-[9px] font-mono text-slate-400 opacity-40">{item.shortcut}</span>}
                         </button>
                       )
                     )}
@@ -1142,39 +1155,65 @@ export default function LabelEditor() {
             </AnimatePresence>
           </div>
         }
-        rightContent={
-          <div className="flex items-center gap-5">
-            <div className="flex flex-col items-end">
-              <div className="flex items-center gap-2">
-                <span className="bg-white text-slate-900 text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-lg border border-white/20 leading-none shadow-sm">v{meta.versionNo || '1.0'}</span>
-                <span className="text-[14px] font-bold text-white tracking-tight leading-none group/title cursor-default">{meta.fileName || 'Untitled Label'}</span>
-              </div>
-              <div className={`flex items-center gap-1.5 ${savedStatus === 'saved' ? 'text-[var(--color-primary-light)]' : 'text-amber-300'} text-[9px] font-black uppercase tracking-wider mt-1`}>
-                <span className={`material-symbols-outlined text-[14px] ${savedStatus === 'saving' ? 'animate-spin' : ''}`}>{statusIcon}</span>
-                {statusLabel}
+        centerContent={
+          <div className="flex flex-col items-center">
+            <div className="flex items-center gap-3">
+              <span className="text-[14px] font-bold text-white tracking-tight leading-none truncate max-w-[250px]">{meta.fileName || 'Untitled Label'}</span>
+              <div 
+                className="flex items-center bg-white/10 rounded-md border border-white/20 px-1.5 py-0.5 shadow-sm group cursor-pointer hover:bg-white/20 transition-all" 
+                onClick={() => { setModalType('version'); setShowVersionModal(true); }}
+              >
+                <span className="text-white text-[10px] font-black uppercase tracking-widest leading-none">v{meta.versionNo || '1.0'}</span>
               </div>
             </div>
+            <div className={`text-[9px] font-black uppercase tracking-[0.2em] mt-1.5 flex items-center gap-1.5 transition-colors ${savedStatus === 'saved' ? 'text-emerald-400/80' : 'text-amber-400/80'}`}>
+              {savedStatus === 'saving' ? (
+                <span className="material-symbols-outlined text-[11px] animate-spin">sync</span>
+              ) : (
+                <span className="material-symbols-outlined text-[11px]">{statusIcon}</span>
+              )}
+              {savedStatus === 'saved' ? 'Synced Draft' : statusLabel}
+            </div>
+          </div>
+        }
+        rightContent={
+          <div className="flex items-center gap-2">
+             <button 
+              onClick={() => { setModalType('version'); setShowVersionModal(true); }}
+              className="h-8 px-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-1.5 shadow-lg active:scale-95 transition-transform"
+             >
+               <span className="material-symbols-outlined text-[16px]">publish</span>
+               Save Version
+             </button>
+             
+             <button 
+              onClick={() => { setModalType('finalize'); setShowVersionModal(true); }}
+              className="h-8 px-4 border border-white/20 bg-white/5 hover:bg-white/10 text-white rounded-lg text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-1.5 active:scale-95"
+             >
+               <span className="material-symbols-outlined text-[16px]">lock_person</span>
+               Finalize
+             </button>
 
-            <div className="relative">
-              <button
-                onClick={(e) => { e.stopPropagation(); setShowExportMenu(!showExportMenu); setShowFileMenu(false); }}
-                className="h-10 px-5 bg-[var(--color-primary-light)] text-[var(--color-text-dark)] rounded-xl text-[12px] font-black uppercase tracking-wider shadow-[0_4px_12px_rgba(152,251,203,0.2)] flex items-center gap-2 hover:scale-[1.03] transition-all"
-              >
-                <span className="material-symbols-outlined text-[20px]">ios_share</span>
-                Export
-                <span className="material-symbols-outlined text-[16px] opacity-60">{showExportMenu ? 'arrow_drop_up' : 'arrow_drop_down'}</span>
-              </button>
-              <AnimatePresence>
-                {showExportMenu && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                    className="absolute top-[calc(100%+8px)] right-0 w-64 bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] border border-slate-200 overflow-hidden z-[2100]"
-                  >
-                    <div className="p-2 border-b border-slate-100 bg-slate-50/50">
-                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 px-3 py-1">Export Options</p>
-                    </div>
+             <div className="w-[1px] h-4 bg-white/10 mx-1"></div>
+
+             <button
+              onClick={(e) => { e.stopPropagation(); setShowExportMenu(!showExportMenu); }}
+              className="w-8 h-8 flex items-center justify-center bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all border border-white/10"
+             >
+               <span className="material-symbols-outlined text-[18px]">download</span>
+             </button>
+
+             <AnimatePresence>
+               {showExportMenu && (
+                 <motion.div 
+                   initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                   animate={{ opacity: 1, y: 0, scale: 1 }}
+                   exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                   className="absolute top-[calc(100%+8px)] right-16 w-60 bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] border border-slate-200 overflow-hidden z-[2100]"
+                 >
+                  <div className="p-2 border-b border-slate-100 bg-slate-50/50">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 px-3 py-1">Export Options</p>
+                  </div>
                     <div className="p-1.5">
                       {[
                         { label: 'Download PNG', icon: 'image', action: handleExportPNG, desc: 'High resolution image' },
@@ -1199,9 +1238,8 @@ export default function LabelEditor() {
                 )}
               </AnimatePresence>
             </div>
-          </div>
-        }
-      />
+          }
+        />
 
       {/* ── Global Secondary Toolbar (Contextual Actions) ──────────────────── */}
       <GlobalSecondaryToolbar>
@@ -1457,7 +1495,7 @@ export default function LabelEditor() {
           onMouseLeave={() => setHoveredIcon(null)}
         >
           {/* 1. Icon Rail (Fixed width: 72px) */}
-          <aside className="w-[72px] bg-white border-r border-slate-200 flex flex-col items-center py-6 gap-3 flex-shrink-0">
+          <aside className="w-[72px] h-full bg-white border-r border-slate-200 flex flex-col items-center py-6 gap-1 flex-shrink-0 overflow-y-auto scrollbar-hide select-none transition-all duration-300 shadow-[2px_0_15px_rgba(0,0,0,0.02)]">
             {ICON_RAIL_ITEMS.map((item) => {
               const isActive = activeTab === item.id;
               const isLocked = lockedIcon === item.id;

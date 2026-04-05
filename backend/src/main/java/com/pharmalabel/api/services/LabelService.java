@@ -11,6 +11,7 @@ public interface LabelService {
     Label createLabel(Label label, Object designJson, User user);
     Label updateLabel(Label label);
     LabelVersion saveNewVersion(UUID labelId, Object designJson, String notes, UUID labelStockId, User user);
+    LabelVersion updateLatestVersion(UUID labelId, Object designJson, String notes, UUID labelStockId, User user);
     
     Optional<Label> getLabel(UUID id);
     List<Label> getLabelsByStatus(String status);

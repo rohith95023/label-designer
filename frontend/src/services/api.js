@@ -36,8 +36,11 @@ export const api = {
   getLatestLabelVersion: (id) => 
     authApi.get(`/labels/${id}/versions/latest`).then(res => res.data),
 
-  saveLabelVersion: (id, designJson) => 
-    authApi.post(`/labels/${id}/versions`, designJson).then(res => res.data),
+  saveLabelVersion: (id, data) => 
+    authApi.post(`/labels/${id}/versions`, data).then(res => res.data),
+  
+  updateLatestVersion: (id, data) => 
+    authApi.put(`/labels/${id}/versions/latest`, data).then(res => res.data),
 
   // Users (Admin Only)
   getUsers: () => 

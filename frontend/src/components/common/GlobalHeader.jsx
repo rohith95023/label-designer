@@ -19,64 +19,62 @@ export default function GlobalHeader({
 
   return (
     <motion.header 
-      initial={{ y: -100 }}
-      animate={{ y: 0 }}
-      className="h-[64px] bg-[var(--color-primary-dark)] flex items-center justify-between px-4 gap-4 shrink-0 relative z-[1000] shadow-[0_4px_20px_rgba(0,0,0,0.15)]"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="h-[56px] bg-[var(--color-primary-dark)] flex items-center justify-between px-4 gap-4 shrink-0 relative z-[1000] shadow-[0_4px_20px_rgba(0,0,0,0.1)] border-b border-white/5"
     >
-      {/* ── Left Section: Identity & Contextual Menus ── */}
-      <div className="flex items-center gap-6">
-        <Link to="/" className="flex items-center gap-2 group">
-          <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-all border border-white/10 shadow-sm">
-            <span className="material-symbols-outlined text-white text-[22px]" style={{ fontVariationSettings: "'FILL' 1" }}>medical_services</span>
+      {/* ── Left Section: Identity & Navigation ── */}
+      <div className="flex items-center gap-3">
+        <Link to="/" className="flex items-center gap-2.5 group mr-2">
+          <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center shadow-lg transform group-hover:scale-105 transition-all">
+            <span className="material-symbols-outlined text-[var(--color-primary-dark)] text-[18px] font-black">medical_services</span>
           </div>
-          <span className="text-[15px] font-black tracking-tight text-white uppercase translate-y-[1px] hidden lg:block">PharmaPrecise</span>
+          <span className="text-[13px] font-black tracking-tight text-white uppercase hidden xl:block">PHARMAPRECISE</span>
         </Link>
 
-        {leftContent && (
-          <>
-            <div className="h-6 w-[1px] bg-white/10 mx-1"></div>
-            {leftContent}
-          </>
-        )}
+        <div className="h-4 w-[1px] bg-white/10 mx-1"></div>
+
+        {leftContent}
+
+        <nav className="flex items-center ml-2">
+          {[
+            { label: 'Dashboard', to: '/' },
+            { label: 'Templates', to: '/assets' },
+            { label: 'Label Editor', to: '/editor' },
+            { label: 'Translation', to: '/translation' },
+          ].map(link => {
+            const isActive = 
+              (link.to === '/' && activePage === 'dashboard') ||
+              (link.to === '/assets' && activePage === 'assets') ||
+              (link.to === '/editor' && activePage === 'editor') ||
+              (link.to === '/translation' && activePage === 'translation');
+
+            return (
+              <Link 
+                key={link.to} 
+                to={link.to}
+                className={`px-3 py-1.5 rounded-lg text-[12px] font-bold transition-all ${
+                  isActive 
+                    ? 'bg-white/10 text-white shadow-inner' 
+                    : 'text-white/50 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
+        </nav>
       </div>
 
-      {/* ── Center Section: Navigation or Context ── */}
-      <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1">
-        {centerContent || (
-          <nav className="flex items-center gap-1">
-            {[
-              { label: 'Dashboard', to: '/' },
-              { label: 'Templates', to: '/assets' },
-              { label: 'Label Editor', to: '/editor' },
-              { label: 'Translation', to: '/translation' },
-            ].map(link => {
-              const isActive = 
-                activePage === link.label.toLowerCase() || 
-                (link.to === '/' && activePage === 'dashboard') ||
-                (link.to === '/assets' && activePage === 'assets') ||
-                (link.to === '/editor' && activePage === 'editor') ||
-                (link.to === '/translation' && activePage === 'translation');
-
-              return (
-                <Link 
-                  key={link.to} 
-                  to={link.to}
-                  className={`px-5 py-2 rounded-xl text-[13px] font-bold transition-all ${
-                    isActive 
-                      ? 'bg-white/10 text-white border border-white/10' 
-                      : 'text-white/60 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  {link.label}
-                </Link>
-              );
-            })}
-          </nav>
-        )}
+      {/* ── Center Section: Contextual Focus ── */}
+      <div className="absolute left-1/2 -translate-x-1/2 flex items-center pointer-events-none">
+        <div className="pointer-events-auto">
+          {centerContent}
+        </div>
       </div>
 
-      {/* ── Right Section: Tools, Profile, Identity ── */}
-      <div className="flex items-center gap-4">
+      {/* ── Right Section: Actions & Profile ── */}
+      <div className="flex items-center gap-3">
         {rightContent}
 
         <div className="h-8 w-[1px] bg-white/10 mx-1"></div>

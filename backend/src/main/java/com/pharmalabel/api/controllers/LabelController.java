@@ -85,7 +85,16 @@ public class LabelController {
     @PostMapping("/{id}/versions")
     public ResponseEntity<LabelVersionDto> saveNewVersion(@PathVariable UUID id, @RequestBody SaveVersionRequest request) {
         User currentUser = userService.getCurrentUser();
+        // Manual save ALWAYS creates a new version record
         LabelVersion version = labelService.saveNewVersion(id, request.getDesignJson(), request.getNotes(), request.getLabelStockId(), currentUser);
+        return ResponseEntity.ok(mapVersionToDto(version));
+    }
+
+    @PutMapping("/{id}/versions/latest")
+    public ResponseEntity<LabelVersionDto> updateLatestVersion(@PathVariable UUID id, @RequestBody SaveVersionRequest request) {
+        User currentUser = userService.getCurrentUser();
+        // Auto-save update of existing draft version
+        LabelVersion version = labelService.updateLatestVersion(id, request.getDesignJson(), request.getNotes(), request.getLabelStockId(), currentUser);
         return ResponseEntity.ok(mapVersionToDto(version));
     }
 
