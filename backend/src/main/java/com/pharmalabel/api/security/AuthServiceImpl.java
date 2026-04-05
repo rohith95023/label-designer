@@ -118,7 +118,7 @@ public class AuthServiceImpl implements AuthService {
         // Find existing family and rotate
         UserAuthToken authToken = UserAuthToken.builder()
                 .user(user)
-                .tokenHash(passwordEncoder.encode(token)) 
+                .tokenHash(token) // Store directly for O(1) indexed lookup - refresh tokens are random UUIDs
                 .familyId(familyId)
                 .revoked(false)
                 .expiresAt(OffsetDateTime.now().plusSeconds(refreshExpiration / 1000))
@@ -147,13 +147,9 @@ public class AuthServiceImpl implements AuthService {
         // This is complex because we need to check all revoked/non-revoked tokens for families.
         // For simplicity in this demo, I'll search through active tokens.
         
-        List<UserAuthToken> allTokens = authTokenRepository.findAll();
-        UserAuthToken matchedToken = allTokens.stream()
-                .filter(t -> passwordEncoder.matches(refreshToken, t.getTokenHash()))
-                .findFirst()
+        UserAuthToken matchedToken = authTokenRepository.findByTokenHash(refreshToken)
                 .orElseThrow(() -> {
-                    // This could be a replay of a token we already deleted or one that doesn't exist
-                    // In a production environment, you'd track even revoked tokens to detect replays.
+                    logger.warn("Refresh failed: Token not found in DB.");
                     return new BadCredentialsException("Invalid refresh token");
                 });
 
@@ -206,11 +202,7 @@ public class AuthServiceImpl implements AuthService {
     public void logout(String refreshToken, HttpServletResponse response) {
         User currentUser = null;
         if (refreshToken != null) {
-            List<UserAuthToken> allTokens = authTokenRepository.findAll();
-            UserAuthToken matchedToken = allTokens.stream()
-                .filter(t -> passwordEncoder.matches(refreshToken, t.getTokenHash()))
-                .findFirst()
-                .orElse(null);
+            UserAuthToken matchedToken = authTokenRepository.findByTokenHash(refreshToken).orElse(null);
 
             if (matchedToken != null) {
                 matchedToken.setRevoked(true);

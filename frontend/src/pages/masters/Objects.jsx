@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../../services/api';
-import AppLayout from '../../components/common/AppLayout';
+
 import { useToast } from '../../components/common/ToastContext';
 import { createPortal } from 'react-dom';
 import { resolveUrl } from '../../utils/url';
@@ -207,7 +207,7 @@ const Objects = () => {
   });
 
   return (
-    <AppLayout activePage="visual-assets">
+    <>
       <div className="p-8 max-w-7xl mx-auto h-full flex flex-col gap-6 animate-fade-in font-inter">
         
         {/* Clinical Header */}
@@ -595,7 +595,7 @@ const Objects = () => {
         )}
       </AnimatePresence>
 
-    </AppLayout>
+    </>
   );
 };
 

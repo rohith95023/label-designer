@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLabel, LABEL_PRESETS } from '../context/LabelContext';
 import { api } from '../services/api';
-import AppLayout from '../components/common/AppLayout';
+
 
 function SectionCard({ icon, iconGrad, title, children }) {
   return (
@@ -121,7 +121,7 @@ export default function Settings() {
   };
 
   return (
-    <AppLayout activePage="settings">
+    <>
       <div className="p-6 lg:p-10 pb-24 max-w-5xl mx-auto">
 
         {/* Hero */}
@@ -315,6 +315,6 @@ export default function Settings() {
           </div>
         </div>
       )}
-    </AppLayout>
+    </>
   );
 }

@@ -17,6 +17,8 @@ const NAV_ITEMS = [
   // Masters Section
   { key: 'masters', to: '/masters/label-stocks', icon: 'inventory_2', label: 'Label Stocks', roles: ['ADMIN'], permission: 'masters' },
   { key: 'visual-assets', to: '/masters/assets', icon: 'category', label: 'Visual Asset Master', roles: ['ADMIN'], permission: 'masters' },
+  { key: 'placeholders', to: '/masters/placeholders', icon: 'data_object', label: 'Placeholders', roles: ['ADMIN'], permission: 'masters' },
+  { key: 'phrases', to: '/masters/phrases', icon: 'translate', label: 'Phrases & Translations', roles: ['ADMIN'], permission: 'masters' },
   { key: 'languages', to: '/masters/languages', icon: 'language', label: 'Languages', roles: ['ADMIN'], permission: 'masters' },
   
   { key: 'users', to: '/admin/users', icon: 'group', label: 'Users', roles: ['ADMIN'], permission: 'users' },
@@ -199,11 +201,6 @@ export default function AppLayout({ children, activePage = '', searchBar = null 
               );
             })}
           </nav>
-
-          {/* Bottom: version badge */}
-          <div className="p-3 mt-auto border-t border-slate-100 flex justify-center">
-            <span className="bg-slate-100 text-slate-400 text-[9px] font-black uppercase tracking-[0.2em] px-3 py-1 rounded-full border border-slate-200/50 cursor-help transition-all hover:bg-white hover:text-slate-600">v1.1.0-STABLE</span>
-          </div>
         </aside>
 
         {/* ── Main Content ─────────────────────────────────────────────── */}

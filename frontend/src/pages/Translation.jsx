@@ -5,7 +5,7 @@ import { useToast } from '../components/common/ToastContext';
 import { GEO_LANGUAGE_DATA, ELEMENT_TYPE_LABELS, TRANSLATABLE_TYPES } from '../data/geoLanguages';
 import { translateBatch } from '../services/translation.service';
 import { calcAutoFitFontSize } from '../utils/autoFitFont';
-import AppLayout from '../components/common/AppLayout';
+
 
 const TYPE_COLORS = {
   text: 'text-blue-700 bg-blue-50 border-blue-200',
@@ -132,7 +132,7 @@ export default function Translation() {
   }, [draftTranslations, translatableElements, selectedLang]);
 
   return (
-    <AppLayout activePage="translation">
+    <>
       <div className="flex h-[calc(100vh-112px)] overflow-hidden">
         {/* ── Left Sidebar: Source ─────────────────────────────────────────── */}
         <aside className="w-[340px] shrink-0 bg-[#F8FAFC] border-r border-black/5 flex flex-col overflow-hidden h-full">
@@ -469,6 +469,6 @@ export default function Translation() {
           </div>
         </main>
       </div>
-    </AppLayout>
+    </>
   );
 }

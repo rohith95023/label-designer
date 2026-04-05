@@ -7,6 +7,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import GlobalHeader from '../components/common/GlobalHeader';
 import GlobalSecondaryToolbar from '../components/common/GlobalSecondaryToolbar';
 import { useLabel } from '../context/LabelContext';
+import { useAuth } from '../context/AuthContext';
 import { Rnd } from 'react-rnd';
 import html2canvas from 'html2canvas';
 import { basicShapes, allIcons } from '../data/shapesLibrary';
@@ -444,12 +445,16 @@ export default function LabelEditor() {
   }, [selectedIds]); // Added selectedIds dependency to be safe
 
   // --- Placeholder & Object Logic ---
+  const { user: currentUser, accessToken } = useAuth();
   const [placeholders, setPlaceholders] = useState([]);
   const [placeholdersLoading, setPlaceholdersLoading] = useState(false);
   const [objects, setObjects] = useState([]);
   const [objectsLoading, setObjectsLoading] = useState(false);
 
   useEffect(() => {
+    // Only fetch if we have a token (avoid race during refresh)
+    if (!accessToken) return;
+
     const fetchAssets = async () => {
       setPlaceholdersLoading(true);
       setObjectsLoading(true);
@@ -468,7 +473,7 @@ export default function LabelEditor() {
       }
     };
     fetchAssets();
-  }, []);
+  }, [accessToken]);
 
   const refreshObjects = async () => {
     setObjectsLoading(true);

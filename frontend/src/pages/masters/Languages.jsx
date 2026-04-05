@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../../services/api';
-import AppLayout from '../../components/common/AppLayout';
+
 import { useToast } from '../../components/common/ToastContext';
 import './LabelStocks.css';
 
@@ -148,7 +148,7 @@ const Languages = () => {
   }).filter(Boolean);
 
   return (
-    <AppLayout activePage="languages">
+    <>
       <div className="um-container animate-fade-in">
         <motion.div 
           className="um-header"
@@ -473,7 +473,7 @@ const Languages = () => {
         </div>
         )}
       </AnimatePresence>
-    </AppLayout>
+    </>
   );
 };
 

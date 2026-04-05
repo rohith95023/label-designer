@@ -2,9 +2,10 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 import { api } from '../../services/api';
-import AppLayout from '../../components/common/AppLayout';
+
 import { useToast } from '../../components/common/ToastContext';
 import { useLabel } from '../../context/LabelContext';
+import { useAuth } from '../../context/AuthContext';
 import './LabelStocks.css';
 
 const EMPTY_FORM = {
@@ -27,6 +28,7 @@ const EMPTY_FORM = {
 const UOM_OPTIONS = ['ROLL', 'SHEET', 'PKT', 'BOX', 'CASE'];
 
 const LabelStocks = () => {
+  const { accessToken } = useAuth();
   const initialized = useRef(false);
   const [stocks, setStocks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -42,6 +44,7 @@ const LabelStocks = () => {
   const { success, error: toastError } = useToast();
 
   const fetchData = useCallback(async () => {
+    if (!accessToken) return;
     try {
       setLoading(true);
       const data = await api.getLabelStocks();
@@ -54,11 +57,11 @@ const LabelStocks = () => {
   }, [toastError]);
 
   useEffect(() => {
-    if (!initialized.current) {
+    if (accessToken && !initialized.current) {
       fetchData();
       initialized.current = true;
     }
-  }, [fetchData]);
+  }, [accessToken, fetchData]);
 
   // Lock body scroll when modal is open to prevent clumsiness
   useEffect(() => {
@@ -191,7 +194,7 @@ const LabelStocks = () => {
   });
 
   return (
-    <AppLayout activePage="masters">
+    <>
       <div className="um-container animate-fade-in">
         <motion.div 
           className="um-header"
@@ -476,7 +479,7 @@ const LabelStocks = () => {
         </div>
         )}
       </AnimatePresence>
-    </AppLayout>
+    </>
   );
 };
 

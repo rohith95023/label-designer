@@ -19,7 +19,14 @@ export default function PersistentAppLayout({ children }) {
     if (path === '/print-requests') return 'print';
     if (path === '/settings') return 'settings';
     if (path.startsWith('/admin')) return 'users';
+    
+    // Masters Section Mapping
+    if (path === '/masters/label-stocks') return 'masters';
+    if (path === '/masters/assets') return 'visual-assets';
+    if (path === '/masters/placeholders') return 'placeholders';
+    if (path === '/masters/phrases') return 'phrases';
     if (path.startsWith('/masters')) return path.split('/').pop();
+    
     return '';
   };
 

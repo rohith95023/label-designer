@@ -4,7 +4,7 @@ import { api } from '../services/api';
 import { useToast } from '../components/common/ToastContext';
 import { useAuth } from '../context/AuthContext';
 import { format } from 'date-fns';
-import AppLayout from '../components/common/AppLayout';
+
 
 const PrintRequests = () => {
   const [requests, setRequests] = useState([]);
@@ -13,7 +13,7 @@ const PrintRequests = () => {
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const { addToast: showToast } = useToast();
-  const { user } = useAuth();
+  const { user, accessToken } = useAuth();
 
   // Form State
   const [formData, setFormData] = useState({
@@ -25,8 +25,10 @@ const PrintRequests = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (accessToken) {
+      fetchData();
+    }
+  }, [accessToken]);
 
   const fetchData = async () => {
     try {
@@ -84,7 +86,7 @@ const PrintRequests = () => {
   };
 
   return (
-    <AppLayout activePage="print">
+    <>
       <div className="p-6 lg:p-10 pb-24 max-w-7xl mx-auto animate-fade-in">
       {/* Header */}
       <motion.div 
@@ -347,7 +349,7 @@ const PrintRequests = () => {
         )}
       </AnimatePresence>
       </div>
-    </AppLayout>
+    </>
   );
 };
 

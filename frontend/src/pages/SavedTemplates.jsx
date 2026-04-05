@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useLabel } from '../context/LabelContext';
 import { useAuth } from '../context/AuthContext';
-import AppLayout from '../components/common/AppLayout';
+
 import PreviewModal from '../components/modals/PreviewModal';
 import TemplateConflictModal from '../components/modals/TemplateConflictModal';
 
@@ -110,7 +110,7 @@ export default function SavedTemplates() {
   );
 
   return (
-    <AppLayout activePage="saved-templates" searchBar={searchBar}>
+    <>
       <div className="p-6 lg:p-10 pb-24">
         <motion.div 
           className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6"
@@ -366,7 +366,7 @@ export default function SavedTemplates() {
         replaceLabel="Close current label and open this"
         replaceDescription="This will discard any unsaved changes in the current workspace"
       />
-    </AppLayout>
+    </>
   );
 }
 

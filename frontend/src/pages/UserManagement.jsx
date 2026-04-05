@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../services/api';
-import AppLayout from '../components/common/AppLayout';
+
 import PermissionMatrix from '../components/users/PermissionMatrix';
 import ConfirmDeleteModal from '../components/users/ConfirmDeleteModal';
 import { useToast } from '../components/common/ToastContext';
@@ -322,8 +322,7 @@ const UserManagement = () => {
   };
 
   return (
-    <AppLayout activePage="users">
-
+    <>
       <div className="um-container animate-fade-in">
         {/* ── Header ──────────────────────────────────────────────────────── */}
         <motion.div 
@@ -834,7 +833,7 @@ const UserManagement = () => {
           </div>
         )}
       </AnimatePresence>
-    </AppLayout>
+    </>
   );
 };
 

@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useLabel } from '../context/LabelContext';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
-import AppLayout from '../components/common/AppLayout';
+
 
 /* Animated number counter */
 function AnimatedNumber({ target, duration = 900 }) {
@@ -89,7 +89,7 @@ const QUICK_ACTIONS = (handleNew, navigate, handleUpload) => [
 ];
 
 export default function Dashboard() {
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, accessToken } = useAuth();
   const { newFile, openFileById, getAllFiles, openFileFromJSON, activityLogs, loading: labelLoading } = useLabel();
   const navigate = useNavigate();
   const allFiles = useMemo(() => getAllFiles().sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)), [getAllFiles]);
@@ -101,7 +101,7 @@ export default function Dashboard() {
   const canApprove = currentUser?.role?.name === 'ADMIN' || currentUser?.role?.name === 'APPROVER';
 
   useEffect(() => {
-    if (canApprove) {
+    if (canApprove && accessToken) {
       const fetchApprovals = async () => {
         setApprovalsLoading(true);
         try {
@@ -115,7 +115,7 @@ export default function Dashboard() {
       };
       fetchApprovals();
     }
-  }, [canApprove]);
+  }, [canApprove, accessToken]);
 
   const totalExports = useMemo(() => 
     (activityLogs || []).filter(log => log?.action === 'Exported JSON').length

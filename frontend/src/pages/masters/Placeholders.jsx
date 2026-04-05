@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { api } from '../../services/api';
-import AppLayout from '../../components/common/AppLayout';
+
 import { useToast } from '../../components/common/ToastContext';
 import './LabelStocks.css'; // Reusing the same grid/table styles
 
@@ -107,7 +107,7 @@ const Placeholders = () => {
   );
 
   return (
-    <AppLayout activePage="masters">
+    <>
       <div className="um-container animate-fade-in">
         <div className="um-header">
           <div className="um-header-left">
@@ -228,7 +228,7 @@ const Placeholders = () => {
           </div>
         </div>
       )}
-    </AppLayout>
+    </>
   );
 };
 

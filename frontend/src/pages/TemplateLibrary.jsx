@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useLabel } from '../context/LabelContext';
-import AppLayout from '../components/common/AppLayout';
+
 import TemplateConflictModal from '../components/modals/TemplateConflictModal';
 
 const CATEGORIES = ['All', 'Tablets', 'Syrups', 'Injections', 'Ointments', 'Generic Labels'];

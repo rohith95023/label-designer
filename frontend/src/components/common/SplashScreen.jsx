@@ -1,6 +1,5 @@
-import React from 'react';
-
 export default function SplashScreen() {
+  console.log("[SplashScreen] Rendering generic system loader...");
   return (
     <div className="fixed inset-0 min-h-screen bg-surface-container-lowest flex flex-col items-center justify-center p-6 lg:p-12 z-[9999]">
       {/* Animated Background Gradients */}
