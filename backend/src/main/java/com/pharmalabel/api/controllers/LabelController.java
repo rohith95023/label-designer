@@ -4,6 +4,7 @@ import com.pharmalabel.api.dtos.label.CreateLabelRequest;
 import com.pharmalabel.api.dtos.label.LabelDto;
 import com.pharmalabel.api.dtos.label.LabelVersionDto;
 import com.pharmalabel.api.dtos.label.SaveVersionRequest;
+import com.pharmalabel.api.dtos.label.UpdateLabelRequest;
 import com.pharmalabel.api.models.Label;
 import com.pharmalabel.api.models.LabelStock;
 import com.pharmalabel.api.models.LabelVersion;
@@ -96,6 +97,29 @@ public class LabelController {
         // Auto-save update of existing draft version
         LabelVersion version = labelService.updateLatestVersion(id, request.getDesignJson(), request.getNotes(), request.getLabelStockId(), currentUser);
         return ResponseEntity.ok(mapVersionToDto(version));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<LabelDto> updateLabel(@PathVariable UUID id, @RequestBody UpdateLabelRequest request) {
+        Label label = labelService.getLabel(id)
+                .orElseThrow(() -> new RuntimeException("Label not found with id: " + id));
+
+        if (request.getName() != null) label.setName(request.getName());
+        if (request.getStatus() != null) label.setStatus(request.getStatus());
+        if (request.getNotes() != null) label.setNotes(request.getNotes());
+        
+        if (request.getLabelStockId() != null) {
+            labelStockRepository.findById(request.getLabelStockId()).ifPresent(label::setLabelStock);
+        }
+
+        // If designJson is provided, we update the LATEST version with it
+        if (request.getDesignJson() != null) {
+            User currentUser = userService.getCurrentUser();
+            labelService.updateLatestVersion(id, request.getDesignJson(), request.getNotes(), request.getLabelStockId(), currentUser);
+        }
+
+        Label saved = labelService.updateLabel(label);
+        return ResponseEntity.ok(mapToDto(saved));
     }
 
     @DeleteMapping("/{id}")

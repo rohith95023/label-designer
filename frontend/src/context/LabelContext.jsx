@@ -473,7 +473,14 @@ export const LabelProvider = ({ children }) => {
 
     const scaleX = newW / oldW;
     const scaleY = newH / oldH;
-    const minScale = Math.min(scaleX, scaleY);
+    
+    // Detect orientation swap (e.g. 300x450 -> 450x300)
+    const isSwap = Math.abs(newW - oldH) < 0.2 && Math.abs(newH - oldW) < 0.2;
+    
+    // Use area-based scaling for font sizes to be more natural 
+    // BUT maintain 1:1 if it's just an orientation flip.
+    const fontScale = isSwap ? 1 : Math.min(scaleX, scaleY);
+    const minScale = isSwap ? 1 : Math.min(scaleX, scaleY);
 
     setElements(prev => {
       const scaled = prev.map(el => {

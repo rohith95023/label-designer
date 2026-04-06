@@ -1,13 +1,13 @@
 
 -------- =============================================================================
--- PharmaLabel Designer — Supabase / PostgreSQL Setup Script
+-- PharmaLabel Designer — PostgreSQL / PostgreSQL Setup Script
 -- =============================================================================
--- Optimized for: Supabase (Auth, RLS, Realtime)
+-- Optimized for: PostgreSQL (Auth, RLS, Realtime)
 -- PostgreSQL Version: 15+
 -- =============================================================================
 
 -- ── 0.  Extensions & Schemas ──────────────────────────────────────────────────
--- Supabase usually has an 'extensions' schema.
+-- PostgreSQL usually has an 'extensions' schema.
 CREATE SCHEMA IF NOT EXISTS "extensions";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto" WITH SCHEMA extensions;
 
@@ -31,8 +31,8 @@ CREATE TABLE IF NOT EXISTS public.roles (
 );
 
 -- ── 1.2 users (Profile Table) ─────────────────────────────────────────────────
--- In Supabase, the primary user data is in auth.users. 
--- This public.users table acts as a profile linked to Supabase Auth.
+-- In PostgreSQL, the primary user data is in auth.users. 
+-- This public.users table acts as a profile linked to PostgreSQL Auth.
 CREATE TABLE IF NOT EXISTS public.users (
     id                    UUID        PRIMARY KEY DEFAULT extensions.gen_random_uuid(),
     username              VARCHAR(255) NOT NULL UNIQUE,
@@ -265,6 +265,8 @@ BEGIN
   ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
   ALTER TABLE public.system_config ENABLE ROW LEVEL SECURITY;
   ALTER TABLE public.print_requests ENABLE ROW LEVEL SECURITY;
+  ALTER TABLE public.user_auth_tokens ENABLE ROW LEVEL SECURITY;
+  ALTER TABLE public.user_sessions ENABLE ROW LEVEL SECURITY;
 EXCEPTION
   WHEN OTHERS THEN 
     RAISE NOTICE 'RLS not supported or error enabling RLS. Skipping.';
@@ -272,7 +274,8 @@ END $$;
 
 -- ── 5.1 Basic Access Policies ───────────────────────────────────────────────
 
--- Helper function to simulate Supabase auth.uid() locally if needed
+-- Helper function to simulate PostgreSQL auth.uid() locally if needed
+CREATE SCHEMA IF NOT EXISTS "auth";
 CREATE OR REPLACE FUNCTION auth.uid() RETURNS UUID AS $$
   -- Replace with your session-based logic or a mock UUID for local testing
   SELECT NULL::UUID;
@@ -307,16 +310,25 @@ CREATE POLICY "Print Requests - Access" ON public.print_requests FOR ALL USING (
 -- =============================================================================
 
 -- Roles
-INSERT INTO public.roles (id, name) VALUES
-  ('d68e4294-eff5-4f3a-b6c2-3adff348e863', 'ADMIN'),
-  ('0446db85-60cd-4f5e-8125-b049531c7716', 'REVIEWER'),
-  ('39c97678-04c1-4d46-932d-959502633631', 'DESIGNER')
+INSERT INTO public.roles (name) VALUES
+  ('ADMIN'),
+  ('REVIEWER'),
+  ('OPERATOR'),
+  ('EXTERNAL'),
+  ('DESIGNER'),
+  ('QA_OFFICER'),
+  ('STUDY_MANAGER'),
+  ('PRINT_OPERATOR')
 ON CONFLICT (name) DO NOTHING;
 
 -- Languages
 INSERT INTO public.languages (name, code, direction, status) VALUES
   ('English', 'en', 'LTR', 'ACTIVE'),
-  ('Spanish', 'es', 'LTR', 'ACTIVE')
+  ('Spanish', 'es', 'LTR', 'ACTIVE'),
+  ('Arabic', 'ar', 'RTL', 'ACTIVE'),
+  ('French', 'fr', 'LTR', 'ACTIVE'),
+  ('French-CA', 'fc', 'LTR', 'ACTIVE'),
+  ('French-BE', 'fb', 'LTR', 'ACTIVE')
 ON CONFLICT (code) DO NOTHING;
 
 -- System Config
@@ -324,3 +336,11 @@ INSERT INTO public.system_config (config_key, config_value) VALUES
   ('sod.prevent_same_user_approve', 'true'),
   ('audit.log_limit_days', '365')
 ON CONFLICT (config_key) DO NOTHING;
+
+-- Admin User
+INSERT INTO public.users (username, email, password_hash, role_id, status, must_change_password)
+SELECT 'admin', 'admin@pharmalabel.com', '$2a$10$7Z2v8.1.5v6v6v6v6v6v6u/5yO6X9z9z9z9z9z9z9z9z9z9z9z9z', id, 'ACTIVE', false
+FROM public.roles 
+WHERE name = 'ADMIN' 
+LIMIT 1
+ON CONFLICT (username) DO NOTHING;
