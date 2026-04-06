@@ -436,6 +436,7 @@ export default function LabelEditor() {
   const activeTab = lockedIcon || hoveredIcon;
 
   const sidebarRef = useRef(null);
+  const rightSidebarRef = useRef(null);
 
   // ── Deselect elements on modal opening — fixes "layering" issue ──
   useEffect(() => {
@@ -462,8 +463,9 @@ export default function LabelEditor() {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      // 1. Sidebar area
-      const isSidebar = sidebarRef.current?.contains(event.target);
+      // 1. Sidebar area (Left rail or Right props panel)
+      const isSidebar = sidebarRef.current?.contains(event.target) || 
+                        rightSidebarRef.current?.contains(event.target);
       
       // 2. Artboard area (including backdrop of canvas and rulers)
       const isArtboardArea = artboardContainerRef.current?.contains(event.target);
@@ -489,8 +491,8 @@ export default function LabelEditor() {
         }
       }
 
-      // Close sidebar panels if clicking truly outside (artboard or elsewhere)
-      if (!isSidebar && !isArtboardArea && !isModal) {
+      // Close sidebar panels if clicking truly outside (e.g. background, or somewhere not related to the editor)
+      if (!isSidebar && !isArtboardArea && !isModal && !isToolbarArea) {
         setLockedIcon(null);
         setHoveredIcon(null);
       }
@@ -631,7 +633,8 @@ export default function LabelEditor() {
         name: obj.name,
         width: 120,
         height: 120,
-        imageFit: 'contain'
+        imageFit: 'contain',
+        needsAspectRatioSync: true
       });
     } else if (obj.type === 'ICON') {
       addElement({
@@ -2841,7 +2844,27 @@ export default function LabelEditor() {
                               />
                             </div>
                           ) : el.type === 'image' ? (
-                            <img src={resolveUrl(el.src)} alt="Uploaded" className="w-full flex-1 min-h-0 pointer-events-none" style={{ objectFit: el.imageFit || 'contain' }} />
+                            <img 
+                              src={resolveUrl(el.src)} 
+                              alt="Uploaded" 
+                              className="w-full flex-1 min-h-0 pointer-events-none" 
+                              style={{ objectFit: el.imageFit || 'contain' }} 
+                              onLoad={(e) => {
+                                // Auto-correct aspect ratio for assets loaded from inventory
+                                if (el.needsAspectRatioSync) {
+                                  const { naturalWidth, naturalHeight } = e.target;
+                                  if (naturalWidth && naturalHeight) {
+                                    const ratio = naturalWidth / naturalHeight;
+                                    const newHeight = Math.round(el.width / ratio);
+                                    updateElement(el.id, { 
+                                      height: newHeight, 
+                                      needsAspectRatioSync: false 
+                                    });
+                                    commitUpdate();
+                                  }
+                                }
+                              }}
+                            />
                           ) : el.type === 'icon' ? (
                             <div className="w-full flex-1 min-h-0 flex items-center justify-center overflow-hidden">
                               <span className="material-symbols-outlined leading-[0]" style={{
@@ -3001,6 +3024,7 @@ export default function LabelEditor() {
 
         {/* ── Premium Right Properties Panel ────────────────────────────────────── */}
         <motion.aside
+          ref={rightSidebarRef}
           className="bg-[#F1F5F9] border-l border-slate-200 flex flex-col overflow-hidden shrink-0 relative shadow-sm"
           initial={false}
           animate={{
