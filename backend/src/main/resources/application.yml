@@ -8,7 +8,7 @@ spring:
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: validate # We manage schema via Supabase explicitly, Spring just verifies
+      ddl-auto: update # Sync entity changes without destructive drops
     show-sql: true
     properties:
       hibernate:

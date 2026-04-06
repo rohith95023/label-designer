@@ -28,7 +28,8 @@ const DEFAULT_META = {
   labelSize: { w: 302, h: 454 },
   bgColor: '#FFFFFF',
   unit: UNITS.MM,
-  notes: ''
+  notes: '',
+  imageUrl: null
 };
 
 export const DEFAULT_SETTINGS = {
@@ -172,7 +173,8 @@ export const LabelProvider = ({ children }) => {
                     labelStockId: last.labelStockId || last.labelStock?.id,
                     labelSize: latestVersion.designJson?.labelSize || { w: 600, h: 400 },
                     bgColor: latestVersion.designJson?.bgColor || '#FFFFFF',
-                    notes: latestVersion.designJson?.notes || ''
+                    notes: latestVersion.designJson?.notes || '',
+                    imageUrl: last.imageUrl
                   }));
                   setElements(latestVersion.designJson?.elementsData || []);
                 }

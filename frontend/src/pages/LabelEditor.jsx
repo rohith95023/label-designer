@@ -206,10 +206,12 @@ function AssetUploadModal({ onConfirm, onCancel, labelId }) {
   const [type, setType] = useState('LOGO');
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [uploadError, setUploadError] = useState(null);
 
   const handleUpload = async () => {
     if (!name || !file) return;
     setLoading(true);
+    setUploadError(null);
     try {
       const formData = new FormData();
       formData.append('name', name);
@@ -220,10 +222,12 @@ function AssetUploadModal({ onConfirm, onCancel, labelId }) {
       if (labelId && isUUID) {
         formData.append('labelId', labelId);
       }
-      await api.uploadObject(formData);
-      onConfirm();
+      const result = await api.uploadObject(formData);
+      onConfirm(result);
     } catch (err) {
       console.error("Upload failed", err);
+      const msg = err?.response?.data?.message || err?.message || 'Upload failed. Please try again.';
+      setUploadError(msg);
     } finally {
       setLoading(false);
     }
@@ -266,6 +270,13 @@ function AssetUploadModal({ onConfirm, onCancel, labelId }) {
             </div>
           </div>
         </div>
+        {/* Error Banner */}
+        {uploadError && (
+          <div className="mx-7 mb-0 px-4 py-3 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
+            <span className="material-symbols-outlined text-red-500 text-[18px] shrink-0 mt-0.5">error</span>
+            <p className="text-[12px] font-semibold text-red-700 leading-snug">{uploadError}</p>
+          </div>
+        )}
         <div className="px-7 py-5 bg-slate-50/50 border-t border-slate-100 flex justify-end gap-3">
           <button onClick={onCancel} className="px-5 py-2.5 text-[13px] font-bold text-slate-500 hover:text-slate-700 transition-colors">Cancel</button>
           <button
@@ -426,25 +437,67 @@ export default function LabelEditor() {
 
   const sidebarRef = useRef(null);
 
+  // ── Deselect elements on modal opening — fixes "layering" issue ──
+  useEffect(() => {
+    const isAnyModalOpen = modalStep !== 'none' || 
+                           showTableModal || 
+                           showWordArtModal || 
+                           showPreviewModal || 
+                           showAssetModal || 
+                           showBulkDeleteModal ||
+                           showSaveAs ||
+                           showVersionModal ||
+                           showValidation ||
+                           showTemplateConflictModal;
+
+    if (isAnyModalOpen && selectedIds.length > 0) {
+      setSelectedIds([]);
+      setEditingElementId(null);
+    }
+  }, [
+    modalStep, showTableModal, showWordArtModal, showPreviewModal, 
+    showAssetModal, showBulkDeleteModal, showSaveAs, showVersionModal, 
+    showValidation, showTemplateConflictModal, selectedIds.length, setSelectedIds
+  ]);
+
   useEffect(() => {
     const handleClickOutside = (event) => {
-      // 1. Check if click is inside sidebar
-      const isSidebar = sidebarRef.current && sidebarRef.current.contains(event.target);
+      // 1. Sidebar area
+      const isSidebar = sidebarRef.current?.contains(event.target);
       
-      // 2. Check if click is inside the label/artboard
-      const isArtboard = artboardRef.current && artboardRef.current.contains(event.target);
+      // 2. Artboard area (including backdrop of canvas and rulers)
+      const isArtboardArea = artboardContainerRef.current?.contains(event.target);
       
-      // 3. Check if click is inside a modal/portal (usually has Z-index > 1000)
+      // 3. Modals or high-z overlays
       const isModal = event.target.closest('.fixed.z-\\[3000\\]') || event.target.closest('.fixed.z-\\[9999\\]');
 
-      if (!isSidebar && !isArtboard && !isModal) {
+      // 4. Formatting tools or headers - we EXEMPT these from deselection
+      // because you might want to select an element and then click a header button (Save, Export) 
+      // or a formatting tool (Bold, Color).
+      const isToolbarArea = event.target.closest('header') || 
+                           event.target.closest('nav') || 
+                           event.target.closest('.formatting-toolbar') ||
+                           event.target.closest('.h-\\[48px\\].bg-\\[var\\(--color-primary-light\\)\\]');
+
+      // IF clicking completely outside (not sidebar, not artboard, not toolbar) 
+      // OR if clicking on a modal (which is "outside" the label context)
+      // THEN deselect everything in the editor.
+      if (isModal || (!isSidebar && !isArtboardArea && !isToolbarArea)) {
+        if (selectedIds.length > 0) {
+          setSelectedIds([]);
+          setEditingElementId(null);
+        }
+      }
+
+      // Close sidebar panels if clicking truly outside (artboard or elsewhere)
+      if (!isSidebar && !isArtboardArea && !isModal) {
         setLockedIcon(null);
         setHoveredIcon(null);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [selectedIds]); // Added selectedIds dependency to be safe
+  }, [selectedIds, setSelectedIds, setEditingElementId]);
 
   // --- Placeholder & Object Logic ---
   const { user: currentUser, accessToken } = useAuth();
@@ -993,7 +1046,13 @@ export default function LabelEditor() {
 
       {showAssetModal && (
         <AssetUploadModal
-          onConfirm={() => { setShowAssetModal(false); refreshObjects(); }}
+          onConfirm={(obj) => { 
+            setShowAssetModal(false); 
+            refreshObjects();
+            if (obj && obj.fileUrl && (String(obj.labelId) === String(meta.fileId) || (obj.label && String(obj.label.id) === String(meta.fileId)))) {
+              setMeta(prev => ({ ...prev, imageUrl: obj.fileUrl }));
+            }
+          }} 
           onCancel={() => setShowAssetModal(false)}
           labelId={meta.fileId}
         />

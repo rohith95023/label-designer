@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -42,14 +44,17 @@ public class ObjectEntity {
     private Integer version = 1;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "activation_status", nullable = false)
+    @Column(name = "activation_status")
     @Builder.Default
     private ObjectStatus activationStatus = ObjectStatus.DRAFT;
 
     @Column(name = "parent_id")
     private UUID parentId;
 
-    @Column(columnDefinition = "JSONB")
+    // Use JdbcTypeCode to tell Hibernate to bind this as JSON (not varchar)
+    // so Postgres correctly accepts it for the jsonb column type.
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(columnDefinition = "jsonb")
     private String metadata;
 
     @CreatedDate

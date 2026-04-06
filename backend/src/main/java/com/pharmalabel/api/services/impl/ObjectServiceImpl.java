@@ -22,6 +22,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class ObjectServiceImpl implements ObjectService {
 
     private final ObjectRepository objectRepository;
@@ -71,14 +72,22 @@ public class ObjectServiceImpl implements ObjectService {
                 .tags(tags)
                 .fileUrl(fileUrl)
                 .version(1)
-                .activationStatus(ObjectStatus.DRAFT)
+                .activationStatus(ObjectStatus.ACTIVE)
                 .label(label)
                 .build();
 
         ObjectEntity saved = objectRepository.save(objectEntity);
         // On initial creation, parentId is the first version's ID
         saved.setParentId(saved.getId());
-        return objectRepository.save(saved);
+        ObjectEntity result = objectRepository.save(saved);
+
+        // Update Label's main image URL if this object is linked to a label
+        if (label != null) {
+            label.setImageUrl(fileUrl);
+            labelRepository.save(label);
+        }
+
+        return result;
     }
 
     @Override

@@ -52,9 +52,9 @@ public class ObjectController {
             @RequestParam(value = "labelId", required = false) String labelId) {
         
         UUID labelUuid = null;
-        if (labelId != null && !labelId.isEmpty() && !"null".equalsIgnoreCase(labelId)) {
+        if (labelId != null && !labelId.isEmpty() && !"null".equalsIgnoreCase(labelId) && !"undefined".equalsIgnoreCase(labelId)) {
             try {
-                labelUuid = UUID.fromString(labelId);
+                labelUuid = UUID.fromString(labelId.trim());
             } catch (Exception ignored) {}
         }
         
