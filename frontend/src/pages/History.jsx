@@ -46,14 +46,20 @@ export default function History() {
   const [previewData, setPreviewData] = useState(null);
   const [compareSelection, setCompareSelection] = useState([]); // Array of version objects
   const [showCompareModal, setShowCompareModal] = useState(false);
+  const [loadingPreview, setLoadingPreview] = useState(null); // id of file loading
 
   const allFiles = getAllFiles().sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
 
   const handleSelectFile = async (file) => {
-    setSelectedFile(file);
-    setCompareSelection([]);
-    const history = await getTemplateHistory(file.id);
-    setFileVersions(history);
+    setLoadingPreview(file.id);
+    try {
+      setSelectedFile(file);
+      setCompareSelection([]);
+      const history = await getTemplateHistory(file.id);
+      setFileVersions(history);
+    } finally {
+      setLoadingPreview(null);
+    }
   };
 
   const confirmRestoreAction = async () => {
@@ -146,13 +152,24 @@ export default function History() {
                         <button 
                           onClick={async (e) => {
                             e.stopPropagation();
-                            const data = await getTemplateById(file.id);
-                            if (data) setPreviewData({ elements: data.elementsData, meta: { labelSize: data.labelSize, fileName: data.name }, title: data.name });
+                            if (loadingPreview) return;
+                            setLoadingPreview(file.id);
+                            try {
+                              const data = await getTemplateById(file.id);
+                              if (data) setPreviewData({ elements: data.elementsData, meta: { labelSize: data.labelSize, fileName: data.name }, title: data.name });
+                            } finally {
+                              setLoadingPreview(null);
+                            }
                           }}
-                          className="w-8 h-8 rounded-lg flex items-center justify-center bg-white text-slate-500 hover:text-blue-600 transition-all shadow-sm border border-slate-100 hover:scale-110"
+                          className="w-8 h-8 rounded-lg flex items-center justify-center bg-white text-slate-500 hover:text-blue-600 transition-all shadow-sm border border-slate-100 hover:scale-110 disabled:opacity-50"
                           title="Quick Preview"
+                          disabled={loadingPreview === file.id}
                         >
-                          <span className="material-symbols-outlined text-[16px]">visibility</span>
+                          {loadingPreview === file.id ? (
+                            <div className="w-4 h-4 border-2 border-blue-600/20 border-t-blue-600 rounded-full animate-spin" />
+                          ) : (
+                            <span className="material-symbols-outlined text-[16px]">visibility</span>
+                          )}
                         </button>
                         <button 
                           onClick={(e) => {

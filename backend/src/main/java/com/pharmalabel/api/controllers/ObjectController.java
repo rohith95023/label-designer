@@ -42,14 +42,14 @@ public class ObjectController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PostMapping(value = "/upload", consumes = "multipart/form-data")
+    @PostMapping("/upload")
     public ResponseEntity<ObjectEntity> uploadObject(
-            @RequestPart("name") String name,
-            @RequestPart("type") String type,
-            @RequestPart(value = "description", required = false) String description,
-            @RequestPart(value = "tags", required = false) String tags,
-            @RequestPart("file") MultipartFile file,
-            @RequestPart(value = "labelId", required = false) String labelId) {
+            @RequestParam("name") String name,
+            @RequestParam("type") String type,
+            @RequestParam(value = "description", required = false) String description,
+            @RequestParam(value = "tags", required = false) String tags,
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "labelId", required = false) String labelId) {
         
         UUID labelUuid = null;
         if (labelId != null && !labelId.isEmpty() && !"null".equalsIgnoreCase(labelId)) {
@@ -61,10 +61,10 @@ public class ObjectController {
         return ResponseEntity.ok(objectService.createObject(name, type, description, tags, file, labelUuid));
     }
 
-    @PostMapping(value = "/{id}/replace", consumes = "multipart/form-data")
+    @PostMapping(value = "/{id}/replace")
     public ResponseEntity<ObjectEntity> replaceObject(
             @PathVariable UUID id,
-            @RequestPart("file") MultipartFile file) {
+            @RequestParam("file") MultipartFile file) {
         return ResponseEntity.ok(objectService.replaceObject(id, file));
     }
 

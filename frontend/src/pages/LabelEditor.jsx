@@ -285,7 +285,7 @@ function AssetUploadModal({ onConfirm, onCancel, labelId }) {
 
 export default function LabelEditor() {
   const {
-    meta, setMeta, setFileName, setLabelSize, newFile,
+    meta, setMeta, setFileName, initNewFile, setLabelSize, newFile,
     elements, setElements, selectedIds, setSelectedIds,
     addElement, duplicateElement, updateElement, commitUpdate,
     deleteElement, moveLayer, alignElements,
@@ -708,7 +708,7 @@ export default function LabelEditor() {
   }, [elements, zoomLevel, editingElementId]);
 
   // ── Modal Handlers ──────────────────────────────────────────────────────────
-  const handleFileNameConfirm = (name) => {
+  const handleFileNameConfirm = async (name) => {
     const trimmed = name.trim().toLowerCase();
     const allFiles = getAllFiles();
     const exists = allFiles.find(f => f.name.toLowerCase() === trimmed);
@@ -721,9 +721,11 @@ export default function LabelEditor() {
     }
 
     if (pendingFlow === 'new') {
-      newFile();
+      const success = await initNewFile(name);
+      if (!success) return; // Stop if creation failed
+    } else {
+      setFileName(name);
     }
-    setFileName(name);
     setModalStep('labelsize');
   };
 
@@ -860,6 +862,23 @@ export default function LabelEditor() {
   const statusColor = savedStatus === 'saved' ? 'text-green-600' : savedStatus === 'saving' ? 'text-amber-500' : 'text-slate-400';
   const statusIcon = savedStatus === 'saved' ? 'check_circle' : savedStatus === 'saving' ? 'sync' : 'edit';
   const statusLabel = savedStatus === 'saved' ? 'Saved' : savedStatus === 'saving' ? 'Saving…' : 'Unsaved';
+
+  if (!hydrated || (meta.fileId && !elements.length && !meta.fileName)) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-slate-50 gap-6">
+        <div className="relative">
+          <div className="w-20 h-20 border-4 border-primary/10 border-t-primary rounded-full animate-spin" />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="material-symbols-outlined text-primary text-3xl animate-pulse">pill</span>
+          </div>
+        </div>
+        <div className="flex flex-col items-center">
+          <h2 className="text-xl font-black text-primary-dark tracking-tight">Initializing Workspace</h2>
+          <p className="text-sm text-slate-500 font-medium mt-1">Securing clinical assets and loading designer...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="font-body text-on-surface h-screen flex flex-col overflow-hidden bg-background transition-colors">
@@ -1845,26 +1864,65 @@ export default function LabelEditor() {
 
                       {/* OBJECTS */}
                       {activeTab === 'Objects' && (
-                        <div className="flex flex-col gap-4">
-                           {objects.slice(0, 30).map(obj => (
-                            <button
-                              key={obj.id}
-                              onClick={() => addObject(obj)}
-                              className="flex items-center gap-4 p-3 bg-slate-50 rounded-2xl border border-slate-200 hover:border-[var(--color-primary)]/50/50 hover:bg-white transition-all group"
-                            >
-                              <div className="w-14 h-14 rounded-xl bg-slate-200 flex items-center justify-center overflow-hidden shrink-0 border border-slate-100">
-                                {obj.type === 'LOGO' ? (
-                                  <img src={resolveUrl(obj.fileUrl)} alt={obj.name} className="w-4/5 h-4/5 object-contain" />
-                                ) : (
-                                  <span className="material-symbols-outlined text-3xl text-slate-400">{obj.type === 'QR_SPEC' ? 'qr_code_2' : 'barcode'}</span>
-                                )}
-                              </div>
-                              <div className="flex flex-col min-w-0 text-left">
-                                <span className="text-[11px] font-black text-slate-800 uppercase truncate tracking-tight">{obj.name}</span>
-                                <span className="text-[9px] font-black text-slate-400 uppercase mt-1 tracking-widest">{obj.type}</span>
-                              </div>
-                            </button>
-                          ))}
+                        <div className="flex flex-col gap-4 animate-in fade-in slide-in-from-left-4 duration-300">
+                           {/* Quick Action: New Asset Upload — AC 18.0 */}
+                           <button 
+                             onClick={() => setShowAssetModal(true)}
+                             className="group flex items-center gap-4 p-4 border-2 border-dashed border-slate-200 rounded-2xl bg-white/50 hover:bg-white hover:border-[var(--color-primary)]/50 hover:shadow-xl hover:shadow-[var(--color-primary)]/5 transition-all duration-300 text-left active:scale-[0.98]"
+                           >
+                             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center text-slate-400 group-hover:from-[var(--color-primary)] group-hover:to-indigo-600 group-hover:text-white transition-all duration-500 shadow-sm group-hover:shadow-lg group-hover:shadow-[var(--color-primary)]/20 border border-slate-200 group-hover:border-transparent">
+                               <span className="material-symbols-outlined text-[24px]">cloud_upload</span>
+                             </div>
+                             <div className="flex flex-col flex-1">
+                               <span className="text-[11px] font-black text-slate-800 uppercase tracking-widest leading-none mb-1.5 transition-colors group-hover:text-[var(--color-primary)]">Upload New Asset</span>
+                               <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">Add logo, icon or barcode spec</span>
+                             </div>
+                             <span className="material-symbols-outlined text-slate-300 group-hover:text-[var(--color-primary)] transition-all group-hover:translate-x-1 opacity-0 group-hover:opacity-100">chevron_right</span>
+                           </button>
+
+                           {/* Horizontal Divider */}
+                           <div className="flex items-center gap-3 py-2">
+                             <div className="h-[1px] flex-1 bg-slate-200"></div>
+                             <span className="text-[9px] font-black uppercase tracking-widest text-slate-300">Inventory</span>
+                             <div className="h-[1px] flex-1 bg-slate-200"></div>
+                           </div>
+
+                           {objectsLoading ? (
+                             <div className="flex flex-col items-center justify-center py-12 gap-3 text-slate-400">
+                               <div className="w-6 h-6 rounded-full border-2 border-slate-200 border-t-[var(--color-primary)] animate-spin"></div>
+                               <span className="text-[10px] font-black uppercase tracking-widest">Hydrating Assets...</span>
+                             </div>
+                           ) : objects.length === 0 ? (
+                             <div className="flex flex-col items-center justify-center py-12 gap-3 text-slate-400/60 text-center">
+                               <span className="material-symbols-outlined text-[40px] opacity-30">inventory_2</span>
+                               <p className="text-[11px] font-bold">No assets found in inventory.<br/>Upload your first design object above.</p>
+                             </div>
+                           ) : (
+                             <div className="flex flex-col gap-3">
+                               {objects
+                                 .filter(obj => !sidebarSearch || obj.name.toLowerCase().includes(sidebarSearch.toLowerCase()) || obj.type.toLowerCase().includes(sidebarSearch.toLowerCase()))
+                                 .slice(0, 30).map(obj => (
+                                 <button
+                                   key={obj.id}
+                                   onClick={() => addObject(obj)}
+                                   className="flex items-center gap-4 p-3 bg-slate-50 rounded-2xl border border-slate-200 hover:border-[var(--color-primary)]/50/50 hover:bg-white transition-all group lg:active:scale-[0.98] animate-in fade-in zoom-in-95 duration-300"
+                                 >
+                                   <div className="w-14 h-14 rounded-xl bg-slate-200/50 flex items-center justify-center overflow-hidden shrink-0 border border-slate-100 group-hover:border-[var(--color-primary)]/20 transition-all">
+                                     {obj.type === 'LOGO' ? (
+                                       <img src={resolveUrl(obj.fileUrl)} alt={obj.name} className="w-4/5 h-4/5 object-contain" />
+                                     ) : (
+                                       <span className="material-symbols-outlined text-3xl text-slate-400 group-hover:text-[var(--color-primary)] transition-colors">{obj.type === 'QR_SPEC' ? 'qr_code_2' : 'barcode'}</span>
+                                     )}
+                                   </div>
+                                   <div className="flex flex-col min-w-0 text-left flex-1">
+                                     <span className="text-[11px] font-black text-slate-800 uppercase truncate tracking-tight">{obj.name}</span>
+                                     <span className="text-[9px] font-black text-slate-400 uppercase mt-1 tracking-widest group-hover:text-[var(--color-primary)]/60 transition-colors">{obj.type}</span>
+                                   </div>
+                                   <span className="material-symbols-outlined text-slate-200 transition-colors group-hover:text-[var(--color-primary)]/30">add_circle</span>
+                                 </button>
+                               ))}
+                             </div>
+                           )}
                         </div>
                       )}
 

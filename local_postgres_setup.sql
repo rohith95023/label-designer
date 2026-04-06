@@ -32,15 +32,16 @@ CREATE TABLE IF NOT EXISTS public.roles (
 -- In Supabase, the primary user data is in auth.users. 
 -- This public.users table acts as a profile linked to Supabase Auth.
 CREATE TABLE IF NOT EXISTS public.users (
-    id                    UUID        PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    id                    UUID        PRIMARY KEY DEFAULT extensions.gen_random_uuid(),
     username              TEXT        NOT NULL UNIQUE,
     email                 TEXT        NOT NULL UNIQUE,
+    password_hash         TEXT,
     role_id               UUID        REFERENCES public.roles(id),
     status                TEXT        DEFAULT 'ACTIVE',
     failed_login_attempts INTEGER     DEFAULT 0,
     locked_until          TIMESTAMPTZ,
     password_changed_at   TIMESTAMPTZ DEFAULT now(),
-    must_change_password  BOOLEAN     DEFAULT false,
+    must_change_password  BOOLEAN     DEFAULT true,
     created_at            TIMESTAMPTZ DEFAULT now()
 );
 
@@ -58,37 +59,63 @@ CREATE TABLE IF NOT EXISTS public.permissions (
 -- =============================================================================
 
 CREATE TABLE IF NOT EXISTS public.languages (
-    id        UUID PRIMARY KEY DEFAULT extensions.gen_random_uuid(),
-    name      TEXT NOT NULL,
-    code      TEXT NOT NULL UNIQUE,
-    direction TEXT CHECK (direction IN ('LTR', 'RTL')),
-    status    TEXT DEFAULT 'ACTIVE'
+    id                 UUID PRIMARY KEY DEFAULT extensions.gen_random_uuid(),
+    name               TEXT NOT NULL,
+    code               TEXT NOT NULL UNIQUE,
+    direction          TEXT CHECK (direction IN ('LTR', 'RTL')),
+    status             TEXT DEFAULT 'ACTIVE',
+    country_code       TEXT,
+    currency_symbol    TEXT,
+    date_format        TEXT,
+    is_default_variant BOOLEAN DEFAULT false,
+    parent_language_id UUID REFERENCES public.languages(id),
+    region_name        TEXT,
+    time_format        TEXT
 );
 
 CREATE TABLE IF NOT EXISTS public.label_stocks (
-    id          UUID PRIMARY KEY DEFAULT extensions.gen_random_uuid(),
-    name        TEXT NOT NULL,
-    length      NUMERIC,
-    width       NUMERIC,
-    height      NUMERIC,
-    description TEXT
+    id                UUID PRIMARY KEY DEFAULT extensions.gen_random_uuid(),
+    stock_id          TEXT NOT NULL,
+    name              TEXT NOT NULL UNIQUE,
+    breadth           NUMERIC NOT NULL,
+    length            NUMERIC,
+    height            NUMERIC,
+    description       TEXT,
+    quantity_on_hand  NUMERIC DEFAULT 0,
+    reorder_level     NUMERIC DEFAULT 0,
+    max_stock_level   NUMERIC,
+    unit_of_measure   TEXT DEFAULT 'EA',
+    status            TEXT DEFAULT 'ACTIVE' CHECK (status IN ('DRAFT', 'ACTIVE', 'RETIRED')),
+    supplier          TEXT,
+    cost_center       TEXT
 );
 
 CREATE TABLE IF NOT EXISTS public.objects (
-    id       UUID PRIMARY KEY DEFAULT extensions.gen_random_uuid(),
-    name     TEXT NOT NULL,
-    type     TEXT,
-    file_url TEXT,
-    status   TEXT DEFAULT 'ACTIVE',
-    label_id UUID  -- Optional: link to a specific label if it's a dedicated asset
+    id                UUID PRIMARY KEY DEFAULT extensions.gen_random_uuid(),
+    name              TEXT NOT NULL,
+    type              TEXT,
+    file_url          TEXT,
+    status            TEXT DEFAULT 'ACTIVE',
+    activation_status TEXT DEFAULT 'DRAFT',
+    description       TEXT,
+    metadata          JSONB,
+    tags              TEXT,
+    version           INTEGER DEFAULT 1,
+    parent_id         UUID REFERENCES public.objects(id),
+    label_id          UUID, -- Refers to public.labels(id) but added later for cycle
+    created_at        TIMESTAMPTZ DEFAULT now(),
+    updated_at        TIMESTAMPTZ DEFAULT now()
 );
 
 CREATE TABLE IF NOT EXISTS public.placeholders (
-    id           UUID PRIMARY KEY DEFAULT extensions.gen_random_uuid(),
-    name         TEXT NOT NULL,
-    type         TEXT CHECK (type IN ('DATA', 'FREE_TEXT', 'RUNTIME', 'VISIT')),
-    mapping_key  TEXT UNIQUE,
-    format_rules JSONB
+    id            UUID PRIMARY KEY DEFAULT extensions.gen_random_uuid(),
+    name          TEXT NOT NULL,
+    type          TEXT CHECK (type IN ('DATA', 'FREE_TEXT', 'RUNTIME', 'VISIT')),
+    mapping_key   TEXT UNIQUE,
+    format_rules  JSONB,
+    default_value TEXT,
+    description   TEXT,
+    status        TEXT DEFAULT 'ACTIVE'
 );
 
 CREATE TABLE IF NOT EXISTS public.phrases (
@@ -118,9 +145,13 @@ CREATE TABLE IF NOT EXISTS public.labels (
     label_stock_id UUID        REFERENCES public.label_stocks(id),
     created_by     UUID        REFERENCES public.users(id),
     status         TEXT        DEFAULT 'DRAFT',
+    notes          TEXT,
     created_at     TIMESTAMPTZ DEFAULT now(),
     updated_at     TIMESTAMPTZ DEFAULT now()
 );
+
+-- Circular references for objects
+ALTER TABLE public.objects ADD CONSTRAINT objects_label_id_fkey FOREIGN KEY (label_id) REFERENCES public.labels(id) ON DELETE SET NULL;
 
 CREATE TABLE IF NOT EXISTS public.label_versions (
     id            UUID        PRIMARY KEY DEFAULT extensions.gen_random_uuid(),
@@ -138,21 +169,20 @@ CREATE TRIGGER trigger_update_labels
   BEFORE UPDATE ON public.labels
   FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
-CREATE TRIGGER trigger_update_system_config
-  BEFORE UPDATE ON public.system_config
-  FOR EACH ROW EXECUTE FUNCTION set_updated_at();
-
 -- =============================================================================
 -- SECTION 4: WORKFLOW & SYSTEM TABLES
 -- =============================================================================
 
 CREATE TABLE IF NOT EXISTS public.approvals (
-    id          UUID        PRIMARY KEY DEFAULT extensions.gen_random_uuid(),
-    entity_type TEXT        NOT NULL,
-    entity_id   UUID        NOT NULL,
-    status      TEXT        DEFAULT 'PENDING',
-    approved_by UUID        REFERENCES public.users(id),
-    approved_at TIMESTAMPTZ
+    id           UUID        PRIMARY KEY DEFAULT extensions.gen_random_uuid(),
+    label_id     UUID        REFERENCES public.labels(id) ON DELETE CASCADE,
+    version_no   INTEGER     NOT NULL,
+    status       TEXT        DEFAULT 'PENDING',
+    requested_by UUID        REFERENCES public.users(id),
+    approved_by  UUID        REFERENCES public.users(id),
+    comments     TEXT,
+    created_at   TIMESTAMPTZ DEFAULT now(),
+    approved_at  TIMESTAMPTZ
 );
 
 CREATE TABLE IF NOT EXISTS public.electronic_signatures (
@@ -182,6 +212,35 @@ CREATE TABLE IF NOT EXISTS public.system_config (
     updated_at   TIMESTAMPTZ DEFAULT now()
 );
 
+CREATE TABLE IF NOT EXISTS public.user_auth_tokens (
+    id         UUID        PRIMARY KEY DEFAULT extensions.gen_random_uuid(),
+    user_id    UUID        REFERENCES public.users(id) ON DELETE CASCADE,
+    token_hash TEXT        NOT NULL,
+    family_id  UUID        NOT NULL,
+    revoked    BOOLEAN     DEFAULT false,
+    expires_at TIMESTAMPTZ NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.user_sessions (
+    id                    UUID        PRIMARY KEY DEFAULT extensions.gen_random_uuid(),
+    user_id               TEXT        UNIQUE NOT NULL,
+    dashboard_preferences JSONB,
+    recent_activity_log   JSONB,
+    last_accessed        TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.print_requests (
+    id              UUID        PRIMARY KEY DEFAULT extensions.gen_random_uuid(),
+    label_id        UUID        REFERENCES public.labels(id) ON DELETE CASCADE,
+    label_stock_id  UUID        REFERENCES public.label_stocks(id) ON DELETE CASCADE,
+    quantity        INTEGER     NOT NULL CHECK (quantity > 0),
+    printer_name    TEXT,
+    status          TEXT        DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'IN_PROGRESS', 'COMPLETED', 'FAILED', 'CANCELLED')),
+    requested_by_id UUID        REFERENCES public.users(id) ON DELETE SET NULL,
+    requested_at    TIMESTAMPTZ DEFAULT now()
+);
+
 -- =============================================================================
 -- SECTION 5: ROW LEVEL SECURITY (RLS)
 -- =============================================================================
@@ -202,6 +261,7 @@ ALTER TABLE public.approvals ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.electronic_signatures ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.system_config ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.print_requests ENABLE ROW LEVEL SECURITY;
 
 -- ── 5.1 Basic Access Policies (Standard Authenticated Access) ───────────────
 
@@ -225,6 +285,9 @@ CREATE POLICY "Placeholders - Authenticated Select" ON public.placeholders FOR S
 -- Audit Logs: Insert only for authenticated users (system logs)
 CREATE POLICY "Audit Logs - Insert" ON public.audit_logs FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Audit Logs - Select" ON public.audit_logs FOR SELECT TO authenticated USING (true);
+
+-- Print Requests
+CREATE POLICY "Print Requests - Access" ON public.print_requests FOR ALL TO authenticated USING (true);
 
 -- =============================================================================
 -- SECTION 6: AUTH AUTOMATION (Supabase Trigger)

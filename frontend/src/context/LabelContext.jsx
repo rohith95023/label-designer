@@ -225,12 +225,16 @@ export const LabelProvider = ({ children }) => {
     if (!meta.fileId || !hydrated) return;
     
     // Comparison hash to prevent loops on meta/version updates
-    const currentStateHash = JSON.stringify({
-      elements,
-      labelSize: meta.labelSize,
-      bgColor: meta.bgColor,
-      notes: meta.notes
-    });
+    const getDesignerStateHash = () => {
+      return JSON.stringify({
+        elements,
+        labelSize: meta.labelSize,
+        bgColor: meta.bgColor,
+        notes: meta.notes
+      });
+    };
+
+    const currentStateHash = getDesignerStateHash();
 
     // 1. SILENT INITIALIZATION: Capture baseline state upon first hydration or file change
     if (!lastSavedRef.current) {
@@ -254,12 +258,7 @@ export const LabelProvider = ({ children }) => {
     const triggerAutoSave = async () => {
       if (isSavingRef.current || !meta.fileId) return;
 
-      const currentHash = JSON.stringify({
-        elements,
-        labelSize: meta.labelSize,
-        bgColor: meta.bgColor,
-        notes: meta.notes
-      });
+      const currentHash = getDesignerStateHash();
 
       if (lastSavedRef.current === currentHash) {
           setSavedStatus('saved');
@@ -299,12 +298,7 @@ export const LabelProvider = ({ children }) => {
         // AND the last call was successful, then schedule a catch-up.
         // If the call FAILED (e.g. 500), we STOP to prevent a crash loop.
         if (currentSuccess) {
-           const actualHash = JSON.stringify({
-             elements,
-             labelSize: meta.labelSize,
-             bgColor: meta.bgColor,
-             notes: meta.notes
-           });
+           const actualHash = getDesignerStateHash();
            
            if (actualHash !== lastSavedRef.current) {
              setSavedStatus('unsaved');
@@ -354,12 +348,70 @@ export const LabelProvider = ({ children }) => {
     setHistoryIndex(0);
     setSelectedIds([]);
     setZoomLevel(1);
-    setSavedStatus('unsaved');
+    setSavedStatus('saved');
+    lastSavedRef.current = ""; // Reset baseline
   };
 
-  const setFileName = async (name) => {
+  const initNewFile = useCallback(async (name) => {
+    const trimmed = name.trim();
+    const stockId = defaultStockIdRef.current;
+    if (!stockId) {
+      showToast('No label stock available. Please contact admin.', 'error');
+      return;
+    }
+    if (isSavingRef.current) return;
+    isSavingRef.current = true;
+    try {
+      setSavedStatus('saving');
+      // Create with EMPTY content since it's a NEW file
+      const newLabel = await api.createLabel({
+        name: trimmed,
+        labelStockId: stockId,
+        status: 'ACTIVE',
+        designJson: {
+          elementsData: [],
+          labelSize: DEFAULT_META.labelSize,
+          bgColor: DEFAULT_META.bgColor,
+          notes: ''
+        }
+      });
+
+      // Reset local state to match the fresh new label
+      setMeta({
+        ...DEFAULT_META,
+        fileName: trimmed,
+        fileId: newLabel.id,
+        labelStockId: stockId
+      });
+      setElements([]);
+      setHistory([[]]);
+      setHistoryIndex(0);
+      setSelectedIds([]);
+      setZoomLevel(1);
+      setSavedStatus('saved');
+      
+      setUserFiles(prev => [...prev, newLabel]);
+      lastSavedRef.current = JSON.stringify({
+        elements: [],
+        labelSize: DEFAULT_META.labelSize,
+        bgColor: DEFAULT_META.bgColor,
+        notes: ''
+      });
+      addActivityLog('Created new design', newLabel.id, trimmed);
+      return true;
+    } catch (err) {
+      console.error('Initial save failed:', err);
+      showToast('Failed to start new design in database', 'error');
+      return false;
+    } finally {
+      isSavingRef.current = false;
+    }
+  }, [setUserFiles, showToast, addActivityLog]);
+
+  const setFileName = useCallback(async (name) => {
     const trimmed = name.trim();
     if (!meta.fileId) {
+      // This path is usually for the very first file after a fresh load
       const stockId = defaultStockIdRef.current;
       if (!stockId) {
         showToast('No label stock available. Please contact admin.', 'error');
@@ -383,7 +435,13 @@ export const LabelProvider = ({ children }) => {
         setMeta(m => ({ ...m, fileName: trimmed, fileId: newLabel.id }));
         setUserFiles(prev => [...prev, newLabel]);
         setSavedStatus('saved');
-        addActivityLog(activeTemplate ? 'Started from template' : 'Created new label', newLabel.id, trimmed);
+        lastSavedRef.current = JSON.stringify({
+          elements,
+          labelSize: meta.labelSize,
+          bgColor: meta.bgColor,
+          notes: meta.notes
+        });
+        addActivityLog('Created label', newLabel.id, trimmed);
       } catch (err) {
         console.error('Failed to create label:', err);
         showToast('Failed to initialize label in backend', 'error');
@@ -391,9 +449,20 @@ export const LabelProvider = ({ children }) => {
         isSavingRef.current = false;
       }
     } else {
-      setMeta(m => ({ ...m, fileName: trimmed }));
+      // Renaming existing
+      try {
+        // Sync to backend rename if possible (optional but good)
+        await api.updateLabel(meta.fileId, { name: trimmed });
+        setMeta(m => ({ ...m, fileName: trimmed }));
+        // Update the list in memory so other pages (Dashboard/History) reflect it immediately
+        setUserFiles(prev => prev.map(f => f.id === meta.fileId ? { ...f, name: trimmed, updatedAt: new Date().toISOString() } : f));
+        showToast('Label renamed', 'success');
+      } catch (err) {
+        console.error('Rename failed', err);
+        setMeta(m => ({ ...m, fileName: trimmed })); // UI only if DB fails
+      }
     }
-  };
+  }, [meta.fileId, meta.labelStockId, meta.labelSize, meta.bgColor, meta.notes, elements, setUserFiles, showToast, addActivityLog]);
 
   const scaleElements = useCallback((newW, newH) => {
     const oldW = meta.labelSize.w;
@@ -492,11 +561,29 @@ export const LabelProvider = ({ children }) => {
     }
   };
 
-  const setLabelSize = (w, h) => {
+  const setLabelSize = useCallback(async (w, h) => {
     if (w < 10 || h < 10) return; // Prevent invalid sizes
     scaleElements(w, h);
     setMeta(prev => ({ ...prev, labelSize: { w, h } }));
-  };
+
+    // If we have a file ID, proactively update the size in the DB to ensure it "applies" 
+    // even if auto-save hasn't fired yet.
+    if (meta.fileId) {
+      try {
+        await api.updateLabel(meta.fileId, {
+          designJson: {
+            elementsData: elements,
+            labelSize: { w, h },
+            bgColor: meta.bgColor
+          }
+        });
+        // Also update the UI list
+        setUserFiles(prev => prev.map(f => f.id === meta.fileId ? { ...f, labelSize: { w, h }, updatedAt: new Date().toISOString() } : f));
+      } catch (err) {
+        console.warn('Proactive size save failed, relying on auto-save', err);
+      }
+    }
+  }, [meta.fileId, meta.bgColor, elements, scaleElements, setUserFiles]);
 
   const setLabelStock = (stockId) => {
     const stock = labelStocks.find(s => s.id === stockId);
@@ -621,6 +708,12 @@ export const LabelProvider = ({ children }) => {
       });
       setUserFiles(prev => [...prev, newLabel]);
       setSavedStatus('saved');
+      lastSavedRef.current = JSON.stringify({
+        elements,
+        labelSize: meta.labelSize,
+        bgColor: meta.bgColor,
+        notes: meta.notes
+      });
       showToast('Label copy saved ✓', 'success');
       addActivityLog('Saved as new label', newLabel.id, newName);
     } catch (err) {
@@ -652,6 +745,13 @@ export const LabelProvider = ({ children }) => {
       setHistoryIndex(0);
       setSelectedIds([]);
       setSavedStatus('saved');
+      // Update baseline immediately after loading
+      lastSavedRef.current = JSON.stringify({
+        elements: design.elementsData || [],
+        labelSize: design.labelSize || { w: 600, h: 400 },
+        bgColor: design.bgColor || '#FFFFFF',
+        notes: label.notes || design.notes || ''
+      });
       addActivityLog('Opened label', id, label.name);
     } catch (err) {
       showToast('Could not open label from backend', 'error');
@@ -705,7 +805,13 @@ export const LabelProvider = ({ children }) => {
         setHistoryIndex(0);
       }
       setSelectedIds([]);
-      setSavedStatus('unsaved');
+      setSavedStatus('saved'); // Initially marked as saved
+      lastSavedRef.current = JSON.stringify({
+        elements: data.elements,
+        labelSize: data.meta.labelSize || { w: 600, h: 400 },
+        bgColor: data.meta.bgColor || '#FFFFFF',
+        notes: data.meta.notes || ''
+      });
       showToast('File imported successfully ✓', 'success');
       addActivityLog('Imported JSON file', null, data.meta?.fileName || 'Imported Label');
     } catch (err) {
@@ -1049,7 +1155,7 @@ export const LabelProvider = ({ children }) => {
     settings, updateSettings,
     activityLogs,
     // File ops
-    newFile, setFileName, setLabelSize,
+    newFile, setFileName, initNewFile, setLabelSize,
     saveFile, saveFileAs, finalizeFile, restoreVersion,
     openFileById, openFileFromJSON, deleteUserTemplate,
     exportJSON, getAllFiles,

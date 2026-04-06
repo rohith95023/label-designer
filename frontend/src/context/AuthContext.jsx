@@ -13,17 +13,17 @@ const api = axios.create({
 let refreshPromise = null;
 
 export const AuthProvider = ({ children }) => {
-   // Use a hint to skip the splash screen if the user was recently logged in
+  // Use a hint to skip the splash screen if the user was recently logged in
   const hintRaw = localStorage.getItem('pharma_user_hint');
   const hint = JSON.parse(hintRaw || 'null');
-  
+
   const [user, setUser] = useState(hint);
   const [accessToken, setAccessToken] = useState(null);
-  const [loading, setLoading] = useState(true); 
+  const [loading, setLoading] = useState(true);
   const [sessionLostByTab, setSessionLostByTab] = useState(false);
   const [logoutLoading, setLogoutLoading] = useState(false);
   const navigate = useNavigate();
-  
+
   // Optimized setFullUser that also saves the hint and tab active flag
   const setFullUser = (userData, token = null) => {
     setUser(userData);
@@ -72,7 +72,7 @@ export const AuthProvider = ({ children }) => {
     const initSession = async () => {
       const isTabActive = sessionStorage.getItem('pharma_tab_session_active');
       console.log("[Auth-Init] Start check - Hint:", !!hintRaw, "TabActive:", !!isTabActive);
-      
+
       try {
         if (hintRaw && !isTabActive) {
           console.warn("[Auth-Init] GxP Violation: Tab context recycled. Terminating session.");
@@ -154,7 +154,7 @@ export const AuthProvider = ({ children }) => {
   console.log("[Auth-Render] Loading:", loading, "LostByTab:", sessionLostByTab, "AccessToken:", !!accessToken);
 
   // ── Render Phase ─────────────────────────────────────────────────────────────
-  
+
   if (loading) {
     return <SplashScreen />;
   }
@@ -162,9 +162,9 @@ export const AuthProvider = ({ children }) => {
   if (sessionLostByTab && !accessToken) {
     console.log("[Auth-Render] GxP Security Gate: Rendering SessionLostCard...");
     return (
-      <div className="fixed inset-0 flex items-center justify-center p-6 z-[200000] overflow-hidden" 
-           id="session-lost-guard">
-        
+      <div className="fixed inset-0 flex items-center justify-center p-6 z-[200000] overflow-hidden"
+        id="session-lost-guard">
+
         {/* Video Background matching Login */}
         <video
           autoPlay
@@ -183,25 +183,29 @@ export const AuthProvider = ({ children }) => {
           <div className="w-14 h-14 rounded-2xl bg-red-50 flex items-center justify-center text-red-600 mb-6 border border-red-100/50">
             <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>gpp_maybe</span>
           </div>
-          
+
           <h2 className="text-xl font-bold text-slate-950 tracking-tight mb-6 leading-none uppercase">Session Expired</h2>
 
-          <p className="text-[11px] text-slate-500 font-medium mb-8 leading-relaxed px-4">
-            For GxP regulatory compliance, your session has been invalidated. Please log in again to continue working.
+
+          <p className="text-slate-500 text-sm mb-10 max-w-[280px]">
+            Your session has been terminated for security and regulatory compliance.
           </p>
 
-          <button 
+          <button
             id="reauth-btn"
             onClick={() => {
-                console.log("[Auth] Redirecting to Clean Login...");
-                setUser(null);
-                setAccessToken(null);
-                setSessionLostByTab(false);
-                navigate('/login', { replace: true });
+              console.log("[Auth] Redirecting to Clean Login...");
+              // Clear everything and force a hard reload to login
+              setUser(null);
+              setAccessToken(null);
+              setSessionLostByTab(false);
+              localStorage.removeItem('pharma_user_hint');
+              sessionStorage.removeItem('pharma_tab_session_active');
+              navigate('/login');
             }}
-            className="h-9 px-8 bg-[var(--color-primary-dark)] hover:bg-[var(--color-primary-mid)] text-white font-bold uppercase tracking-wider text-[10px] rounded-full shadow-lg hover:shadow-xl transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+            className="h-10 px-10 bg-slate-900 hover:bg-slate-800 text-white font-bold uppercase tracking-widest text-[10px] rounded-full shadow-2xl hover:shadow-xl transition-all active:scale-[0.98] flex items-center justify-center gap-3 border border-white/10"
           >
-            <span className="material-symbols-outlined text-[16px]">login</span>
+            <span className="material-symbols-outlined text-[18px]">login</span>
             RE-LOGIN
           </button>
         </div>
