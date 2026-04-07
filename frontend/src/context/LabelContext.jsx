@@ -63,6 +63,8 @@ export const LabelProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [userFiles, setUserFiles] = useState([]);
   const [labelStocks, setLabelStocks] = useState([]);
+  const [phrases, setPhrases] = useState([]);
+  const [translations, setTranslations] = useState({}); // { phraseId: { langCode: text } }
   
   const debounceRef = useRef(null);
   const isSavingRef = useRef(false);
@@ -110,12 +112,14 @@ export const LabelProvider = ({ children }) => {
         setLoading(true);
 
         // Tier 1: Parallel fetch all essential data
-        const [dashRes, stockRes, templatesRes, labelsRes, languagesRes] = await Promise.allSettled([
+        const [dashRes, stockRes, templatesRes, labelsRes, languagesRes, phrasesRes, transRes] = await Promise.allSettled([
           api.getDashboard(effectiveId),
           api.getLabelStocks(),
           api.getLabels('PREDEFINED'),
           api.getLabels('ACTIVE'),
-          api.getLanguages()
+          api.getLanguages(),
+          api.getPhrases(),
+          api.getTranslations()
         ]);
 
         // Process Tier 1 immediately
@@ -149,6 +153,19 @@ export const LabelProvider = ({ children }) => {
           if (currentLanguage) {
             setSettings(prev => ({ ...prev, languageId: currentLanguage.id, direction: currentLanguage.direction }));
           }
+        }
+
+        if (phrasesRes.status === 'fulfilled' && Array.isArray(phrasesRes.value)) {
+          setPhrases(phrasesRes.value);
+        }
+
+        if (transRes.status === 'fulfilled' && Array.isArray(transRes.value)) {
+          const trMap = {};
+          transRes.value.forEach(t => {
+            if (!trMap[t.phrase.id]) trMap[t.phrase.id] = {};
+            trMap[t.phrase.id][t.language.code] = { id: t.id, text: t.translatedText };
+          });
+          setTranslations(trMap);
         }
 
         if (labelsRes.status === 'fulfilled' && Array.isArray(labelsRes.value)) {
@@ -1152,7 +1169,7 @@ export const LabelProvider = ({ children }) => {
   };
 
   const value = {
-    templates, userFiles, labelStocks,
+    templates, userFiles, labelStocks, phrases, translations,
     activeTemplate, setActiveTemplate,
     meta, setMeta,
     elements, setElements,

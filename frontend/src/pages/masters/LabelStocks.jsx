@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 import { api } from '../../services/api';
@@ -6,6 +7,7 @@ import { api } from '../../services/api';
 import { useToast } from '../../components/common/ToastContext';
 import { useLabel } from '../../context/LabelContext';
 import { useAuth } from '../../context/AuthContext';
+import ConfirmModal from '../../components/common/ConfirmModal';
 import './LabelStocks.css';
 
 const EMPTY_FORM = {
@@ -37,6 +39,9 @@ const LabelStocks = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState(EMPTY_FORM);
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // Custom Confirm State
+  const [pendingDeleteId, setPendingDeleteId] = useState(null);
 
   const { settings, refreshStocks } = useLabel();
   const unit = settings?.units || 'mm';
@@ -63,17 +68,17 @@ const LabelStocks = () => {
     }
   }, [accessToken, fetchData]);
 
-  // Lock body scroll when modal is open to prevent clumsiness
+  // Scroll Lock
   useEffect(() => {
-    if (showModal) {
-      document.body.style.overflow = 'hidden';
+    if (showModal || pendingDeleteId) {
+      document.body.classList.add('modal-open');
     } else {
-      document.body.style.overflow = 'auto';
+      document.body.classList.remove('modal-open');
     }
     return () => {
-      document.body.style.overflow = 'auto';
+      document.body.classList.remove('modal-open');
     };
-  }, [showModal]);
+  }, [showModal, pendingDeleteId]);
 
   const [fieldErrors, setFieldErrors] = useState({});
 
@@ -161,16 +166,21 @@ const LabelStocks = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this stock?')) return;
+  const handleDelete = (id) => {
+    setPendingDeleteId(id);
+  };
+
+  const confirmDelete = async () => {
+    if (!pendingDeleteId) return;
     setActionLoading(true);
     try {
-      await api.deleteLabelStock(id);
+      await api.deleteLabelStock(pendingDeleteId);
       await refreshStocks();
-      setStocks(prev => prev.filter(s => s.id !== id));
-      success('Stock deleted.');
+      setStocks(prev => prev.filter(s => s.id !== pendingDeleteId));
+      success('Physical asset stock entry removed.');
+      setPendingDeleteId(null);
     } catch (err) {
-      toastError(err.response?.data?.message || 'Failed to delete stock. It might be in use.');
+      toastError(err.response?.data?.message || 'Failed to delete stock.');
     } finally {
       setActionLoading(false);
     }
@@ -337,15 +347,14 @@ const LabelStocks = () => {
           )}
         </div>
       </div>
-
       <AnimatePresence>
-        {showModal && (
+        {showModal && createPortal(
           <div className="modal-overlay !bg-[var(--color-primary-dark)]/80 backdrop-blur-sm" onClick={closeModal}>
             <motion.div 
-              initial={{ opacity: 0, scale: 0.95, y: 30 }}
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 30 }}
-              className="modal-content modal-large !bg-[var(--color-background)] !rounded-[40px] shadow-[0_32px_120px_rgba(56,36,13,0.3)] border border-white/40" 
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="modal-content !max-w-[540px] !max-h-[85vh] !flex !flex-col !rounded-[40px] shadow-[0_32px_120px_rgba(56,36,13,0.3)] border border-white/40" 
               onClick={e => e.stopPropagation()}
             >
               <div className="um-modal-header !p-10 !border-none !bg-transparent">
@@ -362,8 +371,8 @@ const LabelStocks = () => {
                   <span className="material-symbols-outlined">close</span>
                 </button>
               </div>
-            <form onSubmit={handleSubmit}>
-              <div className="modal-body">
+            <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0 overflow-hidden">
+              <div className="modal-body overflow-y-auto custom-scrollbar">
                 <div className="form-grid">
                   <div className="form-group span-2">
                     <label>Internal Reference Name *</label>
@@ -404,7 +413,7 @@ const LabelStocks = () => {
                   <div className="form-group">
                     <label>Breadth ({unit}) *</label>
                     <input type="number" step="0.01" min="0.01" name="breadth" value={formData.breadth} onChange={handleInputChange} placeholder="0.00" className={fieldErrors.breadth ? '!border-red-400' : ''} />
-                    {fieldErrors.breadth && <p className="text-red-500 text-[10px] font-bold mt-1 pl-1">{fieldErrors.breadth}</p>}
+                    {fieldErrors.length && <p className="text-red-500 text-[10px] font-bold mt-1 pl-1">{fieldErrors.breadth}</p>}
                   </div>
                   <div className="form-group">
                     <label>Height ({unit}) *</label>
@@ -476,9 +485,22 @@ const LabelStocks = () => {
               </div>
             </form>
           </motion.div>
-        </div>
+        </div>,
+        document.body
         )}
       </AnimatePresence>
+
+      <ConfirmModal
+        isOpen={!!pendingDeleteId}
+        title="Delete Stock Entry?"
+        message="Are you sure you want to permanently remove this physical asset specification? This action cannot be reversed and may affect historical inventory scans."
+        confirmText="Yes, Remove Stock"
+        cancelText="Keep Asset"
+        type="danger"
+        loading={actionLoading}
+        onConfirm={confirmDelete}
+        onCancel={() => setPendingDeleteId(null)}
+      />
     </>
   );
 };

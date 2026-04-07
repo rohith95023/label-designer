@@ -161,6 +161,17 @@
     overflow: hidden; /* Scroll delegated to AppLayout main */
   }
 
+  body.modal-open {
+    overflow: hidden !important;
+    position: relative;
+    /* touch-action: none; Removed as it can interfere with form interactions */
+  }
+
+  body.modal-open main.flex-1 {
+    overflow: hidden !important;
+    /* pointer-events: none; REMOVED: This was disabling interactions inside the modal if it's not portalled */
+  }
+
   body {
     @apply font-body bg-background text-sm antialiased;
     color: #0f172a;

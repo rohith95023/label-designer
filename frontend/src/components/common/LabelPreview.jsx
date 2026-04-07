@@ -81,16 +81,16 @@ export default function LabelPreview({ elements, meta, scale = 1 }) {
                 </svg>
               )}
               
-              {el.heading && (
+              {(el.resolvedHeading || el.heading) && (
                 <span style={{ display: 'block', fontSize: `${8 * scale}px`, fontWeight: '800', fontFamily: 'Inter, sans-serif', textTransform: 'uppercase', color: el.alertColor || '#717783', marginBottom: `${2 * scale}px`, letterSpacing: `${1.2 * scale}px` }}>
-                  {el.heading}
+                  {el.resolvedHeading || el.heading}
                 </span>
               )}
 
               {el.type === 'barcode' ? (
                 <div className="w-full h-full flex items-center justify-center pointer-events-none px-2">
                   <BarcodeUnified
-                    value={el.text || '123456789012'}
+                    value={el.resolvedText || el.text || '123456789012'}
                     format={el.barcodeFormat || 'code128'}
                     color={el.color || '#191c1e'}
                     width={elW}
@@ -100,7 +100,7 @@ export default function LabelPreview({ elements, meta, scale = 1 }) {
               ) : el.type === 'qrcode' ? (
                 <div className="w-full h-full p-1">
                   <BarcodeUnified
-                    value={el.text || 'https://pharma-precision.com/scan'}
+                    value={el.resolvedText || el.text || 'https://pharma-precision.com/scan'}
                     format="qrcode"
                     color={el.color || '#191c1e'}
                     width={elW}
@@ -118,7 +118,7 @@ export default function LabelPreview({ elements, meta, scale = 1 }) {
               ) : el.type === 'table' ? (
                 <table className="w-full h-full table-fixed" style={{ borderCollapse: 'collapse' }}>
                   <tbody>
-                    {(el.text || '').split('\n').filter(r => r.trim()).map((row, i) => (
+                    {(el.resolvedText || el.text || '').split('\n').filter(r => r.trim()).map((row, i) => (
                       <tr key={i}>
                         {row.split('|').map((cell, j) => (
                           <td key={j}
@@ -153,17 +153,18 @@ export default function LabelPreview({ elements, meta, scale = 1 }) {
                   />
                 </div>
               ) : (
-                <div style={{
-                  backgroundImage: el.backgroundImage || undefined,
-                  WebkitBackgroundClip: el.WebkitBackgroundClip || undefined,
-                  WebkitTextFillColor: el.WebkitTextFillColor || undefined,
-                  textShadow: el.textShadow || 'none',
-                  WebkitTextStroke: el.WebkitTextStroke || undefined,
-                  width: '100%',
-                  height: '100%',
-                }}>
-                  {el.resolvedText || el.text}
-                </div>
+                  <div 
+                    style={{ 
+                      backgroundImage: el.backgroundImage || undefined,
+                      WebkitBackgroundClip: el.WebkitBackgroundClip || undefined,
+                      WebkitTextFillColor: el.WebkitTextFillColor || undefined,
+                      textShadow: el.textShadow || 'none',
+                      WebkitTextStroke: el.WebkitTextStroke || undefined,
+                      width: '100%', 
+                      height: '100%' 
+                    }}
+                    dangerouslySetInnerHTML={{ __html: el.resolvedHtml || el.resolvedText || el.html || el.text || '' }}
+                  />
               )}
             </div>
           </div>

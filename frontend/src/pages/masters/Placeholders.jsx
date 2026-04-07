@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { api } from '../../services/api';
 
 import { useToast } from '../../components/common/ToastContext';
+import ConfirmModal from '../../components/common/ConfirmModal';
 import './LabelStocks.css'; // Reusing the same grid/table styles
 
 const EMPTY_FORM = {
@@ -23,6 +25,9 @@ const Placeholders = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState(EMPTY_FORM);
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // Custom Confirm State
+  const [pendingDeleteId, setPendingDeleteId] = useState(null);
 
   const { success, error: toastError } = useToast();
 
@@ -44,6 +49,18 @@ const Placeholders = () => {
       initialized.current = true;
     }
   }, [fetchData]);
+
+  // Scroll Lock
+  useEffect(() => {
+    if (showModal || pendingDeleteId) {
+      document.body.classList.add('modal-open');
+    } else {
+      document.body.classList.remove('modal-open');
+    }
+    return () => { 
+      document.body.classList.remove('modal-open');
+    };
+  }, [showModal, pendingDeleteId]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -87,13 +104,18 @@ const Placeholders = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this placeholder?')) return;
+  const handleDelete = (id) => {
+    setPendingDeleteId(id);
+  };
+
+  const confirmDelete = async () => {
+    if (!pendingDeleteId) return;
     setActionLoading(true);
     try {
-      await api.deletePlaceholder(id);
-      setPlaceholders(prev => prev.filter(p => p.id !== id));
+      await api.deletePlaceholder(pendingDeleteId);
+      setPlaceholders(prev => prev.filter(p => p.id !== pendingDeleteId));
       success('Placeholder deleted.');
+      setPendingDeleteId(null);
     } catch (err) {
       toastError(err.response?.data?.message || 'Failed to delete placeholder.');
     } finally {
@@ -182,20 +204,23 @@ const Placeholders = () => {
         </div>
       </div>
 
-      {showModal && (
+      {showModal && createPortal(
         <div className="modal-overlay" onClick={closeModal}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
             <div className="um-modal-header">
               <h2>{isEditing ? 'Edit Placeholder' : 'Add Placeholder'}</h2>
-              <button className="um-modal-close" onClick={closeModal}><span className="material-symbols-outlined">close</span></button>
+              <button className="um-modal-close" onClick={closeModal}>
+                <span className="material-symbols-outlined">close</span>
+              </button>
             </div>
-            <form onSubmit={handleSubmit}>
+            
+            <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
               <div className="modal-body">
-                <div className="form-group">
+                <div className="form-group animate-slide-in-up" style={{ animationDelay: '0.05s' }}>
                   <label>Display Name *</label>
                   <input type="text" name="name" value={formData.name} onChange={handleInputChange} required placeholder="e.g., Batch Number" />
                 </div>
-                <div className="form-group">
+                <div className="form-group animate-slide-in-up" style={{ animationDelay: '0.1s' }}>
                   <label>Type *</label>
                   <select name="type" value={formData.type} onChange={handleInputChange} required>
                     <option value="DATA">DATA</option>
@@ -204,30 +229,43 @@ const Placeholders = () => {
                     <option value="VISIT">VISIT</option>
                   </select>
                 </div>
-                <div className="form-group">
+                <div className="form-group animate-slide-in-up" style={{ animationDelay: '0.15s' }}>
                   <label>Placeholder Key *</label>
                   <input type="text" name="mappingKey" value={formData.mappingKey} onChange={handleInputChange} required placeholder="e.g., BATCH_NO" disabled={isEditing} />
                   <p className="text-[10px] text-slate-500 mt-1">Usage: <code>{`{{${formData.mappingKey || 'KEY'}}}`}</code></p>
                 </div>
-                <div className="form-group">
+                <div className="form-group animate-slide-in-up" style={{ animationDelay: '0.2s' }}>
                   <label>Default Value</label>
                   <input type="text" name="defaultValue" value={formData.defaultValue} onChange={handleInputChange} placeholder="Sample text..." />
                 </div>
-                <div className="form-group">
+                <div className="form-group animate-slide-in-up" style={{ animationDelay: '0.25s' }}>
                   <label>Description</label>
                   <textarea name="description" value={formData.description} onChange={handleInputChange} rows="2" />
                 </div>
               </div>
               <div className="modal-actions">
-                <button type="button" onClick={closeModal}>Cancel</button>
-                <button type="submit" className="um-add-btn" disabled={actionLoading}>
+                <button type="button" className="um-cancel-btn" onClick={closeModal}>Cancel</button>
+                <button type="submit" className="um-add-btn h-[48px] shadow-lg" disabled={actionLoading}>
                   {actionLoading ? 'Saving...' : (isEditing ? 'Update' : 'Create')}
                 </button>
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
+      {/* Custom Confirm Dialog */}
+      <ConfirmModal
+        isOpen={!!pendingDeleteId}
+        title="Delete Placeholder Component?"
+        message="Are you sure you want to permanently remove this automated data mapping? Existing label templates using this key may fail to resolve dynamic data."
+        confirmText="Confirm Removal"
+        cancelText="Retain Mapping"
+        type="danger"
+        loading={actionLoading}
+        onConfirm={confirmDelete}
+        onCancel={() => setPendingDeleteId(null)}
+      />
     </>
   );
 };

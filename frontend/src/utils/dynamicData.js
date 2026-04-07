@@ -88,7 +88,7 @@ function evaluateRule(rule, data) {
 /**
  * Resolves an element's final display state and text.
  */
-export function resolveElementData(el, trialData) {
+export function resolveElementData(el, trialData, phrases = [], translations = {}, langCode = 'en') {
   // 1. Evaluate Visibility Rules (AC 3, 4, 5)
   if (el.displayRules && el.displayRules.length > 0) {
     const logic = el.rulesLogic || 'AND';
@@ -101,13 +101,18 @@ export function resolveElementData(el, trialData) {
     if (!isVisible) return { ...el, hidden: true };
   }
 
-  // 2. Resolve Text if it's a dynamic field
-  let finalContent = el.text || '';
-
-  // Replace placeholders: {{FIELD_NAME}}
+  // 2. Resolve Text, HTML, and Heading if they contain dynamic fields
   const regex = /\{\{([\w\d_]+)\}\}/g;
-  finalContent = finalContent.replace(regex, (match, key) => {
+  const resolver = (match, key) => {
     let val = trialData[key];
+    
+    // 2a. Check if it's a phrase if not in trialData
+    if (val === undefined) {
+      const phrase = phrases.find(p => p.phraseKey === key);
+      if (phrase) {
+        val = (translations[phrase.id]?.[langCode]?.text) || phrase.defaultText;
+      }
+    }
     
     // Fallback if null/empty (AC 7)
     if (val === null || val === undefined || val === '') {
@@ -120,12 +125,28 @@ export function resolveElementData(el, trialData) {
     }
     
     return val;
-  });
+  };
+
+  let resolvedText = (el.text || '').replace(regex, resolver);
+  let resolvedHtml = (el.html || '').replace(regex, resolver);
+  let resolvedHeading = (el.heading || '').replace(regex, resolver);
 
   // 3. Apply Prefix/Suffix (AC 8)
-  if (finalContent && !el.isPlaceholderHidden) {
-    finalContent = (el.prefix || '') + finalContent + (el.suffix || '');
+  if (resolvedText && !el.isPlaceholderHidden) {
+    resolvedText = (el.prefix || '') + resolvedText + (el.suffix || '');
+    // If we have HTML, adding prefix/suffix blindly might break tags if not careful, 
+    // but usually resolvedHtml is derived from the same source.
+    // Actually, el.html is usually richer. If the user provided el.html, 
+    // they probably intended the prefix/suffix to be part of the text *before* HTML conversion or 
+    // handled it in the editor. 
+    // However, for consistency with resolvedText, let's just keep it simple.
   }
 
-  return { ...el, resolvedText: finalContent, hidden: false };
+  return { 
+    ...el, 
+    resolvedText, 
+    resolvedHtml, 
+    resolvedHeading, 
+    hidden: false 
+  };
 }

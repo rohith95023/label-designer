@@ -69,4 +69,9 @@ public class ObjectEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "label_id")
     private Label label;
+
+    @com.fasterxml.jackson.annotation.JsonProperty("labelName")
+    public String getLabelName() {
+        return label != null ? label.getName() : null;
+    }
 }

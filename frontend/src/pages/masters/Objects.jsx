@@ -5,6 +5,7 @@ import { api } from '../../services/api';
 import { useToast } from '../../components/common/ToastContext';
 import { createPortal } from 'react-dom';
 import { resolveUrl } from '../../utils/url';
+import ConfirmModal from '../../components/common/ConfirmModal';
 
 const EMPTY_FORM = {
   id: null,
@@ -41,6 +42,10 @@ const Objects = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
+  
+  // Custom Confirm State
+  const [pendingDeleteId, setPendingDeleteId] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const { success, error: toastError } = useToast();
 
@@ -63,6 +68,18 @@ const Objects = () => {
       initialized.current = true;
     }
   }, [fetchData]);
+
+  // Scroll Lock
+  useEffect(() => {
+    if (showModal || showHistory || showReplace || pendingDeleteId) {
+      document.body.classList.add('modal-open');
+    } else {
+      document.body.classList.remove('modal-open');
+    }
+    return () => {
+      document.body.classList.remove('modal-open');
+    };
+  }, [showModal, showHistory, showReplace, pendingDeleteId]);
 
   // --- Handlers ---
 
@@ -167,14 +184,22 @@ const Objects = () => {
     }
   };
 
-  const handleDeleteVersion = async (id) => {
-    if (!window.confirm('Delete this version? Reference data may be affected.')) return;
+  const handleDeleteVersion = (id) => {
+    setPendingDeleteId(id);
+  };
+
+  const confirmDelete = async () => {
+    if (!pendingDeleteId) return;
+    setDeleteLoading(true);
     try {
-      await api.deleteObject(id);
-      setObjects(prev => prev.filter(o => o.id !== id));
+      await api.deleteObject(pendingDeleteId);
+      setObjects(prev => prev.filter(o => o.id !== pendingDeleteId));
       success('Version removed.');
+      setPendingDeleteId(null);
     } catch (err) {
       toastError('Delete failed.');
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -311,7 +336,17 @@ const Objects = () => {
                   <div className="p-5 flex-1 flex flex-col gap-3">
                     <div>
                       <h3 className="font-bold text-[15px] text-text-primary tracking-tight leading-tight mb-1 truncate">{obj.name}</h3>
-                      <p className="text-[10px] text-primary font-black uppercase tracking-widest">{obj.type.replace('_', ' ')}</p>
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-[10px] text-primary font-black uppercase tracking-widest leading-none">{obj.type.replace('_', ' ')}</p>
+                        {(obj.labels?.length > 0 || obj.labelName) && (
+                          <div className="flex items-center gap-1 bg-blue-50/50 px-2 py-0.5 rounded-md border border-blue-100/50 max-w-[60%] overflow-hidden" title={obj.labels?.map(l => l.name).join(', ') || obj.labelName}>
+                            <span className="material-symbols-outlined text-[10px] text-blue-500 shrink-0">label</span>
+                            <span className="text-[9px] font-bold text-blue-600 truncate uppercase tracking-tighter">
+                              {obj.labels?.map(l => l.name).join(', ') || obj.labelName}
+                            </span>
+                          </div>
+                        )}
+                      </div>
                     </div>
                     
                     {obj.description && (
@@ -388,7 +423,7 @@ const Objects = () => {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-white rounded-[32px] shadow-lg w-full max-w-lg overflow-hidden border border-border" 
+              className="bg-white rounded-[32px] shadow-lg w-full max-w-lg max-h-[85vh] overflow-hidden border border-border flex flex-col" 
               onClick={e => e.stopPropagation()}
             >
               <div className="bg-primary p-8 text-white">
@@ -404,7 +439,7 @@ const Objects = () => {
                 <p className="text-white/70 text-[13px] mt-1">Configure global asset properties for high-fidelity clinical labels.</p>
               </div>
 
-              <form onSubmit={handleSubmit} className="p-8 flex flex-col gap-5">
+              <form onSubmit={handleSubmit} className="p-8 flex flex-col gap-5 overflow-y-auto flex-1 custom-scrollbar">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1.5">
                     <label className="text-[10px] font-black text-text-muted uppercase tracking-widest pl-1">Primary Identifier</label>
@@ -594,6 +629,19 @@ const Objects = () => {
           document.body
         )}
       </AnimatePresence>
+
+      {/* Custom Confirm Dialog */}
+      <ConfirmModal
+        isOpen={!!pendingDeleteId}
+        title="Delete Specification?"
+        message="By removing this version, reference data for labels using this specific asset index may become unlinked or display errors in legacy documents."
+        confirmText="Confirm Deletion"
+        cancelText="Retain Version"
+        type="danger"
+        loading={deleteLoading}
+        onConfirm={confirmDelete}
+        onCancel={() => setPendingDeleteId(null)}
+      />
 
     </>
   );

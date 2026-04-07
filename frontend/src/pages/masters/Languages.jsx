@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { api } from '../../services/api';
 
 import { useToast } from '../../components/common/ToastContext';
+import ConfirmModal from '../../components/common/ConfirmModal';
 import './LabelStocks.css';
 
 const EMPTY_FORM = {
@@ -31,6 +32,9 @@ const Languages = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedBase, setExpandedBase] = useState(new Set());
   const [statusFilter, setStatusFilter] = useState('ALL'); // ALL, ACTIVE, INACTIVE
+  
+  // Custom Confirm State
+  const [pendingDeleteId, setPendingDeleteId] = useState(null);
 
   const { success, error: toastError } = useToast();
 
@@ -101,13 +105,18 @@ const Languages = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this language?')) return;
+  const handleDelete = (id) => {
+    setPendingDeleteId(id);
+  };
+
+  const confirmDelete = async () => {
+    if (!pendingDeleteId) return;
     setActionLoading(true);
     try {
-      await api.deleteLanguage(id);
-      setLanguages(prev => prev.filter(l => l.id !== id));
-      success('Language deleted.');
+      await api.deleteLanguage(pendingDeleteId);
+      setLanguages(prev => prev.filter(l => l.id !== pendingDeleteId));
+      success('Global locale specification removed.');
+      setPendingDeleteId(null);
     } catch (err) {
       toastError(err.response?.data?.message || 'Failed to delete language.');
     } finally {
@@ -473,6 +482,19 @@ const Languages = () => {
         </div>
         )}
       </AnimatePresence>
+
+      {/* Custom Confirm Dialog */}
+      <ConfirmModal
+        isOpen={!!pendingDeleteId}
+        title="Remove Locale Environment?"
+        message="Are you sure you want to permanently delete this language specification? This action will impact all associated phrase translations and regional label deployments linked to this ISO code."
+        confirmText="Confirm Deletion"
+        cancelText="Retain Locale"
+        type="danger"
+        loading={actionLoading}
+        onConfirm={confirmDelete}
+        onCancel={() => setPendingDeleteId(null)}
+      />
     </>
   );
 };

@@ -311,6 +311,7 @@ export default function LabelEditor() {
     labelStocks,
     toggleOrientation, saveAsTemplate, templates,
     loadTemplate,
+    phrases, translations,
   } = useLabel();
 
   const [showTemplateConflictModal, setShowTemplateConflictModal] = useState(false);
@@ -410,7 +411,7 @@ export default function LabelEditor() {
   const [eraserPos, setEraserPos] = useState(null); // {x, y} for visual brush
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [bulkSuffix, setBulkSuffix] = useState('');
-  const [previewMode, setPreviewMode] = useState(false);
+  const [previewMode, setPreviewMode] = useState(true);
   const originalTexts = useRef({}); // Tracks base text during bulk suffix editing
   const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
   const [artboardCursor, setArtboardCursor] = useState({ x: null, y: null });
@@ -550,6 +551,7 @@ export default function LabelEditor() {
       text: `{{${ph.mappingKey}}}`,
       name: ph.name,
       placeholderKey: ph.mappingKey,
+      fallbackValue: ph.defaultValue,
       fontSize: 14,
       fontFamily: 'Inter, sans-serif',
       fontWeight: '600',
@@ -1138,7 +1140,7 @@ export default function LabelEditor() {
       <PreviewModal
         isOpen={showPreviewModal}
         onClose={() => setShowPreviewModal(false)}
-        elements={elements}
+        elements={elements.map(el => resolveElementData(el, SAMPLE_TRIAL_DATA, phrases, translations, settings.defaultLanguage))}
         meta={meta}
         title={`Preview: ${meta.fileName || 'Untitled Label'}`}
       />
@@ -1917,7 +1919,9 @@ export default function LabelEditor() {
                               </div>
                               <div className="flex flex-col min-w-0 pr-2">
                                 <span className="text-[11px] font-black text-slate-800 truncate uppercase tracking-tight">{ph.name}</span>
-                                <span className="text-[9px] font-mono text-[var(--color-primary)] font-bold mt-0.5">{`{{${ph.mappingKey}}}`}</span>
+                                <span className="text-[9px] font-mono text-[var(--color-primary)] font-bold mt-0.5">
+                                  {previewMode ? (ph.defaultValue || ph.mappingKey) : `{{${ph.mappingKey}}}`}
+                                </span>
                               </div>
                             </button>
                           ))}
@@ -2579,7 +2583,7 @@ export default function LabelEditor() {
 
               {[...elements]
                 .sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0))
-                .map(el => previewMode ? resolveElementData(el, SAMPLE_TRIAL_DATA) : el)
+                .map(el => previewMode ? resolveElementData(el, SAMPLE_TRIAL_DATA, phrases, translations, settings.defaultLanguage) : el)
                 .filter(el => !el.hidden)
                 .map(el => {
                   const isSelected = selectedIds.includes(el.id);
@@ -2817,16 +2821,16 @@ export default function LabelEditor() {
                                 padding: '0',
                               }}
                             />
-                          ) : el.heading && !isSelected ? (
+                          ) : (el.resolvedHeading || el.heading) ? (
                             <span style={{ display: 'block', fontSize: '8px', fontWeight: '800', fontFamily: 'Inter, sans-serif', textTransform: 'uppercase', color: el.alertColor || '#717783', marginBottom: '2px', letterSpacing: '1.2px' }}>
-                              {el.heading}
+                              {el.resolvedHeading || el.heading}
                             </span>
                           ) : null}
 
                           {el.type === 'barcode' ? (
                             <div className="w-full flex-1 min-h-0 flex items-center justify-center pointer-events-none px-2">
                               <BarcodeUnified
-                                value={el.text || '123456789012'}
+                                value={el.resolvedText || el.text || '123456789012'}
                                 format={el.barcodeFormat || 'code128'}
                                 color={el.color || '#191c1e'}
                                 width={elW}
@@ -2836,7 +2840,7 @@ export default function LabelEditor() {
                           ) : el.type === 'qrcode' ? (
                             <div className="w-full flex-1 min-h-0 p-1">
                               <BarcodeUnified
-                                value={el.text || 'https://pharma-precision.com/scan'}
+                                value={el.resolvedText || el.text || 'https://pharma-precision.com/scan'}
                                 format="qrcode"
                                 color={el.color || '#191c1e'}
                                 width={elW}
@@ -2879,7 +2883,7 @@ export default function LabelEditor() {
                           ) : el.type === 'table' ? (
                             <table className="w-full flex-1 min-h-0 table-fixed" style={{ borderCollapse: 'collapse' }}>
                               <tbody>
-                                {(el.text || '').split('\n').filter(r => r.trim()).map((row, i) => (
+                                {(el.resolvedText || el.text || '').split('\n').filter(r => r.trim()).map((row, i) => (
                                   <tr key={i}>
                                     {row.split('|').map((cell, j) => (
                                       <td
@@ -2966,7 +2970,7 @@ export default function LabelEditor() {
                               wordBreak: 'break-word',
                               textAlign: el.align || (el.type === 'shape' ? 'center' : 'left'),
                             }}
-                            dangerouslySetInnerHTML={{ __html: el.html || el.text || (isSelected ? '' : '&nbsp;') }}
+                            dangerouslySetInnerHTML={{ __html: el.resolvedHtml || el.resolvedText || el.html || el.text || (isSelected ? '' : '&nbsp;') }}
                             />
                           )}
                         </div>

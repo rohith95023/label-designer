@@ -149,7 +149,19 @@ public class ObjectServiceImpl implements ObjectService {
     @Override
     @Transactional
     public void deleteObject(UUID id) {
-        objectRepository.deleteById(id);
+        objectRepository.findById(id).ifPresent(existing -> {
+            String url = existing.getFileUrl();
+            if (url != null && url.startsWith("/uploads/")) {
+                try {
+                    String filename = url.substring("/uploads/".length());
+                    Path path = Paths.get(uploadPath, filename);
+                    Files.deleteIfExists(path);
+                } catch (IOException e) {
+                    System.err.println("Failed to delete physical file: " + url + " - " + e.getMessage());
+                }
+            }
+            objectRepository.delete(existing);
+        });
     }
 
     private void validateFile(MultipartFile file) {

@@ -11,12 +11,19 @@ import java.util.UUID;
 
 @Repository
 public interface ObjectRepository extends JpaRepository<ObjectEntity, UUID> {
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"label"})
+    List<ObjectEntity> findAll();
+
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"label"})
     List<ObjectEntity> findByType(String type);
-    
+
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"label"})
     List<ObjectEntity> findByActivationStatus(ObjectStatus status);
-    
+
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"label"})
     List<ObjectEntity> findByParentIdOrderByVersionDesc(UUID parentId);
     
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"label"})
     Optional<ObjectEntity> findByParentIdAndActivationStatus(UUID parentId, ObjectStatus status);
     
     @Query("SELECT MAX(o.version) FROM ObjectEntity o WHERE o.parentId = :parentId")
