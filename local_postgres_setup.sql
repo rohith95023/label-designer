@@ -309,7 +309,11 @@ CREATE POLICY "Print Requests - Access" ON public.print_requests FOR ALL USING (
 -- SECTION 8: SEED DATA
 -- =============================================================================
 
--- Roles
+-- =============================================================================
+-- SECTION 8: SEED DATA
+-- =============================================================================
+
+-- ── 8.1 Roles ────────────────────────────────────────────────────────────────
 INSERT INTO public.roles (name) VALUES
   ('ADMIN'),
   ('REVIEWER'),
@@ -321,26 +325,136 @@ INSERT INTO public.roles (name) VALUES
   ('PRINT_OPERATOR')
 ON CONFLICT (name) DO NOTHING;
 
--- Languages
+-- ── 8.2 Languages ─────────────────────────────────────────────────────────────
 INSERT INTO public.languages (name, code, direction, status) VALUES
   ('English', 'en', 'LTR', 'ACTIVE'),
   ('Spanish', 'es', 'LTR', 'ACTIVE'),
   ('Arabic', 'ar', 'RTL', 'ACTIVE'),
   ('French', 'fr', 'LTR', 'ACTIVE'),
-  ('French-CA', 'fc', 'LTR', 'ACTIVE'),
-  ('French-BE', 'fb', 'LTR', 'ACTIVE')
+  ('German', 'de', 'LTR', 'ACTIVE'),
+  ('Hindi', 'hi', 'LTR', 'ACTIVE'),
+  ('Telugu', 'te', 'LTR', 'ACTIVE')
 ON CONFLICT (code) DO NOTHING;
 
--- System Config
+-- ── 8.3 Placeholders ─────────────────────────────────────────────────────────
+INSERT INTO public.placeholders (name, mapping_key, type, default_value, description) VALUES
+  ('Protocol Number', 'PROTOCOL_NO', 'DATA', 'CL-2024-V91', 'Clinical study protocol reference'),
+  ('Patient ID', 'PATIENT_ID', 'DATA', 'P-882931', 'Unique participant identifier'),
+  ('Medication Name', 'MEDICATION', 'DATA', 'Methylprednisolone IP', 'Drug product designation'),
+  ('Strength', 'STRENGTH', 'DATA', '40 mg / mL', 'Concentration or potency'),
+  ('Dosage Form', 'DOSAGE', 'DATA', '10 mL Injection', 'Administration format'),
+  ('Expiry Date', 'EXP_DATE', 'DATA', '2027-02-15', 'Product expiration date'),
+  ('Manufacturing Date', 'MFG_DATE', 'DATA', '2024-02-15', 'Production date'),
+  ('Route of Admin', 'ROUTE', 'DATA', 'Subcutaneous', 'Administration method'),
+  ('Batch Number', 'BATCH_NO', 'DATA', 'BATCH-XQ102', 'Manufacturing batch ID'),
+  ('Site Name', 'SITE_NAME', 'DATA', 'St. Jude Research Center', 'Clinical trial site location'),
+  ('Sponsor Name', 'SPONSOR', 'DATA', 'PharmaCore Solutions', 'Study sponsor entity'),
+  ('Manufacturing Lic No', 'MFG_LIC_NO', 'DATA', 'MFG/2024/99182', 'Regulated license reference'),
+  ('Custom Note', 'CUSTOM_NOTE', 'FREE_TEXT', 'Sample clinical note', 'User-defined note field')
+ON CONFLICT (mapping_key) DO NOTHING;
+
+-- ── 8.4 Label Stocks ─────────────────────────────────────────────────────────
+INSERT INTO public.label_stocks (stock_id, name, breadth, length, description, status) VALUES
+  ('STK-100-50', 'Standard Vial (100x50mm)', 100, 50, 'Standard adhesive vial label', 'ACTIVE'),
+  ('STK-75-25', 'Syringe Wrap (75x25mm)', 75, 25, 'Thin wrap-around syringe label', 'ACTIVE'),
+  ('STK-150-100', 'Carton Box (150x100mm)', 150, 100, 'Large cardboard carton label', 'ACTIVE'),
+  ('STK-50-50', 'Square Ampoule (50x50mm)', 50, 50, 'Small square ampoule label', 'ACTIVE')
+ON CONFLICT (name) DO NOTHING;
+
+-- ── 8.5 Phrases ──────────────────────────────────────────────────────────────
+INSERT INTO public.phrases (phrase_key, default_text) VALUES
+  ('WARNING_KEEP_REACH', 'Keep out of reach of children.'),
+  ('WARNING_RESTRICTED', 'For Clinical Trial Use Only.'),
+  ('STORE_CONDITION', 'Store at 2°C to 8°C. Do not freeze.'),
+  ('WARNING_DO_NOT_CONSUME', 'Do not consume directly. For external use only.')
+ON CONFLICT (phrase_key) DO NOTHING;
+
+-- ── 8.6 Translations ─────────────────────────────────────────────────────────
+
+-- English
+INSERT INTO public.translations (phrase_id, language_id, translated_text)
+SELECT p.id, l.id, p.default_text
+FROM public.phrases p, public.languages l
+WHERE l.code = 'en'
+ON CONFLICT (phrase_id, language_id) DO NOTHING;
+
+-- Hindi
+INSERT INTO public.translations (phrase_id, language_id, translated_text)
+SELECT p.id, l.id, 
+  CASE p.phrase_key
+    WHEN 'WARNING_KEEP_REACH' THEN 'बच्चों की पहुँच से दूर रखें।'
+    WHEN 'WARNING_RESTRICTED' THEN 'केवल नैदानिक ​​​​परीक्षण उपयोग के लिए।'
+    WHEN 'STORE_CONDITION' THEN '2°C से 8°C पर स्टोर करें। फ्रीज न करें।'
+    ELSE NULL
+  END
+FROM public.phrases p, public.languages l
+WHERE l.code = 'hi' AND p.phrase_key IN ('WARNING_KEEP_REACH', 'WARNING_RESTRICTED', 'STORE_CONDITION')
+ON CONFLICT (phrase_id, language_id) DO NOTHING;
+
+-- Spanish
+INSERT INTO public.translations (phrase_id, language_id, translated_text)
+SELECT p.id, l.id, 
+  CASE p.phrase_key
+    WHEN 'WARNING_KEEP_REACH' THEN 'Mantener fuera del alcance de los niños.'
+    WHEN 'WARNING_RESTRICTED' THEN 'Solo para uso en ensayos clínicos.'
+    WHEN 'STORE_CONDITION' THEN 'Conservar de 2°C a 8°C. No congelar.'
+    ELSE NULL
+  END
+FROM public.phrases p, public.languages l
+WHERE l.code = 'es' AND p.phrase_key IN ('WARNING_KEEP_REACH', 'WARNING_RESTRICTED', 'STORE_CONDITION')
+ON CONFLICT (phrase_id, language_id) DO NOTHING;
+
+-- Telugu
+INSERT INTO public.translations (phrase_id, language_id, translated_text)
+SELECT p.id, l.id, 
+  CASE p.phrase_key
+    WHEN 'WARNING_KEEP_REACH' THEN 'పిల్లలకు దూరంగా ఉంచండి.'
+    WHEN 'WARNING_RESTRICTED' THEN 'నిర్దేశించిన క్లినికల్ ట్రయల్ ఉపయోగం కోసం మాత్రమే.'
+    WHEN 'STORE_CONDITION' THEN '2°C నుండి 8°C వద్ద నిల్వ చేయండి. ఫ్రీజ్ చేయవద్దు.'
+    ELSE NULL
+  END
+FROM public.phrases p, public.languages l
+WHERE l.code = 'te' AND p.phrase_key IN ('WARNING_KEEP_REACH', 'WARNING_RESTRICTED', 'STORE_CONDITION')
+ON CONFLICT (phrase_id, language_id) DO NOTHING;
+
+-- ── 8.7 System Config ────────────────────────────────────────────────────────
 INSERT INTO public.system_config (config_key, config_value) VALUES
   ('sod.prevent_same_user_approve', 'true'),
-  ('audit.log_limit_days', '365')
+  ('audit.log_limit_days', '365'),
+  ('app.version', '1.0.0-PROD'),
+  ('app.theme.primary', '#004A99')
 ON CONFLICT (config_key) DO NOTHING;
 
--- Admin User
-INSERT INTO public.users (username, email, password_hash, role_id, status, must_change_password)
-SELECT 'admin', 'admin@pharmalabel.com', '$2a$10$7Z2v8.1.5v6v6v6v6v6v6u/5yO6X9z9z9z9z9z9z9z9z9z9z9z9z', id, 'ACTIVE', false
-FROM public.roles 
-WHERE name = 'ADMIN' 
-LIMIT 1
-ON CONFLICT (username) DO NOTHING;
+-- ── 8.8 Admin & Operator Users ───────────────────────────────────────────────
+DO $$ 
+DECLARE
+  admin_role_id UUID := (SELECT id FROM public.roles WHERE name = 'ADMIN');
+  op_role_id UUID := (SELECT id FROM public.roles WHERE name = 'OPERATOR');
+BEGIN
+  -- Admin
+  INSERT INTO public.users (username, email, password_hash, role_id, status, must_change_password)
+  VALUES ('admin', 'admin@pharmalabel.com', '$2a$10$7Z2v8.1.5v6v6v6v6v6v6u/5yO6X9z9z9z9z9z9z9z9z9z9z9z9z', admin_role_id, 'ACTIVE', false)
+  ON CONFLICT (username) DO NOTHING;
+
+  -- Operator
+  INSERT INTO public.users (username, email, password_hash, role_id, status, must_change_password)
+  VALUES ('operator', 'op@pharmalabel.com', '$2a$10$7Z2v8.1.5v6v6v6v6v6v6u/5yO6X9z9z9z9z9z9z9z9z9z9z9z9z', op_role_id, 'ACTIVE', false)
+  ON CONFLICT (username) DO NOTHING;
+END $$;
+
+-- ── 8.9 Default Permissions ──────────────────────────────────────────────────
+INSERT INTO public.permissions (role_id, module, event, allowed) 
+SELECT id, m, e, true
+FROM public.roles, (VALUES 
+  ('dashboard', 'VIEW'),
+  ('templates', 'VIEW'),
+  ('templates', 'CREATE'),
+  ('editor', 'VIEW'),
+  ('editor', 'SAVE'),
+  ('translation', 'VIEW'),
+  ('history', 'VIEW'),
+  ('print', 'VIEW'),
+  ('masters', 'VIEW')
+) AS perms(m, e)
+WHERE name IN ('ADMIN', 'OPERATOR')
+ON CONFLICT DO NOTHING;
